@@ -75,3 +75,9 @@ AI 实时通话已预留 WebRTC 音频、静音/挂断、工具调用与后台�
 恢复依赖：`python3 -m venv .venv-data`，然后 `.venv-data/bin/python -m pip install -r integrations/requirements.lock.txt`。本次环境为 macOS Apple Silicon / Python 3.9，其他平台可能需要重新解析依赖。
 
 详细来源、限制和验收见同目录 `2026-09-18_金融数据源接入核对_验证中_v1.0.md`。
+
+## v0.2.0 · 行情接入预览与语音交互改进
+
+数据来源页新增 TqSdk 只读行情/日K入口；`npm run market` 启动独立采集进程。需要本机天勤服务账号，首页仍明确使用演示数据。语音增加增量字幕、状态、停止播报、有限重连和旧会话结果隔离。HomeRail Codex Live 适配器尚未接入。
+
+配置、测试边界、未完成项和回滚方式见 [本轮迭代说明](docs/iteration-v0.2.md)。运行 `npm run check` 和 `npm test` 验证代码。
