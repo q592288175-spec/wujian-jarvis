@@ -1,0 +1,13 @@
+.env
+.runtime/
+node_modules/
+*.log
+
+.venv-data/
+__pycache__/
+
+# Local archives and design notes
+versions/
+.DS_Store
+2026-*.md
+dist/assets/wujian-logo-v1.png
