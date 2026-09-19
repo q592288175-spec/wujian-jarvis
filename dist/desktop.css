@@ -1,0 +1,4 @@
+/* Native macOS only: the original header is the drag surface. */
+html.wj-desktop-macos body>header{padding-left:104px;-webkit-app-region:drag;user-select:none;background:#050d18;gap:20px}
+html.wj-desktop-macos body>header :is(button,a,input,select,[role=button]){-webkit-app-region:no-drag}
+@media(max-width:1400px){html.wj-desktop-macos body>header .motto{display:none}}
