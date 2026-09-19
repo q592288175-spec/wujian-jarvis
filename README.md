@@ -1,10 +1,13 @@
-# 当前版本说明（2026-09-19）
+# 小木 v0.4.0 · 当前版本说明（2026-09-19）
 
-国内期货研究工作台：TqSdk 真实行情、完成日/周/月 K 线结构核验、DeepSeek 研究任务，以及可配置的 GPT-Live 全双工语音和飞书机器人。未接通的服务明确显示未配置；没有真实下单功能。
+国内期货研究工作台：TqSdk 真实行情、完成日/周/月 K 线结构核验、DeepSeek 研究任务，以及火山语音小球通话和飞书机器人。未接通的服务明确显示未配置；没有真实下单功能。
 
 - 首次运行：Node.js 22+，执行 `npm ci`，按 `.env.example` 在本机配置 `.env`，再执行 `npm start`。
 - 行情采集：按项目 Python 依赖安装后执行 `npm run market`；不要自动升级已有 TqSdk。
 - 飞书：进入“设置 → 飞书扫码绑定”，用手机飞书扫码授权。成功后可配置定时推送，默认关闭；组织不支持一键创建时使用 `配置飞书机器人.command`。
+- [每个版本更新了什么](CHANGELOG.md)
+- [小木三板斧知识库与适配边界](knowledge/three-axes/README.md)
+- [电话式交互与Markdown验收](docs/CONVERSATION-UI.md)
 - [三板斧与飞书接入说明](docs/three-axes-feishu.md)
 - [真实数据与语音边界](docs/real-data-and-live.md)
 - [桌面应用](docs/desktop-app.md)
