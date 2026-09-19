@@ -1,0 +1,10 @@
+dist/ui/audio-tap.js OK
+dist/ui/audio-math.js OK
+dist/ui/voice-core.js OK
+dist/volc-voice.js OK
+dist/voice.js OK
+dist/voice-provider.js OK
+dist/settings.js OK
+desktop/main.cjs OK
+desktop/preload.cjs OK
+scripts/build-desktop.mjs OK

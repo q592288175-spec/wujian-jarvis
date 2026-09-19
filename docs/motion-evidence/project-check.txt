@@ -1,0 +1,4 @@
+
+> wujian-jarvis@0.2.0 check
+> node --check server.mjs && node --check dist/app.js && node --check dist/voice.js && node --check dist/hologram.js && node --check dist/panels.js && node --check dist/data-hub.js && node --check integrations/providers.mjs && node --check finance.mjs && node --check dist/live-news.js && node --check dist/live-market.js && node --check integrations/market.mjs && node --check integrations/start-market.mjs
+

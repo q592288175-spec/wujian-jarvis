@@ -1,0 +1,19 @@
+/* Local asset integration, never overrides financial up/down colors. */
+.wj-icon{width:24px;height:24px;display:inline-block;vertical-align:middle;fill:none;flex:none}
+.sidebar .wj-icon{width:22px;height:22px}.five-dock .wj-icon{width:30px;height:30px}
+.brand img.brand-emblem{border:0;box-shadow:none;outline:0;border-radius:0;object-fit:contain}
+.backdrop{background-image:url('/assets/wujian/backgrounds/ambient-grid.svg'),radial-gradient(ellipse at 50% 30%,#102d40,#050d18 70%);background-size:cover}
+body .scanlines{opacity:.035}
+body #callOrb.call-orb{display:block;position:relative;width:230px;height:230px;max-width:100%;padding:0;margin:auto;border:0;background:transparent!important;box-shadow:none!important;overflow:visible;isolation:isolate}
+#voiceCoreMain{display:block;width:100%;height:100%}#voiceCoreMain .wj-core-caption{font-size:11px;letter-spacing:0;margin-top:-18px}
+#callOrb .wj-voice-art{pointer-events:none}#callOrb:hover{filter:brightness(1.12)}
+#voiceCoreCall{display:block;width:76px;height:76px;flex:0 0 76px}#voiceCoreCall .wj-core-caption{display:none}
+.call-panel{width:420px;height:min(700px,88vh)}.call-head{padding:7px 14px;gap:8px}.call-head>div{min-width:0}.call-head small{max-width:240px;overflow-wrap:anywhere}
+.call-controls{flex-wrap:wrap;justify-content:flex-start}.call-controls button{white-space:nowrap;flex:1;padding:8px 9px}.call-controls button:first-child{flex:1.5}
+body[data-voice-state='connected'] .globe-overlay,body[data-voice-state='speaking'] .globe-overlay{opacity:.42;transition:opacity .3s}
+.five-dock [data-view='fire'] .wj-icon{color:#db927f}.five-dock [data-view='water'] .wj-icon{color:#78badc}.five-dock [data-view='metal'] .wj-icon{color:#d6bd7a}.five-dock [data-view='earth'] .wj-icon{color:#b7a18a}.five-dock [data-view='wood'] .wj-icon{color:#88b6a2}
+body.cockpit #callOrb{width:180px;height:180px}body.focus #callOrb{width:145px;height:145px}
+@media(max-width:900px){body #callOrb.call-orb{width:170px;height:170px}.call-panel{width:min(420px,calc(100vw - 24px))}}
+@media(max-width:600px){.call-panel{right:8px;width:calc(100% - 16px)}#voiceCoreCall{width:58px;height:58px;flex-basis:58px}#voiceCoreMain .wj-core-caption{font-size:9px}}
+
+.assistant-core .core-caption{display:none}

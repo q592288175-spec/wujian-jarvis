@@ -56,5 +56,5 @@ function create(host,small=false){
  }
  renderer.setAnimationLoop(frame);instances.push({renderer,resize,observer,scene});return renderer;
 }
-try{create(document.querySelector('#globeScene'));create(document.querySelector('#callOrb'),true);document.body.classList.add('three-ready');document.querySelector('#sceneHint').textContent='3D 全息场景 · 拖动旋转';}catch(e){console.warn('全息场景不可用，保留静态界面',e);document.querySelector('#sceneHint').textContent='静态全息模式 · WebGL 不可用';}
+try{create(document.querySelector('#globeScene'));document.body.classList.add('three-ready');document.querySelector('#sceneHint').textContent='3D 全息场景 · 拖动旋转';}catch(e){console.warn('全息场景不可用，保留静态界面',e);document.querySelector('#sceneHint').textContent='静态全息模式 · WebGL 不可用';}
 window.addEventListener('beforeunload',()=>instances.forEach(({renderer,resize,observer,scene})=>{renderer.setAnimationLoop(null);resize.disconnect();observer.disconnect();scene.traverse(o=>{o.geometry?.dispose();if(o.material){for(const m of Array.isArray(o.material)?o.material:[o.material])m.dispose()}});renderer.dispose()}));

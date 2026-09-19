@@ -1,0 +1,21 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { rms, normalizeLevel, smoothEnvelope, ringPoints, presentationState, bandLevel } from '../dist/ui/audio-math.js';
+import { AudioTap } from '../dist/ui/audio-tap.js';
+test('silence is zero, never a synthetic waveform',()=>{assert.equal(rms(new Float32Array(1024)),0);assert.equal(normalizeLevel(0),0);assert.equal(ringPoints(new Float32Array(1024),120,0),ringPoints(null,120,0));});
+test('RMS of sine samples matches analytical expectation',()=>{const x=Float32Array.from({length:1024},(_,i)=>.1*Math.sin(i*2*Math.PI*8/1024));assert.ok(Math.abs(rms(x)-.1/Math.sqrt(2))<1e-7);});
+test('invalid / empty samples cannot generate NaN',()=>{assert.equal(rms([]),0);assert.equal(rms([NaN,Infinity]),0);assert.equal(normalizeLevel(NaN),0);});
+test('normalization is bounded and rejects room-floor noise',()=>{assert.equal(normalizeLevel(10**(-70/20)),0);assert.equal(normalizeLevel(2),1);assert.ok(normalizeLevel(.1)>normalizeLevel(.01));});
+test('attack is faster than release',()=>{assert.ok(smoothEnvelope(0,1,.1)>1-smoothEnvelope(1,0,.1));});
+test('smoothing is frame-rate independent',()=>{let a=0,b=0;for(let i=0;i<30;i++)a=smoothEnvelope(a,1,1/30);for(let i=0;i<60;i++)b=smoothEnvelope(b,1,1/60);assert.ok(Math.abs(a-b)<1e-12);});
+test('frequency band is derived from samples',()=>{assert.equal(bandLevel(new Uint8Array(512),48000,1024,320,1500),0);assert.equal(bandLevel(new Uint8Array(512).fill(255),48000,1024,320,1500),1);});
+test('ring has exactly 96 vertices',()=>{assert.equal(ringPoints(null,120,0).split(' ').length,96);});
+test('muting mic does not hide the speaking assistant',()=>{const x=presentationState({connection:'connected',micMuted:true,agentSpeaking:true});assert.equal(x.key,'speaking');assert.match(x.label,/麦克风静音/);});
+test('working state does not disable listening',()=>{assert.equal(presentationState({connection:'connected',working:true,userSpeaking:true}).key,'listening');});
+test('simultaneous input/output is representable',()=>{assert.equal(presentationState({connection:'connected',userSpeaking:true,agentSpeaking:true}).key,'duplex');});
+test('no connection means no live-speaking claim',()=>{assert.equal(presentationState({connection:'idle',agentSpeaking:true}).key,'idle');});
+function graph(){const ctx={state:'running',sampleRate:48000,createAnalyser(){return {fftSize:1024,frequencyBinCount:512,disconnect(){},getFloatTimeDomainData(a){a.fill(.1)},getByteFrequencyData(a){a.fill(128)}}}};const source={context:ctx,connections:[],disconnects:[],connect(n){this.connections.push(n)},disconnect(n){this.disconnects.push(n)}};return {ctx,source};}
+test('audio tap never routes to speakers or duplicates connections',()=>{const {ctx,source}=graph();const t=new AudioTap(ctx);t.addSource(source).addSource(source);assert.equal(source.connections.length,1);assert.ok(Math.abs(t.read().rms-.1)<1e-6);});
+test('audio tap cleanup disconnects only its own branch',()=>{const {ctx,source}=graph();const t=new AudioTap(ctx).addSource(source);t.dispose();t.dispose();assert.equal(source.disconnects.length,1);assert.equal(source.disconnects[0],t.analyser);assert.equal(t.read().level,0);});
+test('suspended and disposed contexts produce zero',()=>{const {ctx,source}=graph();const t=new AudioTap(ctx).addSource(source);ctx.state='suspended';assert.equal(t.read().level,0);ctx.state='running';t.dispose();assert.equal(t.read().level,0);});
+test('cross-context connection is rejected',()=>{const {ctx}=graph();const t=new AudioTap(ctx);assert.throws(()=>t.addSource(graph().source),/share/);});

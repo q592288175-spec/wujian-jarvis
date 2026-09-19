@@ -1,0 +1,24 @@
+/* Scope everything: no effects on original financial charts or market semantics. */
+.wj-voice-core { --wj-input:0; --wj-output:0; color:#76e4df; width:100%; position:relative; }
+.wj-voice-art { width:100%; aspect-ratio:1; position:relative; pointer-events:none; }
+.wj-voice-art svg { display:block; width:100%; height:100%; overflow:visible; }
+.wj-calibration{opacity:.35}.wj-orbits{opacity:.13;stroke-width:.8}
+.wj-nucleus{transform-origin:240px 240px;transform:scale(calc(1 + var(--wj-output)*.09));}
+.wj-aura {transform-origin:240px 240px;animation:wj-breathe 4.6s ease-in-out infinite;}
+.wj-input-wave{opacity:calc(.15 + var(--wj-input)*.8)}
+.wj-output-wave{opacity:calc(.30 + var(--wj-output)*.68)}
+.wj-output-glow{opacity:calc(.06 + var(--wj-output)*.30)}
+.wj-work-arc{opacity:0;transform-origin:240px 240px;}
+.wj-voice-core[data-state="working"] .wj-work-arc,.wj-voice-core[data-state="connecting"] .wj-work-arc{opacity:.65;animation:wj-revolve 7s linear infinite;}
+.wj-core-caption{display:flex;justify-content:center;align-items:center;gap:8px;font:12px/1.5 system-ui,sans-serif;letter-spacing:.06em;color:#adc4cf;margin-top:-20px;min-height:22px;}
+.wj-state-dot{width:5px;height:5px;flex:none;background:#76e4df;border-radius:50%;}
+.wj-voice-core[data-state="idle"] .wj-state-dot{background:#8fa5b6;}
+.wj-voice-core[data-state="error"] .wj-state-dot{background:#ed9292;}
+.wj-voice-core[data-state="muted"] .wj-state-dot{background:#d6bd7a;}
+.wj-voice-core.wj-paused *{animation-play-state:paused!important}
+.wj-voice-core.wj-reduced *{animation:none!important}
+.wj-voice-core.wj-reduced .wj-nucleus{transform:none!important}
+.wj-voice-core.wj-reduced .wj-output-glow{display:none}
+@keyframes wj-breathe{0%,100%{opacity:.60;transform:scale(.97)}50%{opacity:1;transform:scale(1.025)}}
+@keyframes wj-revolve{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.wj-voice-core *{animation:none!important}.wj-voice-core .wj-nucleus{transform:none!important}}

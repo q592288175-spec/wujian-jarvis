@@ -1,0 +1,17 @@
+{
+  "result": {
+    "type": "object",
+    "value": {
+      "before": {
+        "input": 0.696087164729353,
+        "output": 0.696087164729353
+      },
+      "muted": {
+        "input": 0,
+        "output": 0.6977157033010926
+      },
+      "pass": true,
+      "stopped": 0
+    }
+  }
+}

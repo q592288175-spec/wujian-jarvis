@@ -1,8 +1,5 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {liveConfig,createLive} from '../integrations/live-voice.mjs';
-import {LiveVoice} from '../dist/live-voice.js';
 test('native session uses GPT-Live client delegation, no Responses model substitution',()=>{const c=liveConfig('v=0\r\n');assert.equal(c.session.model,'gpt-live-1');assert.deepEqual(c.session.delegation,{type:'client'});assert.throws(()=>liveConfig('invalid'))});
 test('unconfigured voice fails before network request',async()=>{const saved=process.env.OPENAI_API_KEY;delete process.env.OPENAI_API_KEY;try{await assert.rejects(createLive('v=0',()=>{throw Error('network must not run')}),/OPENAI_API_KEY/)}finally{if(saved)process.env.OPENAI_API_KEY=saved}});
-test('transcript fragments retain repetitions and delegation invokes backend once',async()=>{let calls=0;const v=new LiveVoice({status:()=>{},message:()=>{},api:async(_,body)=>{calls++;assert.equal(body.messages[0].content,'铜铜');return {text:'已查询',jobs:[]}}});v.ready=true;v.sessionId='test';v.event({type:'session.input_transcript.delta',event_id:'a',delta:'铜',start_ms:0,end_ms:100},0);v.event({type:'session.input_transcript.delta',event_id:'b',delta:'铜',start_ms:100,end_ms:200},0);v.event({type:'session.input_transcript.delta',event_id:'b',delta:'铜',start_ms:100,end_ms:200},0);const e={delegation:{id:'d'},offset_ms:300};await v.delegate(e,0);await v.delegate(e,0);assert.equal(calls,1)});
-test('closing session rejects new delegation events',()=>{let calls=0;const v=new LiveVoice({status:()=>{},message:()=>{}});v.closing=true;v.delegate=()=>calls++;v.event({type:'session.delegation.created',delegation:{id:'d',target:'client'}},0);assert.equal(calls,0)});

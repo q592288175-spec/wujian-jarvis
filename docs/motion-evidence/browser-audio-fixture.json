@@ -1,0 +1,16 @@
+{
+  "result": {
+    "type": "object",
+    "value": {
+      "cleared": true,
+      "connection": "idle",
+      "input": 0.4948827859720424,
+      "micRequests": 1,
+      "mutedInput": 0.15967165338454276,
+      "mutedOutput": 0.6777234836750444,
+      "output": 0.6694627130474895,
+      "playing": true,
+      "synthetic": true
+    }
+  }
+}

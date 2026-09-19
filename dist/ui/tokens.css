@@ -1,0 +1,11 @@
+:root {
+  --wj-bg:#050d18; --wj-panel:#0a1623; --wj-panel-raised:#101f2e;
+  --wj-line:#243746; --wj-line-soft:#172a37; --wj-text:#e5edf4; --wj-muted:#8fa5b6;
+  --wj-core:#76e4df; --wj-metal:#d6bd7a; --wj-wood:#88b6a2; --wj-water:#78badc;
+  --wj-fire:#db927f; --wj-earth:#b7a18a; --wj-danger:#ed9292;
+  --wj-radius:16px; --wj-fast:160ms; --wj-slow:320ms; --wj-breath:4600ms;
+  --wj-ease:cubic-bezier(.22,.61,.36,1);
+}
+/* 五行色是功能分区色，不可复用为报价涨跌色。报价沿用原应用明确的语义。 */
+.wj-icon{width:24px;height:24px;fill:none;color:currentColor;vertical-align:middle;flex:none}
+.wj-panel{background:var(--wj-panel);border:1px solid var(--wj-line-soft);border-radius:var(--wj-radius)}

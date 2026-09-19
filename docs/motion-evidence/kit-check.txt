@@ -1,0 +1,4 @@
+
+> wujian-ui-motion-kit@1.0.0 check
+> node --check runtime/voice-core.mjs && node --check runtime/audio-tap.mjs && node --check demo/preview.mjs
+

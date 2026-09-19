@@ -1,0 +1,28 @@
+
+> wujian-ui-motion-kit@1.0.0 test
+> node --test tests/*.test.mjs
+
+✔ silence is zero, never a synthetic waveform (1.789333ms)
+✔ RMS of sine samples matches analytical expectation (0.504584ms)
+✔ invalid / empty samples cannot generate NaN (0.103208ms)
+✔ normalization is bounded and rejects room-floor noise (0.074625ms)
+✔ attack is faster than release (0.100667ms)
+✔ smoothing is frame-rate independent (0.8645ms)
+✔ frequency band is derived from samples (0.317917ms)
+✔ ring has exactly 96 vertices (0.183167ms)
+✔ muting mic does not hide the speaking assistant (0.397ms)
+✔ working state does not disable listening (0.140625ms)
+✔ simultaneous input/output is representable (0.070167ms)
+✔ no connection means no live-speaking claim (0.050667ms)
+✔ audio tap never routes to speakers or duplicates connections (0.282416ms)
+✔ audio tap cleanup disconnects only its own branch (0.096666ms)
+✔ suspended and disposed contexts produce zero (0.057166ms)
+✔ cross-context connection is rejected (0.263375ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 80.504042
