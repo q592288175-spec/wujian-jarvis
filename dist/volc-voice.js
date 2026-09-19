@@ -1,7 +1,7 @@
 import {AudioTap} from './ui/audio-tap.js';
 const idle=()=>({connection:'idle',micMuted:false,working:false,userSpeaking:false,agentSpeaking:false});
 export class VolcVoice{
- constructor({api,status,message,onJobs,context,onAudioGraph,onVoiceState,onOutputReset}){Object.assign(this,{api,status,message,onJobs,context,onAudioGraph,onVoiceState,onOutputReset});this.generation=0;this.sources=new Set();this.intervals=new Map();this.playAt=0;this.audioGeneration=0;this.chain=Promise.resolve();this.facts=idle();}
+ constructor({api,status,message,onJobs,context,onAudioGraph,onVoiceState,onOutputReset,onPartial}){Object.assign(this,{api,status,message,onJobs,context,onAudioGraph,onVoiceState,onOutputReset,onPartial});this.generation=0;this.sources=new Set();this.intervals=new Map();this.playAt=0;this.audioGeneration=0;this.chain=Promise.resolve();this.facts=idle();}
  update(patch){const next={...this.facts,...patch};if(Object.keys(next).some(k=>next[k]!==this.facts[k])){this.facts=next;this.onVoiceState?.({...next})}}
  async connect(){
   if(this.connecting||this.ready)return;
@@ -35,8 +35,8 @@ export class VolcVoice{
  event(e,gen){
   if(e.type==='ready'){clearTimeout(this.timeout);this.ready=true;this.connecting=false;this.update({connection:'connected'});this.status('火山语音已连接 · 请说话');return}
   if(e.type==='interrupt'){this.clearAudio();this.update({userSpeaking:true});this.status('正在聆听…');return}
-  if(e.type==='partial'){this.update({userSpeaking:true});this.status('正在聆听…');return}
-  if(e.type==='user'){this.update({userSpeaking:false});this.message('user',e.text);return}
+  if(e.type==='partial'){this.onPartial?.(e.text||'');this.update({userSpeaking:true});this.status('正在聆听…');return}
+  if(e.type==='user'){this.onPartial?.('');this.update({userSpeaking:false});this.message('user',e.text);return}
   if(e.type==='working'){this.update({working:true,userSpeaking:false});this.status('DeepSeek正在查询 · 可以继续说话');return}
   if(e.type==='result'){this.update({working:false});this.message('assistant',e.text);this.onJobs?.(e.jobs||[]);return}
   if(e.type==='job_complete'){this.message('assistant',e.text);this.onJobs?.([{id:e.id}]);return}
@@ -59,5 +59,5 @@ export class VolcVoice{
  interrupt(){this.clearAudio();if(this.ws?.readyState===1)this.ws.send(JSON.stringify({type:'interrupt'}));}
  mute(value){this.stream?.getAudioTracks().forEach(t=>t.enabled=!value);this.update({micMuted:value,...(value?{userSpeaking:false}:{})});}
  fail(message){this.stop();this.update({connection:'error'});this.status(message);}
- stop(){this.generation++;clearTimeout(this.timeout);clearInterval(this.playbackTimer);this.ready=false;this.connecting=false;this.clearAudio();this.inputTap?.dispose();this.outputTap?.dispose();this.inputTap=this.outputTap=null;this.onAudioGraph?.({});this.capture?.disconnect();this.source?.disconnect();this.silence?.disconnect();this.playbackGain?.disconnect();this.stream?.getTracks().forEach(t=>t.stop());this.stream=null;if(this.ws?.readyState===1)this.ws.send(JSON.stringify({type:'finish'}));this.ws?.close();this.ws=null;this.audio?.close().catch(()=>{});this.audio=null;this.update(idle());}
+ stop(){this.onPartial?.('');this.generation++;clearTimeout(this.timeout);clearInterval(this.playbackTimer);this.ready=false;this.connecting=false;this.clearAudio();this.inputTap?.dispose();this.outputTap?.dispose();this.inputTap=this.outputTap=null;this.onAudioGraph?.({});this.capture?.disconnect();this.source?.disconnect();this.silence?.disconnect();this.playbackGain?.disconnect();this.stream?.getTracks().forEach(t=>t.stop());this.stream=null;if(this.ws?.readyState===1)this.ws.send(JSON.stringify({type:'finish'}));this.ws?.close();this.ws=null;this.audio?.close().catch(()=>{});this.audio=null;this.update(idle());}
 }
