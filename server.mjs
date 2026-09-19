@@ -60,6 +60,6 @@ if(req.method!=='GET')return json(res,405,{error:'方法不支持'});const p=res
 }catch(e){json(res,400,{error:'请求无效或本地处理失败'})}});
 const closeVolc=attachVolc(server,PORT);
 await loadBinding().catch(()=>{});
-server.listen(PORT,'127.0.0.1',()=>{console.log(`JARVIS local workspace: http://127.0.0.1:${PORT}`);void startFeishu()});
+server.listen(PORT,'127.0.0.1',()=>{console.log(`小木 local workspace: http://127.0.0.1:${PORT}`);void startFeishu()});
 
 for(const signal of ['SIGINT','SIGTERM'])process.on(signal,()=>{closeVolc();registration.stop();stopFeishu();server.close(()=>process.exit(0));setTimeout(()=>process.exit(0),2000).unref()});
