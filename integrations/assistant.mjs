@@ -6,7 +6,7 @@ import {researchTools,researchQuery} from './research.mjs';
 import {startResearch,reportDetails,listReports,cancelResearch} from './research-agent.mjs';
 import {sourceTools,sourceQuery} from './research-sources.mjs';
 const taskTools=[{name:'get_three_axes_report',description:'读取TqSdk真实合约三板斧参考筛选与八段式日报。独立外部参考模块，不代替五简正式交易许可；无账户时不计算手数。',parameters:{type:'object',properties:{},additionalProperties:false}},{name:'cancel_deep_research',description:'仅当用户明确要求取消后台研究任务时使用；停止说话、停一下或挂断通话不代表取消研究。必须使用已查询到的任务ID。',parameters:{type:'object',properties:{id:{type:'string'}},required:['id'],additionalProperties:false}},{name:'list_active_research',description:'查询正在运行的后台研究任务及其ID，不启动新任务。',parameters:{type:'object',properties:{},additionalProperties:false}},{name:'start_deep_research',description:'用户要求深入研究某个品种时，启动后台真实研究任务，立即返回任务ID，用户可继续对话。',parameters:{type:'object',properties:{product:{type:'string'}},required:['product'],additionalProperties:false}},{name:'get_deep_research',description:'查询已启动的深度研究报告状态和结果。',parameters:{type:'object',properties:{id:{type:'string'}},required:['id'],additionalProperties:false}}];
-export async function assistantReply(messages,contextSymbol){
+export async function assistantReply(messages,contextSymbol,{voice=false}={}){
  if(!Array.isArray(messages)||!messages.length||messages.length>24||messages.some(m=>!['user','assistant'].includes(m.role)||typeof m.content!=='string'||m.content.length>6000))throw Error('对话格式不正确或过长');
  const contextQuote=typeof contextSymbol==='string'?(await marketSnapshot()).quotes.find(q=>q.symbol===contextSymbol):null;
  const started=[];
@@ -21,6 +21,6 @@ export async function assistantReply(messages,contextSymbol){
  if(researchTools.some(t=>t.name===name))return researchQuery(name,args);
  const r=await marketQuery(name,args);if(r.quotes)r.quotes=r.quotes.map(({bars,...q})=>q);return r;
  };
- const result=await runDeepSeek({messages:[{role:'system',content:(contextQuote?'当前页面选中的实际合约为 '+contextQuote.symbol+'，报价时间 '+contextQuote.quoteTime+'。用户说当前品种时指该合约。\n':'')+financeInstructions+'\\n你使用DeepSeek V4.1 Flash。当前时间'+new Date().toISOString()+'。回答简短中文，详细研报用start_deep_research启动并告知任务ID。任何新闻和行情都先用工具读取。停止播报与取消研究是两回事；只有用户明确取消研究时才调用cancel_deep_research。没有run_research演示工具，也没有下单工具。'},...messages],tools:[...financeTools,...marketTools,...researchTools,...sourceTools,...taskTools],execute});
+ const result=await runDeepSeek({messages:[{role:'system',content:(contextQuote?'当前页面选中的实际合约为 '+contextQuote.symbol+'，报价时间 '+contextQuote.quoteTime+'。用户说当前品种时指该合约。\n':'')+financeInstructions+(voice?'现在是实时电话交谈，用户不看屏幕。直接用自然口语回答，一次只讲最重要的结论和依据，通常80至180字，最多350字。不要使用Markdown、表格、网址或朗读任务ID，不要求用户去看面板才能理解回答。研究可以在后台执行，先简短告知已开始，用户追问时用工具查询进展或读取报告并口头总结。保留关键的数据时点、未知和反证。':'')+'\\n你使用DeepSeek V4.1 Flash。当前时间'+new Date().toISOString()+'。回答简短中文，详细研报用start_deep_research启动并告知任务ID。任何新闻和行情都先用工具读取。停止播报与取消研究是两回事；只有用户明确取消研究时才调用cancel_deep_research。没有run_research演示工具，也没有下单工具。'},...messages],tools:[...financeTools,...marketTools,...researchTools,...sourceTools,...taskTools],execute});
  return {...result,jobs:started};
 }

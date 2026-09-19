@@ -35,7 +35,7 @@ export class VolcVoice{
  event(e,gen){
   if(e.type==='ready'){clearTimeout(this.timeout);this.ready=true;this.connecting=false;this.update({connection:'connected'});this.status('火山语音已连接 · 请说话');return}
   if(e.type==='interrupt'){this.clearAudio();this.update({userSpeaking:true});this.status('正在聆听…');return}
-  if(e.type==='partial'){this.update({userSpeaking:true});this.status('正在听：'+e.text.slice(-70));return}
+  if(e.type==='partial'){this.update({userSpeaking:true});this.status('正在聆听…');return}
   if(e.type==='user'){this.update({userSpeaking:false});this.message('user',e.text);return}
   if(e.type==='working'){this.update({working:true,userSpeaking:false});this.status('DeepSeek正在查询 · 可以继续说话');return}
   if(e.type==='result'){this.update({working:false});this.message('assistant',e.text);this.onJobs?.(e.jobs||[]);return}

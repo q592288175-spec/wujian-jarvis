@@ -17,3 +17,29 @@ body.cockpit #callOrb{width:180px;height:180px}body.focus #callOrb{width:145px;h
 @media(max-width:600px){.call-panel{right:8px;width:calc(100% - 16px)}#voiceCoreCall{width:58px;height:58px;flex-basis:58px}#voiceCoreMain .wj-core-caption{font-size:9px}}
 
 .assistant-core .core-caption{display:none}
+
+/* Telephone mode: the shared, real audio-driven core becomes the entire stage. */
+body.voice-focus{overflow:hidden}
+body #callPanel.voice-only{position:fixed;inset:0;width:100%;height:100dvh;max-height:none;box-sizing:border-box;z-index:10000;border:0;border-radius:0;background:radial-gradient(ellipse at 50% 45%,#0c2534 0,#030b15 65%);box-shadow:none;padding:64px 20px 30px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px}
+body #callPanel.voice-only[hidden]{display:none}
+#callPanel.voice-only>:not(.call-head):not(.call-controls){display:none!important}
+#callPanel.voice-only .call-head{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:0;border:0;background:none;width:min(100%,460px);text-align:center}
+#callPanel.voice-only #voiceCoreCall{width:clamp(220px,34vh,360px);height:clamp(220px,34vh,360px);flex:auto}
+#callPanel.voice-only .call-head b{display:block;font-size:24px;letter-spacing:.2em;margin-bottom:12px}
+#callPanel.voice-only #callStatus{display:block;max-width:440px;white-space:normal;color:#95b8c9;font-size:14px;line-height:1.7}
+#callPanel.voice-only #callTime{font-variant-numeric:tabular-nums;font-size:12px;color:#6b8a9b}
+#callPanel.voice-only #minCall{display:none}
+#callPanel.voice-only .call-controls{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;padding:0;border:0;background:none}
+#callPanel.voice-only .call-controls button{min-height:44px;border-radius:24px;padding:10px 20px;background:#102332;border:1px solid #264453;color:#c0d8e3}
+#callPanel.voice-only .call-controls .hangup{color:#ffaaaa;background:#351b27;border-color:#61313d}
+#callPanel.voice-only #connectCall:disabled{display:none}
+#callPanel.voice-only #connectCall:not(:disabled){color:#a3e4ef}
+body.voice-focus .desktop-drag-region{z-index:10001}
+.markdown-body{line-height:1.75;overflow-wrap:anywhere;white-space:normal;font-size:14px;min-width:0}
+.markdown-body p{margin:.6em 0}.markdown-body h1,.markdown-body h2,.markdown-body h3,.markdown-body h4{line-height:1.4;margin:1em 0 .45em;color:#d9edf5;font-size:1.12em}
+.markdown-body h1{font-size:1.4em}.markdown-body h2{font-size:1.25em}
+.markdown-body ul,.markdown-body ol{padding-left:1.6em;margin:.7em 0;display:block}.markdown-body li{display:list-item;margin:.25em 0}
+.markdown-body blockquote{margin:1em 0;padding:.2em 1em;border-left:3px solid #457c91;color:#a8c5d4}
+.markdown-body pre{white-space:pre;overflow:auto;padding:12px;background:#04101b;border-radius:8px}.markdown-body code{font-family:ui-monospace,monospace;background:#04101b;padding:.1em .3em}.markdown-body pre code{padding:0}
+.markdown-body table{display:block;overflow:auto;border-collapse:collapse;max-width:100%;margin:1em 0}.markdown-body th,.markdown-body td{border:1px solid #284354;padding:8px 12px;text-align:left;min-width:70px}.markdown-body th{background:#102635}.markdown-body a{color:#83d3f1;text-decoration:underline}.markdown-body hr{border:0;border-top:1px solid #284354;margin:1.2em 0}
+#callPanel.voice-only #callTime{position:static;align-self:center;margin:0;text-align:center}
