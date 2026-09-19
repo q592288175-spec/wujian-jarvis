@@ -1,3 +1,4 @@
+import {bindingOverride,bindingSummary} from './im-binding.mjs';
 import * as lark from '@larksuiteoapi/node-sdk';
 import {readFile,mkdir} from 'node:fs/promises';
 import {resolve} from 'node:path';
@@ -9,12 +10,12 @@ import {atomicWrite} from './research-storage.mjs';
 import {Ledger,deliveryId,scheduleTimes,dueSlots,acceptedMessage} from './feishu-core.mjs';
 const dir=resolve('.runtime/feishu'),settingsPath=resolve(dir,'settings.json');
 const split=v=>String(v||'').split(',').map(s=>s.trim()).filter(Boolean);
-function config(){return {appId:process.env.FEISHU_APP_ID,appSecret:process.env.FEISHU_APP_SECRET,allowedUsers:split(process.env.FEISHU_ALLOWED_OPEN_IDS),allowedChats:split(process.env.FEISHU_ALLOWED_CHAT_IDS),botOpenId:process.env.FEISHU_BOT_OPEN_ID,target:process.env.FEISHU_RECEIVE_ID,type:process.env.FEISHU_RECEIVE_ID_TYPE||'open_id'};}
+function config(){const override=bindingOverride();if(override)return override.disabled?{allowedUsers:[],allowedChats:[]}:override;return {appId:process.env.FEISHU_APP_ID,appSecret:process.env.FEISHU_APP_SECRET,allowedUsers:split(process.env.FEISHU_ALLOWED_OPEN_IDS),allowedChats:split(process.env.FEISHU_ALLOWED_CHAT_IDS),botOpenId:process.env.FEISHU_BOT_OPEN_ID,target:process.env.FEISHU_RECEIVE_ID,type:process.env.FEISHU_RECEIVE_ID_TYPE||'open_id'};}
 let ws,client,ledger,timer,busy=false,lastError=null,settings={enabled:false,times:['15:30','21:00']},ready=false;
 const conversations=new Map(),active=new Set();
 function configured(c=config()){return !!(c.appId&&c.appSecret&&c.allowedUsers.length)}
 function targetAllowed(c=config()){return c.type==='open_id'?c.allowedUsers.includes(c.target):c.type==='chat_id'?c.allowedChats.includes(c.target):false;}
-export function feishuStatus(){const c=config();return {configured:configured(c),targetConfigured:targetAllowed(c),transport:ws?.getConnectionStatus()?.state||'未连接',enabled:settings.enabled,times:settings.times,timezone:'Asia/Shanghai',lastError,ready,notice:'工作台服务需持续运行；仅交易日定时，错过5分钟窗口不补发。没有凭据时不发送。'};}
+export function feishuStatus(){const c=config();return {...bindingSummary(),configured:configured(c),targetConfigured:targetAllowed(c),transport:ws?.getConnectionStatus()?.state||'未连接',enabled:settings.enabled,times:settings.times,timezone:'Asia/Shanghai',lastError,ready,notice:'工作台服务需持续运行；仅交易日定时，错过5分钟窗口不补发。没有凭据时不发送。'};}
 export async function setFeishuSchedule(input){if(typeof input.enabled!=='boolean')throw Error('请明确是否启用定时推送');const next={enabled:input.enabled,times:scheduleTimes(input.times)};if(next.enabled&&(!ready||!configured()||!targetAllowed()))throw Error('请先在本机配置飞书应用、授权用户和推送目标');await mkdir(dir,{recursive:true});await atomicWrite(settingsPath,JSON.stringify(next));settings=next;return feishuStatus();}
 async function send(chatId,text,key,type='chat_id'){
  const c=config();const safeTarget=type==='open_id'?c.allowedUsers.includes(chatId):c.allowedChats.includes(chatId)||[...conversations.values()].some(v=>v.chatId===chatId&&v.chatType==='p2p'&&c.allowedUsers.includes(v.user));
@@ -43,4 +44,4 @@ export async function startFeishu(){const c=config();try{await mkdir(dir,{recurs
  if(!configured(c))return;ledger=await new Ledger(resolve(dir,'ledger.json')).init();const silent={debug(){},info(){},warn(){},error(){lastError='飞书连接或API出现错误，请核对凭据、权限和网络'},trace(){}};lark.defaultHttpInstance.defaults.timeout=15000;client=new lark.Client({appId:c.appId,appSecret:c.appSecret,logger:silent,domain:lark.Domain.Feishu});ws=new lark.WSClient({appId:c.appId,appSecret:c.appSecret,logger:silent,domain:lark.Domain.Feishu});ready=true;
  void ws.start({eventDispatcher:new lark.EventDispatcher({logger:silent}).register({'im.message.receive_v1':receive})}).catch(()=>{lastError='飞书长连接启动失败'});timer=setInterval(()=>void tick(),30000);timer.unref();void tick();
  }catch{ready=false;lastError='飞书本地配置或去重记录不可用，已停止自动发送'}}
-export function stopFeishu(){clearInterval(timer);ws?.close({force:true});ready=false;}
+export function stopFeishu(){clearInterval(timer);ws?.close({force:true});ws=null;client=null;conversations.clear();ready=false;}

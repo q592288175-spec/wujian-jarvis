@@ -28,4 +28,5 @@ try:
     os.replace(temp,path);path.chmod(0o600)
 finally:
     if os.path.exists(temp): os.unlink(temp)
+(root/'.runtime/feishu/connection.json').unlink(missing_ok=True)
 print('配置已保存在本机。重新打开工作台，在“数据来源→飞书”预览报告、设置时间并启用推送。')

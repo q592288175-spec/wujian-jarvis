@@ -1,3 +1,5 @@
+import {loadBinding} from './integrations/im-binding.mjs';
+import {registration,disconnectFeishu} from './integrations/feishu-registration.mjs';
 import {buildAxesReport,sizeByRisk} from './integrations/three-axes.mjs';
 import {feishuStatus,startFeishu,stopFeishu,setFeishuSchedule,previewFeishuReport,pushFeishuReport} from './integrations/feishu.mjs';
 import {liveStatus,createLive,delegateLive} from './integrations/live-voice.mjs';
@@ -20,6 +22,10 @@ const origins=new Set([`http://localhost:${PORT}`,`http://127.0.0.1:${PORT}`]);
 const server=http.createServer(async(req,res)=>{try{const host=req.headers.host;if(![`localhost:${PORT}`,`127.0.0.1:${PORT}`].includes(host))return json(res,403,{error:'仅允许本地访问'});const url=new URL(req.url,`http://${host}`);if(req.method==='POST'&&!origins.has(req.headers.origin))return json(res,403,{error:'来源校验失败'});
 if(req.method==='GET'&&url.pathname==='/api/three-axes')return json(res,200,buildAxesReport(await marketSnapshot()));
 if(req.method==='POST'&&url.pathname==='/api/three-axes/size'){try{return json(res,200,sizeByRisk(await body(req)))}catch(e){return json(res,400,{error:e.message})}}
+if(req.method==='POST'&&url.pathname==='/api/feishu/bind/start')return json(res,202,await registration.start());
+if(req.method==='POST'&&url.pathname==='/api/feishu/bind/status')return json(res,200,registration.status((await body(req)).id));
+if(req.method==='POST'&&url.pathname==='/api/feishu/bind/cancel')return json(res,200,registration.cancel((await body(req)).id));
+if(req.method==='POST'&&url.pathname==='/api/feishu/disconnect')return json(res,200,await disconnectFeishu());
 if(req.method==='GET'&&url.pathname==='/api/feishu/status')return json(res,200,feishuStatus());
 if(req.method==='GET'&&url.pathname==='/api/feishu/preview')return json(res,200,await previewFeishuReport());
 if(req.method==='POST'&&url.pathname==='/api/feishu/schedule'){try{return json(res,200,await setFeishuSchedule(await body(req)))}catch(e){return json(res,400,{error:e.message})}}
@@ -49,6 +55,7 @@ if(url.pathname.startsWith('/api/tasks')||url.pathname==='/api/decisions')return
 if(req.method==='POST'&&url.pathname==='/api/tool'){const b=await body(req);if(researchTools.some(t=>t.name===b.name))return json(res,200,await researchQuery(b.name,b.args));if(marketTools.some(t=>t.name===b.name))return json(res,200,await marketQuery(b.name,b.args));if(b.name==='get_external_context')return json(res,200,await externalData(b.args?.provider));if(b.name==='get_official_news')return json(res,200,await officialNews());if(b.name==='get_current_rules')return json(res,200,await rules());return json(res,400,{error:'工具未授权'})}
 if(req.method!=='GET')return json(res,405,{error:'方法不支持'});const p=resolve(PUBLIC,'.'+decodeURIComponent(url.pathname==='/'?'/index.html':url.pathname));if(!p.startsWith(PUBLIC+'/'))return json(res,403,{error:'拒绝访问'});try{let content=await readFile(p);res.writeHead(200,{'Content-Type':({'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.png':'image/png','.svg':'image/svg+xml'})[extname(p)]||'application/octet-stream','X-Content-Type-Options':'nosniff','Referrer-Policy':'same-origin','Cache-Control':'no-cache'});res.end(content)}catch{json(res,404,{error:'文件不存在'})}
 }catch(e){json(res,400,{error:'请求无效或本地处理失败'})}});
+await loadBinding().catch(()=>{});
 server.listen(PORT,'127.0.0.1',()=>{console.log(`JARVIS local workspace: http://127.0.0.1:${PORT}`);void startFeishu()});
 
-for(const signal of ['SIGINT','SIGTERM'])process.on(signal,()=>{stopFeishu();server.close(()=>process.exit(0));setTimeout(()=>process.exit(0),2000).unref()});
+for(const signal of ['SIGINT','SIGTERM'])process.on(signal,()=>{registration.stop();stopFeishu();server.close(()=>process.exit(0));setTimeout(()=>process.exit(0),2000).unref()});

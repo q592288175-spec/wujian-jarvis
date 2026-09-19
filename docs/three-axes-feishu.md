@@ -12,7 +12,17 @@
 
 “火·机会雷达”可查看报告；Agent 可调用 `get_three_axes_report`。接口：`GET /api/three-axes`；`POST /api/three-axes/size` 需要明确传入 equity、riskPct、exposurePct、entry、stop、multiplier，没有默认资金。后者只计算手工参数，不查询账户。
 
-## 飞书配置
+## 设置板块与扫码绑定（2026-09-19）
+
+入口：左侧“设置”，或右上角设置按钮。统一显示研究Agent、语音、飞书通道和定时计划。
+
+优先点击“飞书扫码绑定”，使用官方 SDK `registerApp`（设备授权流程）生成真实二维码；手机确认后，服务端取得应用凭据及扫码者Open ID并自动绑定私聊。当前创建专属新应用，避免改写其他现有机器人的配置；申请机器人发送消息、接收私聊和消息事件。平台是否支持以及实际权限以扫码确认页为准。部分组织可能需要管理员批准或手动核对长连接订阅。
+
+二维码10分钟内有效，支持取消及重新生成。秘钥与身份只保存于权限600的 `.runtime/feishu/connection.json`；不进入前端、Git或日志。断开本地通道会停止消息与定时，但不会删除飞书应用或撤销平台授权。重新绑定后定时默认关闭，需要再次启用。旧.env手工配置仍支持；运行配置脚本会切回该模式。
+
+验证范围：绑定状态机、最小权限、取消/换绑隔离、非法二维码来源和缺少身份拒绝已由测试覆盖。二维码申请可实际测试，扫码确认和真实收发仍需本人在飞书完成。官方源码说明：https://github.com/larksuite/node-sdk/blob/main/README.zh.md#一键创建应用 。
+
+## 飞书手工备用配置
 
 采用飞书官方 Node SDK 1.74.0 长连接。本地无需公网域名或入站端口。官方说明：https://github.com/larksuite/node-sdk/blob/main/README.zh.md 。
 

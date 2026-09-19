@@ -4,7 +4,7 @@
 
 - 首次运行：Node.js 22+，执行 `npm ci`，按 `.env.example` 在本机配置 `.env`，再执行 `npm start`。
 - 行情采集：按项目 Python 依赖安装后执行 `npm run market`；不要自动升级已有 TqSdk。
-- 飞书：双击 `配置飞书机器人.command`，配置后重启服务，在“数据来源”启用定时推送。默认关闭。
+- 飞书：进入“设置 → 飞书扫码绑定”，用手机飞书扫码授权。成功后可配置定时推送，默认关闭；组织不支持一键创建时使用 `配置飞书机器人.command`。
 - [三板斧与飞书接入说明](docs/three-axes-feishu.md)
 - [真实数据与语音边界](docs/real-data-and-live.md)
 - [桌面应用](docs/desktop-app.md)
