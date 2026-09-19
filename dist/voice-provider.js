@@ -1,0 +1,1 @@
+export function voiceProvider(storage=localStorage){const value=storage.getItem('jarvis-voice-provider');const next=['volc','browser'].includes(value)?value:'volc';if(next!==value)storage.setItem('jarvis-voice-provider',next);return next;}
