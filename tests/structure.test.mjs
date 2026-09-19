@@ -1,0 +1,12 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {analyzeStructure,completedSeries} from '../dist/structure.js';
+const bar=(date,close,complete=true)=>({timeNs:String(BigInt(Date.parse(date+'T00:00:00Z'))*1000000n),open:close,high:close+1,low:close-1,close,complete});
+test('forming bar never changes MA10, crossing or platform',()=>{const rows=Array.from({length:11},(_,i)=>bar(`2026-01-${String(i+1).padStart(2,'0')}`,100+i));const a=analyzeStructure({bars:rows});const b=analyzeStructure({bars:[...rows,bar('2026-01-12',100000,false)]});assert.deepEqual(a.day,b.day);assert.deepEqual(a.platforms,b.platforms);assert.equal(a.cross,b.cross);assert.equal(a.day.ma10,105.5);assert.equal(a.range,null);assert.equal(a.permission,false)});
+test('calendar grouping excludes boundary and incomplete periods',()=>{const q={bars:[bar('2026-01-30',100),bar('2026-02-02',110),bar('2026-02-03',120),bar('2026-03-02',130,false)]};const m=completedSeries(q,'M');assert.equal(m.length,1);assert.equal(m[0].open,110);assert.equal(m[0].close,120);assert.equal(m[0].high,121);assert.equal(m[0].low,109)});
+test('missing and malformed candles produce no claimed evidence',()=>{const x=analyzeStructure({bars:[{...bar('2026-01-01',100),close:null},bar('2026-01-02',100,false)]});assert.equal(x.day.state,'历史不足');assert.equal(x.asOf,null);assert.deepEqual(x.platforms,[])});
+test('completed upward MA crossing is measured without permission',()=>{const rows=Array.from({length:10},(_,i)=>bar(`2026-01-${String(i+1).padStart(2,'0')}`,100));rows.push(bar('2026-01-11',110));const x=analyzeStructure({bars:rows});assert.equal(x.cross,'完成日K上穿MA10');assert.equal(x.platforms.at(-1).days,8);assert.equal(x.permission,false)});
+import {closingQuote} from '../dist/structure.js';
+test('close display uses completed bar pair and never settlement or latest trade',()=>{const q={last:900,preSettlement:800,preClose:600,bars:[bar('2026-01-01',100),bar('2026-01-02',110),bar('2026-01-03',200,false)]};assert.equal(closingQuote(q).value,110);assert.equal(closingQuote(q).changePct,10);assert.equal(closingQuote(q).asOf,'2026-01-02')});
+import {barDate} from '../dist/structure.js';
+test('daily timestamps display Shanghai trading date, not previous UTC date',()=>assert.equal(barDate({timeNs:'1789574400000000000'}),'2026-09-17'));

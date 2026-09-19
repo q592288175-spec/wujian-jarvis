@@ -1,0 +1,7 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {atr14,axesFor,sizeByRisk,buildAxesReport} from '../integrations/three-axes.mjs';
+const bars=Array.from({length:400},(_,i)=>{const close=100+i;return {timeNs:String(BigInt(Date.UTC(2025,0,1+i))*1000000n),open:close,close,high:close+2,low:close-2,complete:true,openInterest:20000+i}});
+test('ATR uses previous close and excludes insufficient history',()=>{assert.equal(atr14(bars.slice(0,14)),null);assert.equal(atr14(bars),4)});
+test('reference consensus requires completed monthly history and never grants permission',()=>{const q={symbol:'SHFE.cu2610',name:'沪铜',bars};const x=axesFor(q);assert.equal(x.side,'long');assert.equal(x.lots,null);assert.equal(x.permission,false);assert.equal(axesFor({...q,bars:bars.slice(-100)}).side,'unknown');assert.equal(axesFor({...q,bars:[...bars,{...bars.at(-1),timeNs:String(BigInt(bars.at(-1).timeNs)+86400000000000n),close:1,complete:false}]}).atr14,x.atr14)});
+test('sizing has no assumed equity or multiplier and honors both caps',()=>{assert.throws(()=>sizeByRisk({}));assert.deepEqual(sizeByRisk({equity:100000,riskPct:.01,exposurePct:.1,entry:100,stop:90,multiplier:10}).lots,10);assert.throws(()=>sizeByRisk({equity:100000,riskPct:.01,exposurePct:.1,entry:100,stop:100,multiplier:10}))});
+test('missing snapshot yields empty report with gaps not mock rankings',()=>{const r=buildAxesReport({status:'unavailable',quotes:[]});assert.equal(r.rows.length,0);assert.equal(r.counts.long,0);assert.match(r.text,/权益、持仓和可用手数未知/)});

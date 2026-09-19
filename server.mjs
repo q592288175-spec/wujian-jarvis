@@ -1,3 +1,10 @@
+import {buildAxesReport,sizeByRisk} from './integrations/three-axes.mjs';
+import {feishuStatus,startFeishu,stopFeishu,setFeishuSchedule,previewFeishuReport,pushFeishuReport} from './integrations/feishu.mjs';
+import {liveStatus,createLive,delegateLive} from './integrations/live-voice.mjs';
+import {startResearch,getReport,listReports,cancelResearch,reportDetails,recordFollowup} from './integrations/research-agent.mjs';
+import {researchMethod,researchTools,researchQuery} from './integrations/research.mjs';
+import {assistantReply} from './integrations/assistant.mjs';
+import {modelStatus} from './integrations/deepseek.mjs';
 import {marketSnapshot,marketQuery,marketTools} from './integrations/market.mjs';
 import {providers,externalData,externalTool} from './integrations/providers.mjs';
 import {officialNews,rules,financeTools,financeInstructions} from './finance.mjs';
@@ -7,30 +14,41 @@ import {resolve,extname,dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {randomUUID} from 'node:crypto';
 const ROOT=dirname(fileURLToPath(import.meta.url)),PUBLIC=resolve(ROOT,'dist'),PORT=Number(process.env.PORT||4318);
-const market=JSON.parse(await readFile(resolve(ROOT,'data/market.json'),'utf8'));
-const jobs=new Map();let records=[];const runtime=resolve(ROOT,'.runtime');await mkdir(runtime,{recursive:true});
-try{records=JSON.parse(await readFile(resolve(runtime,'decisions.json'),'utf8'));}catch{}
-const tools=[{type:'function',name:'run_research',description:'运行本地演示市场的确定性结构扫描、品种分析或风险检查。不是实时行情，不下单。',parameters:{type:'object',properties:{kind:{type:'string',enum:['scan','analysis','risk','review']},code:{type:'string',enum:market.markets.map(m=>m.code)}},required:['kind'],additionalProperties:false}},{type:'function',name:'get_task_status',description:'查询后台研究任务结果。',parameters:{type:'object',properties:{id:{type:'string'}},required:['id'],additionalProperties:false}}];
-tools.push(...financeTools,externalTool,...marketTools);
-function bars(m,n=60){let prev=m.price*.91;return Array.from({length:n},(_,i)=>{let open=prev;let delta=(Math.sin((i+m.seed)*2.17)*.007+Math.cos(i*.8+m.seed)*.003+.0016)*m.price;let close=open+delta;prev=close;return{open,close,high:Math.max(open,close)+m.price*(.002+Math.abs(Math.sin(i*3))*.003),low:Math.min(open,close)-m.price*(.002+Math.abs(Math.cos(i*2))*.003),volume:1000+Math.round(Math.abs(Math.sin(i*.72))*4500)}})}
-function compute(kind,code){let selected=market.markets.find(m=>m.code===code)||market.markets[0];if(kind==='scan')return{title:'演示市场结构扫描完成',summary:'已计算8个演示品种的MA10位置。真实月周日许可、产业证据和账户风险未接入，完整交易许可为0。',rows:market.markets.map(m=>{let b=bars(m),ma=b.slice(-10).reduce((a,v)=>a+v.close,0)/10;return{code:m.code,name:m.name,ma10:Number(ma.toFixed(2)),last:Number(b.at(-1).close.toFixed(2)),state:b.at(-1).close>ma?'示例在MA10上方':'示例在MA10下方'}}),source:'data/market.json · 确定性生成K线 · 非真实行情',permission:false};if(kind==='analysis'){let b=bars(selected),ma=b.slice(-10).reduce((a,v)=>a+v.close,0)/10;return{title:selected.name+' · 演示结构分析',summary:`演示序列MA10为${ma.toFixed(2)}，末根收盘${b.at(-1).close.toFixed(2)}。这里只验证计算与交互；没有真实产业证据、完成月周K和账户风险，不产生开仓许可。`,source:'本地示例序列',permission:false}}if(kind==='review')return{title:'执行记录审计完成',summary:`本地已有${records.length}条演示决策记录。未连接账户，真实成交0笔；无可用于推断胜率的交易样本。`,records:records.slice(-20),permission:false};return{title:'风险检查完成',summary:'行情与账户均未接入；真实仓位和保证金状态未知。新增真实交易权限为0。模拟批准只记录计划，不生成委托。',checks:['真实行情：未接入','账户权益：未知','实际持仓：未知','交易通道：未连接','真实下单：禁用'],permission:false}}
-function newJob(kind,code){if(!['scan','analysis','risk','review'].includes(kind))throw Error('不支持的任务');if(code&&!market.markets.some(m=>m.code===code))throw Error('未知品种');const id=randomUUID();const job={id,kind,code:code||'CU2611',status:'running',progress:10,created:new Date().toISOString(),mode:'demo'};jobs.set(id,job);setImmediate(()=>{try{job.result=compute(kind,code);job.status='completed';job.progress=100;job.completed=new Date().toISOString()}catch{job.status='failed';job.error='研究任务失败'}});return job}
 const json=(res,status,obj)=>{res.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'});res.end(JSON.stringify(obj))};
 async function body(req){let chunks=[],size=0;for await(const c of req){size+=c.length;if(size>65536)throw Error('请求过大');chunks.push(c)}return JSON.parse(Buffer.concat(chunks).toString()||'{}')}
 const origins=new Set([`http://localhost:${PORT}`,`http://127.0.0.1:${PORT}`]);
 const server=http.createServer(async(req,res)=>{try{const host=req.headers.host;if(![`localhost:${PORT}`,`127.0.0.1:${PORT}`].includes(host))return json(res,403,{error:'仅允许本地访问'});const url=new URL(req.url,`http://${host}`);if(req.method==='POST'&&!origins.has(req.headers.origin))return json(res,403,{error:'来源校验失败'});
-if(url.pathname==='/api/status')return json(res,200,{mode:'demo',realtimeConfigured:!!process.env.OPENAI_API_KEY,marketConnected:false,brokerConnected:false,tasks:[...jobs.values()].slice(-30),decisions:records});
+if(req.method==='GET'&&url.pathname==='/api/three-axes')return json(res,200,buildAxesReport(await marketSnapshot()));
+if(req.method==='POST'&&url.pathname==='/api/three-axes/size'){try{return json(res,200,sizeByRisk(await body(req)))}catch(e){return json(res,400,{error:e.message})}}
+if(req.method==='GET'&&url.pathname==='/api/feishu/status')return json(res,200,feishuStatus());
+if(req.method==='GET'&&url.pathname==='/api/feishu/preview')return json(res,200,await previewFeishuReport());
+if(req.method==='POST'&&url.pathname==='/api/feishu/schedule'){try{return json(res,200,await setFeishuSchedule(await body(req)))}catch(e){return json(res,400,{error:e.message})}}
+if(req.method==='POST'&&url.pathname==='/api/feishu/push'){try{return json(res,200,await pushFeishuReport())}catch(e){return json(res,400,{error:e.message})}}
+if(req.method==='GET'&&url.pathname==='/api/health')return json(res,200,{app:'wujian-jarvis',version:'0.3.0',mode:'local'});
+if(url.pathname.startsWith('/api/codex/')||url.pathname==='/api/session')return json(res,410,{error:'旧模型通话入口已停用，请使用DeepSeek文字/语音对话'});
+if(req.method==='GET'&&url.pathname==='/api/live-voice/status')return json(res,200,liveStatus());
+if(req.method==='POST'&&url.pathname==='/api/live-voice/session'){try{return json(res,201,await createLive((await body(req)).sdp))}catch(e){return json(res,503,{error:e.message})}}
+if(req.method==='POST'&&url.pathname==='/api/live-voice/delegate'){try{return json(res,200,await delegateLive(await body(req)))}catch(e){return json(res,400,{error:e.message})}}
+if(url.pathname==='/api/llm/status')return json(res,200,modelStatus());
+if(req.method==='POST'&&url.pathname==='/api/chat'){try{const b=await body(req);return json(res,200,await assistantReply(b.messages,b.contextSymbol))}catch(e){return json(res,502,{error:e.message})}}
+if(url.pathname==='/api/status'){const live=await marketSnapshot();return json(res,200,{mode:'real-research',realtimeConfigured:liveStatus().configured,chatConfigured:!!process.env.DEEPSEEK_API_KEY,llm:modelStatus(),marketConnected:live.status==='observing'&&live.quotes.length>0,marketStatus:live.status,brokerConnected:false,tasks:(await listReports()).map(({id,name,status,stage,created})=>({id,name,status,stage,created})),decisions:[]});}
+if(req.method==='POST'&&url.pathname==='/api/research/run'){try{const b=await body(req);return json(res,202,await startResearch(b.product))}catch(e){return json(res,400,{error:e.message})}}
+if(req.method==='POST'&&url.pathname==='/api/research/cancel'){const b=await body(req);return json(res,200,await cancelResearch(b.id))}
+if(req.method==='POST'&&url.pathname==='/api/research/followup'){const b=await body(req);return json(res,201,await recordFollowup(b.id,b))}
+if(req.method==='GET'&&url.pathname==='/api/research/reports')return json(res,200,(await listReports()).map(({report,sources,evidence,...meta})=>meta));
+if(req.method==='GET'&&url.pathname.startsWith('/api/research/reports/')){const r=await reportDetails(url.pathname.split('/').pop());return json(res,r?200:404,r||{error:'报告不存在'})}
+if(url.pathname==='/api/research/method')return json(res,200,researchMethod);
+if(url.pathname==='/api/research/brief')return json(res,200,await researchQuery('get_research_brief',{kind:url.searchParams.get('kind')||'close'}));
 if(url.pathname==='/api/providers')return json(res,200,providers());
 if(url.pathname==='/api/external')return json(res,200,await externalData(url.searchParams.get('provider')));
 if(url.pathname==='/api/news')return json(res,200,await officialNews());
 if(url.pathname==='/api/rules')return json(res,200,await rules());
 if(url.pathname==='/api/live-market')return json(res,200,await marketSnapshot());
-if(url.pathname==='/api/market')return json(res,200,market);
-if(req.method==='POST'&&url.pathname==='/api/tasks'){const b=await body(req);return json(res,202,newJob(b.kind,b.code))}
-if(req.method==='GET'&&url.pathname.startsWith('/api/tasks/')){const j=jobs.get(url.pathname.split('/').pop());return json(res,j?200:404,j||{error:'任务不存在'})}
-if(req.method==='POST'&&url.pathname==='/api/decisions'){const b=await body(req);if(b.planId!=='demo-cu-v1'||!['approve','wait','reject'].includes(b.action))return json(res,400,{error:'无效计划或动作'});const existing=records.find(x=>x.planId===b.planId&&['approve','reject'].includes(x.action));if(existing)return json(res,200,{record:existing,duplicate:true});const record={id:randomUUID(),planId:b.planId,action:b.action,time:new Date().toISOString(),mode:'demo',orderSubmitted:false};records.push(record);await writeFile(resolve(runtime,'decisions.json'),JSON.stringify(records,null,2));return json(res,200,{record})}
-if(req.method==='POST'&&url.pathname==='/api/tool'){const b=await body(req);if(marketTools.some(t=>t.name===b.name))return json(res,200,await marketQuery(b.name,b.args));if(b.name==='get_external_context')return json(res,200,await externalData(b.args?.provider));if(b.name==='get_official_news')return json(res,200,await officialNews());if(b.name==='get_current_rules')return json(res,200,await rules());if(b.name==='run_research')return json(res,200,newJob(b.args?.kind,b.args?.code));if(b.name==='get_task_status')return json(res,200,jobs.get(b.args?.id)||{error:'任务不存在'});return json(res,400,{error:'工具未授权'})}
-if(req.method==='POST'&&url.pathname==='/api/session'){const b=await body(req);if(!process.env.OPENAI_API_KEY)return json(res,503,{error:'AI实时通话尚未配置。请在本地服务端设置OPENAI_API_KEY；也可以先用本地语音指令。'});if(typeof b.sdp!=='string'||b.sdp.length<10)return json(res,400,{error:'无效语音连接请求'});const fd=new FormData();fd.set('sdp',b.sdp);fd.set('session',JSON.stringify({type:'realtime',model:process.env.OPENAI_REALTIME_MODEL||'gpt-realtime-2.1',instructions:financeInstructions,audio:{input:{transcription:{model:'gpt-4o-mini-transcribe',language:'zh'},turn_detection:{type:'semantic_vad',eagerness:'medium',create_response:true,interrupt_response:true}},output:{voice:'marin'}},tools,tool_choice:'auto'}));try{const r=await fetch('https://api.openai.com/v1/realtime/calls',{method:'POST',headers:{Authorization:`Bearer ${process.env.OPENAI_API_KEY}`},body:fd,signal:AbortSignal.timeout(30000)});if(!r.ok)return json(res,r.status,{error:`语音服务连接失败（${r.status}），请核对账户权限与配置。`});res.writeHead(200,{'Content-Type':'application/sdp','Cache-Control':'no-store'});return res.end(await r.text())}catch{return json(res,502,{error:'语音服务暂时不可达，请重试。'})}}
+if(url.pathname==='/api/market')return json(res,200,await marketSnapshot());
+if(url.pathname.startsWith('/api/tasks')||url.pathname==='/api/decisions')return json(res,410,{error:'生成示例接口已移除，请使用真实研究报告入口'});
+if(req.method==='POST'&&url.pathname==='/api/tool'){const b=await body(req);if(researchTools.some(t=>t.name===b.name))return json(res,200,await researchQuery(b.name,b.args));if(marketTools.some(t=>t.name===b.name))return json(res,200,await marketQuery(b.name,b.args));if(b.name==='get_external_context')return json(res,200,await externalData(b.args?.provider));if(b.name==='get_official_news')return json(res,200,await officialNews());if(b.name==='get_current_rules')return json(res,200,await rules());return json(res,400,{error:'工具未授权'})}
 if(req.method!=='GET')return json(res,405,{error:'方法不支持'});const p=resolve(PUBLIC,'.'+decodeURIComponent(url.pathname==='/'?'/index.html':url.pathname));if(!p.startsWith(PUBLIC+'/'))return json(res,403,{error:'拒绝访问'});try{let content=await readFile(p);res.writeHead(200,{'Content-Type':({'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.png':'image/png','.svg':'image/svg+xml'})[extname(p)]||'application/octet-stream','X-Content-Type-Options':'nosniff','Referrer-Policy':'same-origin','Cache-Control':'no-cache'});res.end(content)}catch{json(res,404,{error:'文件不存在'})}
 }catch(e){json(res,400,{error:'请求无效或本地处理失败'})}});
-server.listen(PORT,'127.0.0.1',()=>console.log(`JARVIS local workspace: http://127.0.0.1:${PORT}`));
+server.listen(PORT,'127.0.0.1',()=>{console.log(`JARVIS local workspace: http://127.0.0.1:${PORT}`);void startFeishu()});
+
+for(const signal of ['SIGINT','SIGTERM'])process.on(signal,()=>{stopFeishu();server.close(()=>process.exit(0));setTimeout(()=>process.exit(0),2000).unref()});

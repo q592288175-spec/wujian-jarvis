@@ -11,3 +11,7 @@ versions/
 .DS_Store
 2026-*.md
 dist/assets/wujian-logo-v1.png
+
+# Keep local credential configuration and temporary writes private
+.env.*
+!.env.example

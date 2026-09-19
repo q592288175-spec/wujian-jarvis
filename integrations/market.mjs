@@ -3,9 +3,22 @@ import {resolve} from 'node:path';
 export function assess(snapshot,now=Date.now()){
  if(!snapshot||snapshot.schemaVersion!==1||!Array.isArray(snapshot.quotes))return {schemaVersion:1,source:'TqSdk',status:'unavailable',quotes:[],error:'行情进程尚未产生有效快照'};
  const age=now-Date.parse(snapshot.receivedAt);
- return {...snapshot,status:!Number.isFinite(age)||age>15000?'stale':snapshot.status,ageMs:Number.isFinite(age)?Math.max(0,age):null,permission:false};
+ return {...snapshot,status:['unconfigured','disconnected','stopped'].includes(snapshot.status)?snapshot.status:!Number.isFinite(age)||age>15000?'stale':snapshot.status,ageMs:Number.isFinite(age)?Math.max(0,age):null,permission:false};
 }
-export async function marketSnapshot(){try{return assess(JSON.parse(await readFile(resolve('.runtime/market.json'),'utf8')))}catch{return assess(null)}}
+export function quoteQuality(q,now=Date.now()){
+ const raw=String(q.quoteTime||'');
+ const parsed=/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:\.\d+)?$/.test(raw)?Date.parse(raw.replace(' ','T').replace(/(\.\d{3})\d+$/,'$1')+'+08:00'):NaN;
+ const age=now-parsed;
+ const validPrice=Number.isFinite(q.last)&&q.last>0;
+ const validBase=Number.isFinite(q.preClose)&&q.preClose>0;
+ return {quoteAgeMs:Number.isFinite(age)?Math.max(0,age):null,timeStatus:!Number.isFinite(age)?'unknown':age < -60000?'future':age>900000?'historical':'recent',priceBasis:'last_trade',changeBasis:'previous_close',validPrice,validPreviousClose:validBase,notice:'报价年龄只描述时间差；不据此推断休市或断线。最新成交价不等于已确认日收盘价。'};
+}
+export function filterLiquidity(snapshot){
+ const quotes=snapshot.quotes.filter(q=>Number.isFinite(q.volume)&&q.volume>10000&&Number.isFinite(q.openInterest)&&q.openInterest>10000);
+ const normalized=quotes.map(q=>({...q,changePct:Number.isFinite(q.last)&&q.last>0&&Number.isFinite(q.preClose)&&q.preClose>0?(q.last/q.preClose-1)*100:null,quality:quoteQuality(q)}));
+ return {...snapshot,quotes:normalized,quality:{scope:'当前已订阅主力合约研究池，非所有月份合约',historical:normalized.filter(q=>q.quality.timeStatus==='historical').length,unknownTime:normalized.filter(q=>q.quality.timeStatus==='unknown').length,invalidPrice:normalized.filter(q=>!q.quality.validPrice||!q.quality.validPreviousClose).length},liquidity:{minimumExclusive:10000,total:snapshot.quotes.length,retained:quotes.length,excluded:snapshot.quotes.length-quotes.length,basis:'报价所属交易日累计成交量与当前持仓量均严格大于10000手；缺失值排除'}};
+}
+export async function marketSnapshot(){try{return filterLiquidity(assess(JSON.parse(await readFile(resolve('.runtime/market.json'),'utf8'))))}catch{return filterLiquidity(assess(null))}}
 export async function marketQuery(name,args={}){
  const s=await marketSnapshot();
  if(name==='get_market_snapshot')return s;

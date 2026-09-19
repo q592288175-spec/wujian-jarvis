@@ -1,0 +1,8 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {Session} from '../integrations/codex-live.mjs';
+test('unknown native tool is denied before executor',async()=>{let ran=false;const s=new Session([],()=>{ran=true});let reply;s.send=m=>reply=m;await s.handle({id:1,method:'item/tool/call',params:{tool:'shell',callId:'a'}});assert.equal(ran,false);assert.equal(reply.error.code,-32601);s.close()});
+test('duplicate dynamic tool calls share execution',async()=>{let calls=0;const s=new Session([{name:'get_market_snapshot'}],async()=>{calls++;return {quotes:[]}});const output=[];s.send=m=>output.push(m);const params={tool:'get_market_snapshot',callId:'a',arguments:{}};await Promise.all([s.handle({id:1,method:'item/tool/call',params}),s.handle({id:2,method:'item/tool/call',params})]);assert.equal(calls,1);assert.equal(output.length,2);s.close()});
+test('late executor result cannot send after hangup',async()=>{let finish;const s=new Session([{name:'get_market_snapshot'}],()=>new Promise(r=>finish=r));const output=[];s.send=m=>output.push(m);const task=s.handle({id:1,method:'item/tool/call',params:{tool:'get_market_snapshot',callId:'a',arguments:{}}});await Promise.resolve();s.close();finish({});await task;assert.equal(output.length,0)});
+test('failed write removes pending request and timer',async()=>{const s=new Session([],()=>{});await assert.rejects(s.request('initialize',{}));assert.equal(s.pending.size,0);s.close()});
+test('close rejects outstanding requests',async()=>{const s=new Session([],()=>{});s.send=()=>{};const p=s.request('initialize',{});s.close();await assert.rejects(p);assert.equal(s.pending.size,0)});

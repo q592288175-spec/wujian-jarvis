@@ -18,13 +18,7 @@ try{
  const key=new THREE.DirectionalLight(0xd2e7ff,2);key.position.set(0,8,10);scene.add(key);
  function box(w,h,d,x,y,z,mat=navy,rx=0,rz=0){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.position.set(x,y,z);m.rotation.set(rx,0,rz);scene.add(m);return m}
  function ring(r,t,x,y,z,mat=lightMaterial,rx=Math.PI/2){const m=new THREE.Mesh(new THREE.TorusGeometry(r,t,8,180),mat);m.position.set(x,y,z);m.rotation.x=rx;scene.add(m);return m}
- // Front canopy ribs and side pylons frame the fixed camera.
- for(const side of [-1,1]){
-  box(.28,11,.55,side*8,1,-2,metal,0,side*-.13);
-  box(.06,10,.07,side*7.84,1,-1.68,lightMaterial,0,side*-.13);
-  box(3.4,.2,.55,side*6.6,6.1,-2,metal,0,side*.12);
-  for(let j=0;j<5;j++){box(.9,.13,.6,side*7.8,-2+j*1.65,-1.8,navy,0,side*.07)}
- }
+ // Side pylons removed: keep the data surface unobstructed.
  // Overhead concentric light well, visibly solid with recessed luminous inlays.
  for(let i=0;i<6;i++){
   ring(2.2+i*.55,.06,0,7.2+i*.035,-2.5,metal);
@@ -38,7 +32,7 @@ try{
   for(let j=0;j<Math.floor(h/.22);j++)if(Math.sin(i*7+j*11)>.25)box(.025,.055,.015,x-.08,-2.4+j*.22,z+.34,new THREE.MeshBasicMaterial({color:j%4?0x73a6bf:0xc7b69d}));
  }
  box(30,.1,40,0,-2.8,-9,navy);
- const grid=new THREE.GridHelper(30,40,0x30658c,0x122b43);grid.position.set(0,-2.72,-8);scene.add(grid);
+ const grid=new THREE.GridHelper(30,40,0x30658c,0x122b43);grid.position.set(0,-2.72,-8);grid.material.transparent=true;grid.material.opacity=.18;scene.add(grid);
  // Layered annular holographic projection base.
  for(let i=0;i<5;i++){
   const disk=new THREE.Mesh(new THREE.CylinderGeometry(2.3-i*.24,2.38-i*.24,.075,96),i%2?metal:navy);disk.position.set(0,-1.85+i*.09,.9);scene.add(disk);

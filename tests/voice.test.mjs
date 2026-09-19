@@ -1,10 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {VoiceController} from '../dist/voice.js';
-test('late tool results cannot enter a replacement session',async()=>{
- let resolve;const pending=new Promise(r=>resolve=r);const sent=[];
- const v=Object.create(VoiceController.prototype);Object.assign(v,{generation:1,seenTools:new Set(),phase(){},api:()=>pending,send:e=>sent.push(e),addMessage(){},onTool(){}});
- const work=v.onEvent({type:'response.function_call_arguments.done',call_id:'one',name:'run_research',arguments:'{}'},1);v.generation=2;resolve({id:'job'});await work;assert.equal(sent.length,0);
-});
-test('duplicate tool event executes once',async()=>{let calls=0;const v=Object.create(VoiceController.prototype);Object.assign(v,{generation:1,seenTools:new Set(),phase(){},api:async()=>{calls++;return{}},send(){},addMessage(){},onTool:async()=>{}});const event={type:'response.function_call_arguments.done',call_id:'one',arguments:'{}'};await v.onEvent(event);await v.onEvent(event);assert.equal(calls,1)});
-test('interrupt cancels audio, never cancels a business task',()=>{globalThis.window={speechSynthesis:{cancel(){}}};const sent=[];const v=Object.create(VoiceController.prototype);Object.assign(v,{state:'idle',metrics:{},send:e=>sent.push(e.type)});v.interrupt();assert.deepEqual(sent,['response.cancel','output_audio_buffer.clear'])});
+test('text routes to DeepSeek chat and retains conversation',async()=>{let path,body;const v=Object.create(VoiceController.prototype);Object.assign(v,{generation:1,history:[],state:'idle',addMessage(){},phase(){},status(){},api:async(p,b)=>{path=p;body=b;return{text:'回答',model:'deepseek-flash'}}});await v.submit('问题');assert.equal(path,'/api/chat');assert.equal(body.messages[0].content,'问题');assert.equal(v.history[1].content,'回答')});
+test('late answer cannot enter replacement voice session',async()=>{let resolve;const pending=new Promise(r=>resolve=r),messages=[];const v=Object.create(VoiceController.prototype);Object.assign(v,{generation:1,history:[],state:'idle',addMessage:(r,t)=>messages.push([r,t]),phase(){},status(){},api:()=>pending});const work=v.submit('问题');v.generation=2;resolve({text:'旧回答'});await work;assert.equal(messages.length,1);assert.equal(v.history.length,0)});
+test('interrupt only stops speech, not background research',()=>{let cancelled=0,resumed=0;globalThis.window={speechSynthesis:{cancel(){cancelled++}}};const v=Object.create(VoiceController.prototype);v.resumeListening=()=>resumed++;v.interrupt();assert.equal(cancelled,1);assert.equal(resumed,1)});

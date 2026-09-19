@@ -1,3 +1,21 @@
+# 当前版本说明（2026-09-19）
+
+国内期货研究工作台：TqSdk 真实行情、完成日/周/月 K 线结构核验、DeepSeek 研究任务，以及可配置的 GPT-Live 全双工语音和飞书机器人。未接通的服务明确显示未配置；没有真实下单功能。
+
+- 首次运行：Node.js 22+，执行 `npm ci`，按 `.env.example` 在本机配置 `.env`，再执行 `npm start`。
+- 行情采集：按项目 Python 依赖安装后执行 `npm run market`；不要自动升级已有 TqSdk。
+- 飞书：双击 `配置飞书机器人.command`，配置后重启服务，在“数据来源”启用定时推送。默认关闭。
+- [三板斧与飞书接入说明](docs/three-axes-feishu.md)
+- [真实数据与语音边界](docs/real-data-and-live.md)
+- [桌面应用](docs/desktop-app.md)
+- 校验：`npm test`、`npm run check`。
+
+以下为历史版本记录，其中“演示数据”“无需依赖”等描述仅对应当时版本，以本节和当前代码为准。
+
+---
+
+> 当前模型（2026-09-19）：工作台文字、语音转写问答和研究Agent统一接入 DeepSeek V4.1 Flash。详见 [接入说明](docs/deepseek-integration.md)。旧版本语音说明仅为历史记录。
+
 # 五简 JARVIS 全息工作台 v1.0
 
 本地 Web 原型，2026-09-18。蓝色全息驾驶舱、中央地球、可交互语音球与五行交易工作流。所有行情、图形、定位与计划均为演示，不是实时行情或业绩。
