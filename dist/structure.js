@@ -23,3 +23,17 @@ export function closingQuote(q){
  const rows=completedSeries(q),last=rows.at(-1),previous=rows.at(-2);
  return {value:last?.close??null,previous:previous?.close??null,changePct:last&&previous?(last.close-previous.close)/previous.close*100:null,asOf:last?barDate(last):null,basis:'最近完成日K收盘'};
 }
+
+// Live price and completed-close views share the same previous-close denominator.
+export function tradingQuote(q){
+ if(q?.quality?.timeStatus==='recent'&&Number.isFinite(q.last)&&q.last>0)
+  return {value:q.last,previous:q.preClose,changePct:Number.isFinite(q.preClose)&&q.preClose>0?(q.last/q.preClose-1)*100:null,asOf:q.quoteTime,basis:'最新价 · 较昨收'};
+ return closingQuote(q);
+}
+export function sortQuotes(rows,order='sector'){
+ const copy=[...rows];
+ if(order==='sector')return copy;
+ return copy.sort((a,b)=>{const x=tradingQuote(a).changePct,y=tradingQuote(b).changePct;
+ if(x==null)return y==null?0:1;if(y==null)return -1;
+ return (order==='asc'?x-y:y-x)||String(a.symbol).localeCompare(String(b.symbol));});
+}
