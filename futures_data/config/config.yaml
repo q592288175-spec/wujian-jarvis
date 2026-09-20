@@ -1,0 +1,94 @@
+# 请求间隔不是供应商端到端延迟；全市场轮询周期至少分钟级。
+db_path: .runtime/akshare/futures.sqlite
+poll_minutes: 1
+request_interval_seconds: 0.75
+request_timeout_seconds: 12
+call_timeout_seconds: 35
+retries: 2
+spot_lookback_days: 7
+daily_hour: 17
+daily_minute: 30
+timezone: Asia/Shanghai
+phase2_enabled: true
+# 冷门品种暂不纳入：fb 纤维板、bb 胶合板、rr 粳米、wh 强麦、pm 普麦。
+# 主力分数=成交量+持仓量；同分依次持仓量、成交量、合约代码排序。
+products:
+  cu: {name: "铜", exchange: SHFE, sector: "有色", sina_name: "沪铜", inventory_symbol: "cu", spot_symbol: "CU", unit: "元/吨"}
+  al: {name: "铝", exchange: SHFE, sector: "有色", sina_name: "沪铝", inventory_symbol: "al", spot_symbol: "AL", unit: "元/吨"}
+  zn: {name: "锌", exchange: SHFE, sector: "有色", sina_name: "沪锌", inventory_symbol: "zn", spot_symbol: "ZN", unit: "元/吨"}
+  pb: {name: "铅", exchange: SHFE, sector: "有色", sina_name: "沪铅", inventory_symbol: "pb", spot_symbol: "PB", unit: "元/吨"}
+  ni: {name: "镍", exchange: SHFE, sector: "有色", sina_name: "沪镍", inventory_symbol: "ni", spot_symbol: "NI", unit: "元/吨"}
+  sn: {name: "锡", exchange: SHFE, sector: "有色", sina_name: "沪锡", inventory_symbol: "sn", spot_symbol: "SN", unit: "元/吨"}
+  ao: {name: "氧化铝", exchange: SHFE, sector: "有色", sina_name: "氧化铝", inventory_symbol: "ao", spot_symbol: "AO", unit: "元/吨"}
+  au: {name: "黄金", exchange: SHFE, sector: "贵金属", sina_name: "黄金", inventory_symbol: "au", spot_symbol: "AU", unit: "元/克"}
+  ag: {name: "白银", exchange: SHFE, sector: "贵金属", sina_name: "白银", inventory_symbol: "ag", spot_symbol: "AG", unit: "元/千克"}
+  rb: {name: "螺纹钢", exchange: SHFE, sector: "黑色", sina_name: "螺纹钢", inventory_symbol: "rb", spot_symbol: "RB", unit: "元/吨"}
+  hc: {name: "热卷", exchange: SHFE, sector: "黑色", sina_name: "热轧卷板", inventory_symbol: "hc", spot_symbol: "HC", unit: "元/吨"}
+  ss: {name: "不锈钢", exchange: SHFE, sector: "黑色", sina_name: "不锈钢", inventory_symbol: "ss", spot_symbol: "SS", unit: "元/吨"}
+  fu: {name: "燃油", exchange: SHFE, sector: "能源化工", sina_name: "燃油", inventory_symbol: "fu", spot_symbol: "FU", unit: "元/吨"}
+  bu: {name: "石油沥青", exchange: SHFE, sector: "能源化工", sina_name: "沥青", inventory_symbol: "bu", spot_symbol: "BU", unit: "元/吨"}
+  ru: {name: "橡胶", exchange: SHFE, sector: "能源化工", sina_name: "橡胶", inventory_symbol: "ru", spot_symbol: "RU", unit: "元/吨"}
+  sp: {name: "纸浆", exchange: SHFE, sector: "能源化工", sina_name: "纸浆", inventory_symbol: "sp", spot_symbol: "SP", unit: "元/吨"}
+  lu: {name: "低硫燃油", exchange: INE, sector: "能源化工", sina_name: "低硫燃料油", inventory_symbol: "lu", spot_symbol: "LU", unit: "元/吨"}
+  sc: {name: "原油", exchange: INE, sector: "能源化工", sina_name: "原油", inventory_symbol: "sc", spot_symbol: "SC", unit: "元/桶"}
+  bc: {name: "国际铜", exchange: INE, sector: "有色", sina_name: "国际铜", inventory_symbol: "bc", spot_symbol: "BC", unit: "元/吨"}
+  nr: {name: "20号胶", exchange: INE, sector: "能源化工", sina_name: "20号胶", inventory_symbol: "nr", spot_symbol: "NR", unit: "元/吨"}
+  ec: {name: "集运指数欧线", exchange: INE, sector: "能源化工", sina_name: "集运指数(欧线)期货", inventory_symbol: "ec", spot_symbol: "EC", unit: "指数点"}
+  a: {name: "豆一", exchange: DCE, sector: "农产品", sina_name: "豆一", inventory_symbol: "a", spot_symbol: "A", unit: "元/吨"}
+  b: {name: "豆二", exchange: DCE, sector: "农产品", sina_name: "豆二", inventory_symbol: "b", spot_symbol: "B", unit: "元/吨"}
+  m: {name: "豆粕", exchange: DCE, sector: "农产品", sina_name: "豆粕", inventory_symbol: "m", spot_symbol: "M", unit: "元/吨"}
+  y: {name: "豆油", exchange: DCE, sector: "农产品", sina_name: "豆油", inventory_symbol: "y", spot_symbol: "Y", unit: "元/吨"}
+  p: {name: "棕榈油", exchange: DCE, sector: "农产品", sina_name: "棕榈", inventory_symbol: "p", spot_symbol: "P", unit: "元/吨"}
+  c: {name: "玉米", exchange: DCE, sector: "农产品", sina_name: "玉米", inventory_symbol: "c", spot_symbol: "C", unit: "元/吨"}
+  cs: {name: "玉米淀粉", exchange: DCE, sector: "农产品", sina_name: "玉米淀粉", inventory_symbol: "cs", spot_symbol: "CS", unit: "元/吨"}
+  jd: {name: "鸡蛋", exchange: DCE, sector: "农产品", sina_name: "鸡蛋", inventory_symbol: "jd", spot_symbol: "JD", unit: "元/500千克"}
+  lh: {name: "生猪", exchange: DCE, sector: "农产品", sina_name: "生猪", inventory_symbol: "lh", spot_symbol: "LH", unit: "元/吨"}
+  i: {name: "铁矿石", exchange: DCE, sector: "黑色", sina_name: "铁矿石", inventory_symbol: "i", spot_symbol: "I", unit: "元/吨"}
+  j: {name: "焦炭", exchange: DCE, sector: "黑色", sina_name: "焦炭", inventory_symbol: "j", spot_symbol: "J", unit: "元/吨"}
+  jm: {name: "焦煤", exchange: DCE, sector: "黑色", sina_name: "焦煤", inventory_symbol: "jm", spot_symbol: "JM", unit: "元/吨"}
+  l: {name: "聚乙烯", exchange: DCE, sector: "能源化工", sina_name: "塑料", inventory_symbol: "l", spot_symbol: "L", unit: "元/吨"}
+  v: {name: "聚氯乙烯", exchange: DCE, sector: "能源化工", sina_name: "PVC", inventory_symbol: "v", spot_symbol: "V", unit: "元/吨"}
+  pp: {name: "聚丙烯", exchange: DCE, sector: "能源化工", sina_name: "PP", inventory_symbol: "pp", spot_symbol: "PP", unit: "元/吨"}
+  eg: {name: "乙二醇", exchange: DCE, sector: "能源化工", sina_name: "乙二醇", inventory_symbol: "eg", spot_symbol: "EG", unit: "元/吨"}
+  eb: {name: "苯乙烯", exchange: DCE, sector: "能源化工", sina_name: "苯乙烯", inventory_symbol: "eb", spot_symbol: "EB", unit: "元/吨"}
+  pg: {name: "液化石油气", exchange: DCE, sector: "能源化工", sina_name: "液化石油气", inventory_symbol: "pg", spot_symbol: "PG", unit: "元/吨"}
+  lg: {name: "原木", exchange: DCE, sector: "农产品", sina_name: "原木", inventory_symbol: "lg", spot_symbol: "LG", unit: "元/吨"}
+  cf: {name: "棉花", exchange: CZCE, sector: "农产品", sina_name: "棉花", inventory_symbol: "CF", spot_symbol: "CF", unit: "元/吨"}
+  sr: {name: "白糖", exchange: CZCE, sector: "农产品", sina_name: "白糖", inventory_symbol: "SR", spot_symbol: "SR", unit: "元/吨"}
+  ta: {name: "PTA", exchange: CZCE, sector: "能源化工", sina_name: "PTA", inventory_symbol: "TA", spot_symbol: "TA", unit: "元/吨"}
+  oi: {name: "菜籽油", exchange: CZCE, sector: "农产品", sina_name: "菜油", inventory_symbol: "OI", spot_symbol: "OI", unit: "元/吨"}
+  rm: {name: "菜籽粕", exchange: CZCE, sector: "农产品", sina_name: "菜粕", inventory_symbol: "RM", spot_symbol: "RM", unit: "元/吨"}
+  ri: {name: "早籼稻", exchange: CZCE, sector: "农产品", sina_name: "早籼稻", inventory_symbol: "RI", spot_symbol: "RI", unit: "元/吨"}
+  ma: {name: "甲醇", exchange: CZCE, sector: "能源化工", sina_name: "郑醇", inventory_symbol: "MA", spot_symbol: "MA", unit: "元/吨"}
+  fg: {name: "玻璃", exchange: CZCE, sector: "能源化工", sina_name: "玻璃", inventory_symbol: "FG", spot_symbol: "FG", unit: "元/吨"}
+  sa: {name: "纯碱", exchange: CZCE, sector: "能源化工", sina_name: "纯碱", inventory_symbol: "SA", spot_symbol: "SA", unit: "元/吨"}
+  ur: {name: "尿素", exchange: CZCE, sector: "能源化工", sina_name: "尿素", inventory_symbol: "UR", spot_symbol: "UR", unit: "元/吨"}
+  pf: {name: "短纤", exchange: CZCE, sector: "能源化工", sina_name: "短纤", inventory_symbol: "PF", spot_symbol: "PF", unit: "元/吨"}
+  sf: {name: "硅铁", exchange: CZCE, sector: "黑色", sina_name: "硅铁", inventory_symbol: "SF", spot_symbol: "SF", unit: "元/吨"}
+  sm: {name: "锰硅", exchange: CZCE, sector: "黑色", sina_name: "锰硅", inventory_symbol: "SM", spot_symbol: "SM", unit: "元/吨"}
+  sh: {name: "烧碱", exchange: CZCE, sector: "能源化工", sina_name: "烧碱", inventory_symbol: "SH", spot_symbol: "SH", unit: "元/吨"}
+  px: {name: "对二甲苯", exchange: CZCE, sector: "能源化工", sina_name: "二甲苯", inventory_symbol: "PX", spot_symbol: "PX", unit: "元/吨"}
+  pr: {name: "瓶片", exchange: CZCE, sector: "能源化工", sina_name: "瓶级聚酯切片", inventory_symbol: "PR", spot_symbol: "PR", unit: "元/吨"}
+  ap: {name: "苹果", exchange: CZCE, sector: "农产品", sina_name: "鲜苹果", inventory_symbol: "AP", spot_symbol: "AP", unit: "元/吨"}
+  cj: {name: "红枣", exchange: CZCE, sector: "农产品", sina_name: "红枣", inventory_symbol: "CJ", spot_symbol: "CJ", unit: "元/吨"}
+  pk: {name: "花生", exchange: CZCE, sector: "农产品", sina_name: "花生", inventory_symbol: "PK", spot_symbol: "PK", unit: "元/吨"}
+  zc: {name: "动力煤", exchange: CZCE, sector: "能源化工", sina_name: "动力煤", inventory_symbol: "ZC", spot_symbol: "ZC", unit: "元/吨"}
+  si: {name: "工业硅", exchange: GFEX, sector: "有色", sina_name: "工业硅", inventory_symbol: "si", spot_symbol: "SI", unit: "元/吨"}
+  lc: {name: "碳酸锂", exchange: GFEX, sector: "有色", sina_name: "碳酸锂", inventory_symbol: "lc", spot_symbol: "LC", unit: "元/吨"}
+  ps: {name: "多晶硅", exchange: GFEX, sector: "有色", sina_name: "多晶硅", inventory_symbol: "ps", spot_symbol: "PS", unit: "元/吨"}
+  if: {name: "沪深300股指", exchange: CFFEX, sector: "股指国债", sina_name: "沪深300指数期货", inventory_symbol: "if", spot_symbol: "IF", unit: "指数点"}
+  ih: {name: "上证50股指", exchange: CFFEX, sector: "股指国债", sina_name: "上证50指数期货", inventory_symbol: "ih", spot_symbol: "IH", unit: "指数点"}
+  ic: {name: "中证500股指", exchange: CFFEX, sector: "股指国债", sina_name: "中证500指数期货", inventory_symbol: "ic", spot_symbol: "IC", unit: "指数点"}
+  im: {name: "中证1000股指", exchange: CFFEX, sector: "股指国债", sina_name: "中证1000股指期货", inventory_symbol: "im", spot_symbol: "IM", unit: "指数点"}
+  ts: {name: "2年国债", exchange: CFFEX, sector: "股指国债", sina_name: "2年期国债期货", inventory_symbol: "ts", spot_symbol: "TS", unit: "元/100元面值"}
+  tf: {name: "5年国债", exchange: CFFEX, sector: "股指国债", sina_name: "5年期国债期货", inventory_symbol: "tf", spot_symbol: "TF", unit: "元/100元面值"}
+  t: {name: "10年国债", exchange: CFFEX, sector: "股指国债", sina_name: "10年期国债期货", inventory_symbol: "t", spot_symbol: "T", unit: "元/100元面值"}
+  tl: {name: "30年国债", exchange: CFFEX, sector: "股指国债", sina_name: "30年期国债期货", quote_interface: futures_zh_spot, inventory_symbol: "tl", spot_symbol: "TL", unit: "元/100元面值"}
+# 经已安装AKShare签名核验；每个交易所失败单独记录。
+rank_interfaces:
+  SHFE: get_shfe_rank_table
+  INE: get_shfe_rank_table
+  DCE: futures_dce_position_rank
+  CZCE: get_rank_table_czce
+  GFEX: futures_gfex_position_rank
+  CFFEX: get_cffex_rank_table

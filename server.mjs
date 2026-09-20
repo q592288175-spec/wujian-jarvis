@@ -1,3 +1,4 @@
+import {akshareTools,akshareData} from './integrations/akshare.mjs';
 import {fundamentalsTools,fundamentalsQuery} from './integrations/fundamentals.mjs';
 import {attachVolc,volcStatus,voiceTicket} from './integrations/volc-voice.mjs';
 import {loadBinding} from './integrations/im-binding.mjs';
@@ -56,7 +57,7 @@ if(url.pathname==='/api/rules')return json(res,200,await rules());
 if(url.pathname==='/api/live-market')return json(res,200,await marketSnapshot());
 if(url.pathname==='/api/market')return json(res,200,await marketSnapshot());
 if(url.pathname.startsWith('/api/tasks')||url.pathname==='/api/decisions')return json(res,410,{error:'生成示例接口已移除，请使用真实研究报告入口'});
-if(req.method==='POST'&&url.pathname==='/api/tool'){const b=await body(req);if(fundamentalsTools.some(t=>t.name===b.name))return json(res,200,await fundamentalsQuery(b.name,b.args));if(researchTools.some(t=>t.name===b.name))return json(res,200,await researchQuery(b.name,b.args));if(marketTools.some(t=>t.name===b.name))return json(res,200,await marketQuery(b.name,b.args));if(b.name==='get_external_context')return json(res,200,await externalData(b.args?.provider));if(b.name==='get_official_news')return json(res,200,await officialNews());if(b.name==='get_current_rules')return json(res,200,await rules());return json(res,400,{error:'工具未授权'})}
+if(req.method==='POST'&&url.pathname==='/api/tool'){const b=await body(req);if(b.name==='get_akshare_futures_data')return json(res,200,await akshareData(b.args));if(fundamentalsTools.some(t=>t.name===b.name))return json(res,200,await fundamentalsQuery(b.name,b.args));if(researchTools.some(t=>t.name===b.name))return json(res,200,await researchQuery(b.name,b.args));if(marketTools.some(t=>t.name===b.name))return json(res,200,await marketQuery(b.name,b.args));if(b.name==='get_external_context')return json(res,200,await externalData(b.args?.provider));if(b.name==='get_official_news')return json(res,200,await officialNews());if(b.name==='get_current_rules')return json(res,200,await rules());return json(res,400,{error:'工具未授权'})}
 if(req.method!=='GET')return json(res,405,{error:'方法不支持'});const p=resolve(PUBLIC,'.'+decodeURIComponent(url.pathname==='/'?'/index.html':url.pathname));if(!p.startsWith(PUBLIC+'/'))return json(res,403,{error:'拒绝访问'});try{let content=await readFile(p);res.writeHead(200,{'Content-Type':({'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.png':'image/png','.svg':'image/svg+xml'})[extname(p)]||'application/octet-stream','X-Content-Type-Options':'nosniff','Referrer-Policy':'same-origin','Cache-Control':'no-cache'});res.end(content)}catch{json(res,404,{error:'文件不存在'})}
 }catch(e){json(res,400,{error:'请求无效或本地处理失败'})}});
 const closeVolc=attachVolc(server,PORT);

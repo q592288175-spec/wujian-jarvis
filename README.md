@@ -107,3 +107,7 @@ AI 实时通话已预留 WebRTC 音频、静音/挂断、工具调用与后台�
 ### 火山语音与 DeepSeek
 
 支持在设置中选择火山实时语音，在通话过程中调用行情与研究工具。配置和验证边界见 [语音接入说明](docs/volc-voice.md)。
+
+## 小木免费数据模块
+
+已集成AKShare采集、SQLite、Agent查询和日频任务，见[安装与实测](docs/akshare/README.md)。

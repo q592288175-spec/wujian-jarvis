@@ -1,3 +1,4 @@
+import {akshareData,akshareTools} from './akshare.mjs';
 import {fundamentalsTools,fundamentalsQuery} from './fundamentals.mjs';
 import {decisionProtocol,decisionEvidence,calculatePlanRisk,decisionTools} from './decision-support.mjs';
 import {threeAxesKnowledge,threeAxesKnowledgeTool} from './three-axes-knowledge.mjs';
@@ -14,6 +15,7 @@ export async function assistantReply(messages,contextSymbol,{voice=false}={}){
  const contextQuote=typeof contextSymbol==='string'?(await marketSnapshot()).quotes.find(q=>q.symbol===contextSymbol):null;
  const started=[];
  const execute=async(name,args)=>{
+ if(name==='get_akshare_futures_data')return akshareData(args);
  if(name==='get_futures_decision_evidence'){const snap=await marketSnapshot();const q=snap.quotes.find(q=>q.symbol===args.symbol);return q?decisionEvidence(q,snap):{error:'实际合约未进入研究池，不得补猜',permission:false}}
  if(name==='calculate_futures_plan_risk')return calculatePlanRisk(args);
  if(name==='get_three_axes_knowledge')return threeAxesKnowledge();
@@ -28,6 +30,6 @@ export async function assistantReply(messages,contextSymbol,{voice=false}={}){
  if(researchTools.some(t=>t.name===name))return researchQuery(name,args);
  const r=await marketQuery(name,args);if(r.quotes)r.quotes=r.quotes.map(({bars,...q})=>q);return r;
  };
- const result=await runDeepSeek({messages:[{role:'system',content:(contextQuote?'当前页面选中的实际合约为 '+contextQuote.symbol+'，报价时间 '+contextQuote.quoteTime+'。用户说当前品种时指该合约。\n':'')+financeInstructions+'涉及库存、基差、产地、公告或全球事件时先调用get_product_fundamentals读取当前合约证据包，再按需要搜索指标和读取原文。权限缺口必须明确，但不可未查工具就说全部没接。'+'\n'+await decisionProtocol()+(voice?'现在是实时电话交谈，用户不看屏幕。直接用自然口语回答，一次只讲最重要的结论和依据，通常80至180字，最多350字。不要使用Markdown、表格、网址或朗读任务ID，不要求用户去看面板才能理解回答。研究可以在后台执行，先简短告知已开始，用户追问时用工具查询进展或读取报告并口头总结。保留关键的数据时点、未知和反证。':'')+'\\n你使用DeepSeek V4.1 Flash。当前时间'+new Date().toISOString()+'。回答简短中文，详细研报用start_deep_research启动并告知任务ID。任何新闻和行情都先用工具读取。停止播报与取消研究是两回事；只有用户明确取消研究时才调用cancel_deep_research。没有run_research演示工具，也没有下单工具。'},...messages],tools:[...financeTools,...marketTools,...researchTools,...sourceTools,...fundamentalsTools,...taskTools],execute});
+ const result=await runDeepSeek({messages:[{role:'system',content:(contextQuote?'当前页面选中的实际合约为 '+contextQuote.symbol+'，报价时间 '+contextQuote.quoteTime+'。用户说当前品种时指该合约。\n':'')+financeInstructions+'涉及现货、基差、库存、仓单、持仓排名时先调用get_akshare_futures_data读取本地免费数据。公告和事件用get_product_fundamentals补原文。不要调用EDB付费接口。没有返回数据时明确缺口；不能把接口存在当成已经取得数据。'+'\n'+await decisionProtocol()+(voice?'现在是实时电话交谈，用户不看屏幕。直接用自然口语回答，一次只讲最重要的结论和依据，通常80至180字，最多350字。不要使用Markdown、表格、网址或朗读任务ID，不要求用户去看面板才能理解回答。研究可以在后台执行，先简短告知已开始，用户追问时用工具查询进展或读取报告并口头总结。保留关键的数据时点、未知和反证。':'')+'\\n你使用DeepSeek V4.1 Flash。当前时间'+new Date().toISOString()+'。回答简短中文，详细研报用start_deep_research启动并告知任务ID。任何新闻和行情都先用工具读取。停止播报与取消研究是两回事；只有用户明确取消研究时才调用cancel_deep_research。没有run_research演示工具，也没有下单工具。'},...messages],tools:[...financeTools,...marketTools,...researchTools,...sourceTools,...fundamentalsTools,...akshareTools,...taskTools],execute});
  return {...result,jobs:started};
 }

@@ -12,6 +12,7 @@ async function boot(){
  const market=await fetch(base+'/api/live-market',{signal:AbortSignal.timeout(5000)}).then(r=>{if(!r.ok)throw Error('行情服务状态读取失败，请重新启动工作台。');return r.json()});
  // The collector owns an exclusive file lock; a fresh snapshot does not prove a live process.
  launch('integrations/start-market.mjs');
+ launch('integrations/start-akshare.mjs');
  await window.loadURL(base+'/');
 }
 function external(url){try{const u=new URL(url);if(['https:','http:'].includes(u.protocol)&&!u.username&&!u.password)shell.openExternal(url)}catch{}}

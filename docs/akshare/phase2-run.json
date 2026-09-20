@@ -1,0 +1,69 @@
+{
+  "date": "2026-09-18",
+  "inventory": 3813,
+  "warehouse_receipt": 25,
+  "holdings_rank": 11580,
+  "failures": [
+    {
+      "kind": "inventory",
+      "product": "sc",
+      "reason": "TypeError: 'NoneType' object is not subscriptable"
+    },
+    {
+      "kind": "inventory",
+      "product": "bc",
+      "reason": "TypeError: 'NoneType' object is not subscriptable"
+    },
+    {
+      "kind": "inventory",
+      "product": "ec",
+      "reason": "TypeError: 'NoneType' object is not subscriptable"
+    },
+    {
+      "kind": "inventory",
+      "product": "lg",
+      "reason": "ValueError: 请输入正确的 symbol, 可选项为: {'苯乙烯': 'EB', '沪铜': 'CU', '镍': 'NI', '锡': 'SN', '乙二醇': 'EG', '液化石油气': 'PG', '国际铜': 'bc', '沥青': 'BU', '沪金': 'AU', '沪铅'"
+    },
+    {
+      "kind": "inventory",
+      "product": "ri",
+      "reason": "TypeError: 'NoneType' object is not subscriptable"
+    },
+    {
+      "kind": "inventory",
+      "product": "pr",
+      "reason": "ValueError: 请输入正确的 symbol, 可选项为: {'苯乙烯': 'EB', '沪铜': 'CU', '镍': 'NI', '锡': 'SN', '乙二醇': 'EG', '液化石油气': 'PG', '国际铜': 'bc', '沥青': 'BU', '沪金': 'AU', '沪铅'"
+    },
+    {
+      "kind": "inventory",
+      "product": "zc",
+      "reason": "TypeError: 'NoneType' object is not subscriptable"
+    },
+    {
+      "kind": "inventory",
+      "product": "ps",
+      "reason": "ValueError: 请输入正确的 symbol, 可选项为: {'苯乙烯': 'EB', '沪铜': 'CU', '镍': 'NI', '锡': 'SN', '乙二醇': 'EG', '液化石油气': 'PG', '国际铜': 'bc', '沥青': 'BU', '沪金': 'AU', '沪铅'"
+    },
+    {
+      "kind": "warehouse",
+      "exchange": "SHFE",
+      "reason": "ValueError: '20号胶(仓库)' is not in list"
+    },
+    {
+      "kind": "warehouse",
+      "exchange": "INE",
+      "reason": "ValueError: '20号胶(仓库)' is not in list"
+    },
+    {
+      "kind": "warehouse",
+      "exchange": "DCE",
+      "reason": "JSONDecodeError: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+      "kind": "holdings",
+      "exchange": "DCE",
+      "reason": "BadZipFile: File is not a zip file"
+    }
+  ],
+  "status": "partial"
+}
