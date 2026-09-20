@@ -16,7 +16,7 @@ export class VolcVoice{
    await ctx.audioWorklet.addModule('/volc-capture.js');if(gen!==this.generation)return;
    this.capture=new AudioWorkletNode(ctx,'volc-capture');this.source=ctx.createMediaStreamSource(stream);
    this.silence=ctx.createGain();this.silence.gain.value=0;this.source.connect(this.capture);this.capture.connect(this.silence).connect(ctx.destination);
-   this.playbackGain=ctx.createGain();this.playbackGain.connect(ctx.destination);
+   this.playbackGain=ctx.createGain();const savedVolume=Number(localStorage.getItem('xiaomu-voice-volume'));this.playbackGain.gain.value=Number.isFinite(savedVolume)?Math.min(1.8,Math.max(.6,savedVolume)):1.35;this.playbackGain.connect(ctx.destination);
    this.inputTap=new AudioTap(ctx).addSource(this.source);this.outputTap=new AudioTap(ctx).addSource(this.playbackGain);
    this.onAudioGraph?.({inputTap:this.inputTap,outputTap:this.outputTap});
    const token=await this.api('/api/volc/session',{contextSymbol:this.context?.()||''});if(gen!==this.generation)return;
