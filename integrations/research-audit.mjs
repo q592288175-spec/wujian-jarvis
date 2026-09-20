@@ -9,7 +9,8 @@ export function compareEvidence(previous,current){
 export function reviewReport(text,trace){
  const sections=[['上一版审计',/上一|首次研究/],['支持与反证',/反证/],['三种情景',/基准[\s\S]*上行[\s\S]*下行/],['失效条件',/失效/],['下一次复盘',/下次|下一次|下一观察|下一检查/],['数据缺口',/缺口|待补/],['策略决策卡',/入场[\s\S]*止损[\s\S]*(风险|预算|手数)/],['人工拍板',/拍板|人工决策/]];
  const missingSections=sections.filter(([,r])=>!r.test(text)).map(([n])=>n);
- const known=new Set(trace.flatMap(t=>[t.result?.url,...(t.result?.items||[]).map(i=>i.url)]).filter(Boolean));
+ const articles=trace.flatMap(t=>(t.result?.documents||[]).flatMap(d=>d.articles||[])).filter(a=>a.text);
+ const known=new Set([...articles.map(a=>a.url),...trace.flatMap(t=>[t.result?.url,...(t.result?.items||[]).map(i=>i.url)])].filter(Boolean));
  const links=[...text.matchAll(/https?:\/\/[^\s)\]<>（），。；]+/g)].map(m=>m[0]);
- return {status:'待人工核验',missingSections,unverifiedLinks:[...new Set(links.filter(u=>!known.has(u)))],readSources:trace.filter(t=>t.result?.text).length,notice:'程序只检查结构和链接是否来自工具记录，不代表事实正确或交易许可'};
+ return {status:'待人工核验',missingSections,unverifiedLinks:[...new Set(links.filter(u=>!known.has(u)))],readSources:trace.filter(t=>t.result?.text).length+articles.length,notice:'程序只检查结构和链接是否来自工具记录，不代表事实正确或交易许可'};
 }

@@ -58,3 +58,9 @@ body #callPanel.voice-only{display:grid;grid-template-columns:minmax(260px,420px
 .caption-text{font-size:15px;line-height:1.85;overflow-wrap:anywhere;white-space:pre-wrap;color:#d4e4eb}.caption-text.markdown-body{white-space:normal}.caption-draft{margin:0 22px;padding:12px 0;color:#94b9ce;font-size:14px;border-top:1px dashed #294959;max-height:100px;overflow:auto}.caption-feedback{font-size:11px;color:#7ba9bc;min-height:18px;margin:8px 22px 12px}
 @media(max-width:760px){body #callPanel.voice-only{grid-template-columns:1fr;grid-template-rows:auto auto minmax(160px,1fr);padding:45px 16px 16px;gap:12px}#callPanel.voice-only .call-head{grid-column:1;grid-row:1;flex-direction:row;width:100%;gap:12px;text-align:left}#callPanel.voice-only #voiceCoreCall{width:90px;height:90px;flex:0 0 90px}#callPanel.voice-only .call-head b{font-size:18px;margin-bottom:5px}#callPanel.voice-only #callStatus{font-size:12px}#callPanel.voice-only .call-controls{grid-column:1;grid-row:2;margin:0}#callPanel.voice-only .call-captions{grid-column:1;grid-row:3}.call-captions .caption-head{padding:14px}.caption-log{padding:4px 16px}.caption-head small{font-size:10px}}
 .caption-back{display:none}#callPanel.voice-only .caption-back{display:block}
+/* Resonance priority, independent of red-up / green-down quote colors. */
+.evidence-lines[data-alignment="gold"] .alignment-label{color:#ffdb70;font-weight:800;text-shadow:0 0 16px #e8b74070;border-left:3px solid #ffdb70;padding-left:10px}
+.evidence-lines[data-alignment="orange"] .alignment-label{color:#ffa45b;font-weight:750;border-left:3px solid #ffa45b;padding-left:10px}
+.evidence-lines .intraday-signal{font-weight:650;color:#b9e6ff}
+.evidence-lines svg{width:100%;max-height:100px;display:block}
+.evidence{display:flex;flex-direction:column}.evidence .evidence-lines{min-height:0;overflow:auto;flex:1}.evidence .text-button{flex-shrink:0}.evidence .mini-chart{flex-shrink:0}

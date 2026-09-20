@@ -3,6 +3,7 @@ import os, json, math, time, re
 from pathlib import Path
 from datetime import datetime, timezone, timedelta
 from zoneinfo import ZoneInfo
+from intraday import Intraday
 ROOT = Path(__file__).resolve().parent.parent
 TARGET = ROOT / '.runtime/market.json'
 def finite(value):
@@ -63,6 +64,7 @@ def run():
                 temp_calendar=calendar_path.with_suffix('.tmp')
                 temp_calendar.write_text(json.dumps(dict(source='TqSdk.get_trading_calendar',updatedAt=datetime.now(timezone.utc).isoformat(),dates=[d.isoformat() for d in dates])))
                 temp_calendar.replace(calendar_path)
+            intraday=Intraday()
             quotes={s:api.get_quote(s) for s in symbols}; actual={}; series={}; live_quotes={}; received={}; last_write=0
             while True:
                 api.wait_update(deadline=time.time()+1)
@@ -84,7 +86,7 @@ def run():
                         stamp=finite(r['datetime'])
                         if not stamp or stamp<=0: continue
                         candles.append(dict(timeNs=str(int(stamp)),open=finite(r['open']),high=finite(r['high']),low=finite(r['low']),close=finite(r['close']),volume=finite(r['volume']),openInterest=finite(r.get('close_oi')),openOpenInterest=finite(r.get('open_oi')),complete=i<len(rows)-1))
-                    output.append(dict(symbol=symbol,name=live.instrument_name or symbol,requestedSymbol=requested,exchange=symbol.split('.')[0],quoteTime=live.datetime,receivedAt=received[requested],tradingDay=(trading_day(live.datetime,dates).isoformat() if trading_day(live.datetime,dates) else None),tradingDayStatus='calendar-derived' if trading_day(live.datetime,dates) else 'unknown',last=finite(live.last_price),close=finite(live.close),closeBasis="provider_quote_close",preSettlement=finite(live.pre_settlement),preClose=finite(live.pre_close),changeBasis="previous_close",changePct=change(live.last_price,live.pre_close),volume=finite(live.volume),openInterest=finite(live.open_interest),bid=finite(live.bid_price1),ask=finite(live.ask_price1),upperLimit=finite(live.upper_limit),lowerLimit=finite(live.lower_limit),bars=candles))
+                    output.append(dict(symbol=symbol,name=live.instrument_name or symbol,requestedSymbol=requested,exchange=symbol.split('.')[0],quoteTime=live.datetime,receivedAt=received[requested],tradingDay=(trading_day(live.datetime,dates).isoformat() if trading_day(live.datetime,dates) else None),tradingDayStatus='calendar-derived' if trading_day(live.datetime,dates) else 'unknown',last=finite(live.last_price),close=finite(live.close),closeBasis="provider_quote_close",preSettlement=finite(live.pre_settlement),preClose=finite(live.pre_close),changeBasis="previous_close",changePct=change(live.last_price,live.pre_close),volume=finite(live.volume),openInterest=finite(live.open_interest),bid=finite(live.bid_price1),ask=finite(live.ask_price1),upperLimit=finite(live.upper_limit),lowerLimit=finite(live.lower_limit),bars=candles,average=finite(live.average),volumeMultiple=finite(live.volume_multiple),intraday=intraday.snapshot(symbol,(trading_day(live.datetime,dates).isoformat() if trading_day(live.datetime,dates) else None),live.datetime,finite(live.last_price),finite(live.average))))
                 if time.monotonic()-last_write>=1:
                     write('observing' if output else 'waiting',output)
                     last_write=time.monotonic()
