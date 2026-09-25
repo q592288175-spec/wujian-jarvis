@@ -4,16 +4,27 @@ import {VolcVoice} from '../dist/volc-voice.js';
 import {readFileSync} from 'node:fs';
 const storage=value=>({value,getItem(){return this.value},setItem(_,v){this.value=v}});
 test('old gpt, missing and invalid provider migrate once to volc; browser remains advanced backup',()=>{for(const old of ['gpt',null,'invalid','volc','browser']){const s=storage(old);assert.equal(voiceProvider(s),old==='browser'?'browser':'volc');assert.equal(s.value,voiceProvider(s))}});
-function setup(){
+function setup(volumeStorage=storage(null)){
  const contexts=[],tracks=[];
  class Node{constructor(context){this.context=context;this.gain={value:1};this.port={};this.connections=[];this.stopped=false}connect(n){this.connections.push(n);return n}disconnect(n){this.connections=n?this.connections.filter(x=>x!==n):[]}start(t){this.startAt=t}stop(){this.stopped=true}}
  class Context{constructor(){this.currentTime=0;this.state='running';this.destination={};this.sampleRate=48000;this.audioWorklet={addModule:async()=>{}};contexts.push(this)}resume(){return Promise.resolve()}close(){this.state='closed';return Promise.resolve()}createGain(){return new Node(this)}createMediaStreamSource(){return new Node(this)}createAnalyser(){const n=new Node(this);n.fftSize=1024;n.frequencyBinCount=512;n.getFloatTimeDomainData=a=>a.fill(.1);n.getByteFrequencyData=a=>a.fill(128);return n}decodeAudioData(){return Promise.resolve({duration:1})}createBufferSource(){return new Node(this)}}
  class WS{constructor(){this.readyState=1;this.bufferedAmount=0;this.messages=[]}send(x){this.messages.push(x)}close(){this.readyState=3}}
- const originals={};for(const k of ['AudioContext','AudioWorkletNode','WebSocket','navigator','location'])originals[k]=Object.getOwnPropertyDescriptor(globalThis,k);
+ const originals={};for(const k of ['AudioContext','AudioWorkletNode','WebSocket','navigator','location','localStorage'])originals[k]=Object.getOwnPropertyDescriptor(globalThis,k);
+ Object.defineProperty(globalThis,'localStorage',{value:volumeStorage,configurable:true});
  Object.defineProperties(globalThis,{AudioContext:{value:Context,configurable:true},AudioWorkletNode:{value:Node,configurable:true},WebSocket:{value:WS,configurable:true},location:{value:{protocol:'http:',host:'127.0.0.1:4318'},configurable:true},navigator:{value:{mediaDevices:{getUserMedia:async()=>{const t={enabled:true,stop(){this.stopped=true}};tracks.push(t);return{getTracks:()=>[t],getAudioTracks:()=>[t]}}}},configurable:true}});
  let resets=0,graph;const facts=[];const v=new VolcVoice({api:async path=>path.endsWith('status')?{configured:true}:{token:'test'},status:()=>{},message:()=>{},onAudioGraph:x=>graph=x,onVoiceState:x=>facts.push(x),onOutputReset:()=>resets++});
  return{v,contexts,tracks,facts,get graph(){return graph},get resets(){return resets},cleanup(){v.stop();for(const[k,d]of Object.entries(originals))d?Object.defineProperty(globalThis,k,d):delete globalThis[k]}};
 }
+test('voice uses default gain when volume is unset, invalid or storage unavailable',async()=>{
+ for(const store of [storage(null),storage(''),storage('invalid'),null,{getItem(){throw Error('storage blocked')}}]){
+  const f=setup(store);try{await f.v.connect();assert.ok(f.v.ws);assert.equal(f.v.playbackGain.gain.value,1.35);assert.ok(f.graph.inputTap&&f.graph.outputTap)}finally{f.cleanup()}
+ }
+});
+test('voice preserves saved volume and bounds playback gain',async()=>{
+ for(const [saved,expected] of [['1.5',1.5],['0',.6],['3',1.8]]){
+  const f=setup(storage(saved));try{await f.v.connect();assert.ok(f.v.ws);assert.equal(f.v.playbackGain.gain.value,expected)}finally{f.cleanup()}
+ }
+});
 test('one context and microphone per call; 10 connect/hangup cycles release all owned resources',async()=>{const f=setup();try{for(let i=0;i<10;i++){await f.v.connect();f.v.event({type:'ready'},f.v.generation);assert.ok(f.graph.inputTap&&f.graph.outputTap);assert.equal(f.v.source.connections.filter(n=>n===f.v.inputTap.analyser).length,1);assert.ok(!f.v.source.connections.includes(f.v.audio.destination));f.v.stop();assert.deepEqual(f.graph,{});assert.equal(f.v.sources.size,0);assert.equal(f.v.facts.connection,'idle')}assert.equal(f.contexts.length,10);assert.equal(f.tracks.length,10);assert.ok(f.contexts.every(x=>x.state==='closed'));assert.ok(f.tracks.every(x=>x.stopped))}finally{f.cleanup()}});
 test('queued audio is not speaking; muting input preserves active playback; interrupt clears output only',async()=>{const f=setup();try{await f.v.connect();f.v.event({type:'ready'},f.v.generation);f.v.event({type:'audio',data:'AAAA'},f.v.generation);await f.v.chain;f.v.syncPlayback();assert.equal(f.v.facts.agentSpeaking,false);f.v.audio.currentTime=.1;f.v.syncPlayback();assert.equal(f.v.facts.agentSpeaking,true);const src=[...f.v.sources][0];assert.deepEqual(src.connections,[f.v.playbackGain]);f.v.mute(true);assert.equal(f.v.facts.micMuted,true);assert.equal(f.v.facts.agentSpeaking,true);assert.equal(src.stopped,false);assert.equal(f.tracks[0].enabled,false);f.v.interrupt();assert.equal(src.stopped,true);assert.equal(f.v.facts.agentSpeaking,false);assert.equal(f.v.intervals.size,0);assert.ok(!f.v.inputTap.disposed);assert.ok(f.resets>0)}finally{f.cleanup()}});
 test('late decode after interrupt or hangup cannot schedule or revive old audio',async()=>{const f=setup();try{await f.v.connect();f.v.event({type:'ready'},f.v.generation);for(const action of ['interrupt','stop']){let finish;f.v.audio.decodeAudioData=()=>new Promise(r=>finish=r);f.v.event({type:'audio',data:'AAAA'},f.v.generation);const pending=f.v.chain;await Promise.resolve();f.v[action]();finish({duration:1});await pending;assert.equal(f.v.sources.size,0);assert.equal(f.v.facts.agentSpeaking,false)}}finally{f.cleanup()}});

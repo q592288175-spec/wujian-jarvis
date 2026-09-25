@@ -1,5 +1,13 @@
 import {AudioTap} from './ui/audio-tap.js';
 const idle=()=>({connection:'idle',micMuted:false,working:false,userSpeaking:false,agentSpeaking:false});
+function playbackVolume(){
+ try{
+  const saved=globalThis.localStorage?.getItem('xiaomu-voice-volume');
+  if(saved==null||saved.trim()==='')return 1.35;
+  const value=Number(saved);
+  return Number.isFinite(value)?Math.min(1.8,Math.max(.6,value)):1.35;
+ }catch{return 1.35}
+}
 export class VolcVoice{
  constructor({api,status,message,onJobs,context,onAudioGraph,onVoiceState,onOutputReset,onPartial}){Object.assign(this,{api,status,message,onJobs,context,onAudioGraph,onVoiceState,onOutputReset,onPartial});this.generation=0;this.sources=new Set();this.intervals=new Map();this.playAt=0;this.audioGeneration=0;this.chain=Promise.resolve();this.facts=idle();}
  update(patch){const next={...this.facts,...patch};if(Object.keys(next).some(k=>next[k]!==this.facts[k])){this.facts=next;this.onVoiceState?.({...next})}}
@@ -16,7 +24,7 @@ export class VolcVoice{
    await ctx.audioWorklet.addModule('/volc-capture.js');if(gen!==this.generation)return;
    this.capture=new AudioWorkletNode(ctx,'volc-capture');this.source=ctx.createMediaStreamSource(stream);
    this.silence=ctx.createGain();this.silence.gain.value=0;this.source.connect(this.capture);this.capture.connect(this.silence).connect(ctx.destination);
-   this.playbackGain=ctx.createGain();const savedVolume=Number(localStorage.getItem('xiaomu-voice-volume'));this.playbackGain.gain.value=Number.isFinite(savedVolume)?Math.min(1.8,Math.max(.6,savedVolume)):1.35;this.playbackGain.connect(ctx.destination);
+   this.playbackGain=ctx.createGain();this.playbackGain.gain.value=playbackVolume();this.playbackGain.connect(ctx.destination);
    this.inputTap=new AudioTap(ctx).addSource(this.source);this.outputTap=new AudioTap(ctx).addSource(this.playbackGain);
    this.onAudioGraph?.({inputTap:this.inputTap,outputTap:this.outputTap});
    const token=await this.api('/api/volc/session',{contextSymbol:this.context?.()||''});if(gen!==this.generation)return;
