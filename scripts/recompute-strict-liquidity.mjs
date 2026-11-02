@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {readFile,writeFile,mkdir} from 'node:fs/promises';
+import {resolve} from 'node:path';
+import {applyResonanceRule} from '../integrations/resonance-rule.mjs';
+const source=resolve('.runtime/fire-scan/.wujian-futures-multi-cycle-scan/2026-09-30_week-day-2026-10-07.json');
+const original=JSON.parse(await readFile(source,'utf8'));
+await writeFile(resolve('.runtime/rule-history/2026-10-07-all-liquidity-before/扫描底稿.json'),JSON.stringify(original,null,2));
+const result={...applyResonanceRule(original),recalculated_at:new Date().toISOString(),recalculation_source:source};
+assert.deepEqual(result.rows.map(r=>r.modes['week-day']),original.rows.map(r=>r.modes['week-day']));
+for(const row of result.rows)for(const mode of ['month-week','week-day','month-week-day'])if(['多头观察','空头观察'].includes(row.modes[mode]))assert.ok(row.volume>10000&&row.open_interest>10000);
+const output=resolve('.runtime/fire-scan/.wujian-futures-multi-cycle-scan/2026-09-30_all-strict-liquidity-2026-10-07.json');
+await writeFile(output,JSON.stringify(result,null,2));
+const evidence=resolve('output/strict-liquidity-2026-10-07');await mkdir(evidence,{recursive:true});
+const audit={dataDate:result.target_date,time:result.recalculated_at,output,counts:result.counts,weekDayUnchanged:true,rule:'三模式：成交量 > 10000 且持仓量 > 10000；其他技术条件不变'};
+await writeFile(resolve(evidence,'复算结果.json'),JSON.stringify(audit,null,2));console.log(JSON.stringify(audit,null,2));

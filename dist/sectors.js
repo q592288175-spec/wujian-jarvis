@@ -1,13 +1,19 @@
-// Display taxonomy only; does not change trading-system risk buckets.
-export const sectors=['股指国债','贵金属板块','有色板块','黑色系板块','能源化工板块','农产品板块'];
-const groups={
- '股指国债':'IC IF IH IM T TF TL TS',
- '贵金属板块':'au ag pt pd',
- '有色板块':'cu al zn pb ni sn ao ad bc lc si ps',
- '黑色系板块':'rb hc ss wr i j jm SF SM',
- '能源化工板块':'FG MA PF PL PR PX SA SH TA UR ZC bz eb eg l pg pp v sc lu nr ec br bu fu ru sp op',
- '农产品板块':'AP CF CJ CY JR LR OI PK PM RI RM RS SR WH a b bb c cs fb lg jd lh m p rr y'
-};
-const lookup=new Map(Object.entries(groups).flatMap(([sector,products])=>products.split(' ').map(p=>[p,sector])));
-export function sectorFor(q){const product=(q.symbol||'').split('.').pop().replace(/\d+$/,'');return lookup.get(product)||'待分类';}
+// Display taxonomy only; does not change trading-system risk buckets or research frameworks.
+export const sectorGroups=[
+ {key:'finance',label:'股指/国债',products:'IH IF IC IM TS TF T TL'},
+ {key:'precious',label:'贵金属',products:'AU AG PT PD'},
+ {key:'nonferrous',label:'有色金属',products:'CU AL AO AD PB ZN SN NI SS BC'},
+ {key:'new-energy',label:'新能源金属',products:'LC SI PS'},
+ {key:'black',label:'黑色/建材',products:'I RB HC JM J SM SF FG LG WR FB BB'},
+ {key:'chemical',label:'能源化工',products:'SC FU LU PG BU UR SA SH MA EG TA PX V EB PP PR BZ PL L PF RU BR NR SP OP ZC'},
+ {key:'agriculture',label:'农产品',products:'P Y OI M RM C CS LH JD SR CF AP PK CJ A B RR CY RS WH JR RI LR'},
+ {key:'shipping',label:'航运',products:'EC'}
+];
+export const sectors=sectorGroups.map(group=>group.label);
+const lookup=new Map(sectorGroups.flatMap(group=>group.products.split(' ').map(product=>[product,group.label])));
+const legacyLabels={'金融-股指':'股指/国债','金融-国债':'股指/国债','股指国债':'股指/国债','贵金属板块':'贵金属','有色板块':'有色金属','新能源':'新能源金属','黑色':'黑色/建材','建材':'黑色/建材','黑色系板块':'黑色/建材','能源化工板块':'能源化工','农产品板块':'农产品','其他/航运':'航运'};
+export function sectorFor(q={}){
+ const product=String(q.code||q.symbol||q.main_contract||q.actualContract||'').split('.').pop().replace(/\d+$/,'').toUpperCase();
+ return lookup.get(product)||legacyLabels[q.sector]||(sectors.includes(q.sector)?q.sector:'待分类');
+}
 export function groupedQuotes(quotes){return [...sectors,'待分类'].map(name=>({name,quotes:quotes.filter(q=>sectorFor(q)===name)}));}

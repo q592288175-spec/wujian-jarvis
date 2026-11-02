@@ -1,0 +1,89 @@
+import {readFile,writeFile} from 'node:fs/promises';
+import {resolve} from 'node:path';
+import {createHash} from 'node:crypto';
+import {marked} from 'marked';
+const out=resolve('output/trend-monitor-2026-11-03'),base='http://127.0.0.1:4318';
+const source=await readFile('server.mjs','utf8'),head=source.slice(source.indexOf('const buildSources='),source.indexOf('const operationArchive=')),paths=[...head.matchAll(/'([^']+\.(?:mjs|js|py|ps1))'/g)].map(m=>m[1]);
+const expected=createHash('sha256').update(Buffer.concat(await Promise.all(paths.map(p=>readFile(p))))).digest('hex');
+let active={},wx={},verification={};try{const h=await fetch(base+'/api/health').then(r=>r.json());active=await fetch(base+'/api/trend-monitor/status').then(r=>r.json());wx=active.weixin||{};verification={current:h.serverBuild===expected,build:h.serverBuild}}catch{}
+let test={};try{test=JSON.parse(await readFile(out+'/weixin-test.json','utf8'))}catch{}
+const click=JSON.parse(await readFile(out+'/click-verification.json','utf8')),log=await readFile('output/trend-monitor-tests-2026-11-03.txt','utf8'),count=log.match(/tests\s+(\d+)/)?.[1]||'待核验';
+const received=test.event?.deliveries?.find(d=>d.channel==='weixin'),receipt=received?.receipt;
+const wxText=receipt?.received===true?'本人已确认收到测试消息':received?.status==='accepted'?'微信接口已接受测试提醒，尚待本人确认手机收到':wx.pushReady?'已建立微信推送会话，待手机测试验收':wx.connected?'已扫码绑定；等待本人发送消息建立会话，手机推送尚未验收':'尚未绑定，待本人扫码并向机器人发送一条消息';
+const md=`# 全品种MA10监控与微信事件推送 · 2026-11-03
+
+## 当前交付状态
+
+- 全品种表格版已开发，独立桌面实际点击验收${click.passed?'通过':'未完成'}。
+- 正式进程：${verification.current?'已加载当前表格版及微信兼容修复':'仍运行先前进程；当前表格版及微信兼容修复待完全退出小木后重新打开'}。
+- 微信：${wxText}。绑定使用Windows加密保留，不需要因普通重启重新扫码。
+- 微信官方安装器已实际下载、校验和运行；本机缺少OpenClaw宿主，安装器退出1。小木改为按腾讯官方公开iLink协议独立扫码接入，不依赖OpenClaw运行。
+
+## 页面怎么用
+
+入口：左侧“品种强弱”下方 → **全品种监控**。
+
+主表按原小木板块与品种顺序排列，显示“代码／品种／板块、月K MA10、周K MA10、日K MA10、2小时 MA10、30分钟 MA10、警报”。红色向上、绿色向下、灰色走平／不足／陈旧；休市保留最后真实数据对应方向并显示行情时间。启用1小时任务时增加1小时列。
+
+顶部“监控设置与任务管理”可展开。默认已配置 **周K＋日K MA10同向、30分钟／2小时触发、多空双向、全部品种、桌面＋微信提醒**。可勾选月／周／日，以及30分钟／1小时／2小时，保存后启用；修改保留旧版本并重新建立观察基线。支持暂停、恢复和归档。
+
+真实新信号出现后，最后一列标明周期和方向，例如“30分钟多头警报”“2小时空头警报”。未读新警报5分钟内闪烁，点击停止闪烁并保留历史、输入依据和推送回执；陈旧警报不会重新伪装为新信号。
+
+## 计算口径
+
+所有周期均使用 **MA10**。
+
+- 当前动态MA10＝（前9根完整K线收盘价之和＋最新成交价）÷10。
+- 上一根完整MA10＝前10根完整K线收盘价之和÷10。
+- 大周期向上／向下由两者差值正负判断。勾选的大周期必须全部同向；不把价格在均线上下的位置当作均线方向。
+- 多头：大周期MA10同向向上，小周期MA10由非上升转为上升，随后连续观察到价格从MA10下侧／等于均线转到上侧时提醒。同一笔同时满足拐头和穿越也可提醒。
+- 空头完全镜像。只有穿越或只有拐头不触发。每个新拐点提醒一次，直到出现新的反向再拐头。
+- 按本人确认采用盘中即时口径，明确标为“盘中未收线”。首次启动、重连、换月、恢复交易和修改任务后先建立基线，不补报旧穿越。
+
+日线按交易日归属聚合周／月，处理夜盘和自然日期差异，保守移除开头不完整周／月；使用真实具体合约数据，不以其他合约价格凑月线。连续历史或MA10样本不足则明确“不足”。旧历史存在缺口时只使用最后可验证的连续尾部，不跨缺口计算。
+
+## 行情与及时性
+
+本机当前使用新浪公开具体合约报价与K线，报价约每10秒检查，公开接口可能延迟。检测收到新报价后执行，不承诺逐笔即时。天勤适配已支持真实行情和30／60／120分钟K线订阅，权限以本人账号为准，本轮没有真实天勤登录验收。
+
+真实公开接口抽查覆盖上期所黄金、能源中心原油、郑商所甲醇、大商所豆粕、中金所股指、广期所碳酸锂；均取得日K及30／60／120分钟K线。休市、陈旧报价和缺数据的品种暂停警报判断。2小时K线使用来源真实结束时间，可跨夜盘／日盘休息段，不强行按连续两小时截断。
+
+已核验目录87品种，正式首版订阅85个已映射合约、81个取得公开报价。无法核验合约、接口空表、权限和历史不足分别保留；不为补足数量伪造行情。
+
+电脑休眠、关机或真正退出服务时不能继续判断；仅最小化并保持服务运行可继续跟踪。表格离开或折叠不会停止任务。
+
+## 微信连接与验收
+
+点击“连接微信”，本人扫码确认；必要时输入手机显示数字。随后向刚绑定的微信机器人发一句“小木”，建立当前会话。推送收件人固定为扫码者。入站消息只更新通知会话，不执行聊天指令、不交给AI。
+
+点击“发送测试提醒”发出明确测试消息，再核对手机实际收到。接口接受与本人收到分开记录；网络结果不明不自动重复发送。超过5分钟的积压通知不冒充即时信号重发。
+
+本轮发现并修正了腾讯成功响应省略ret／errcode的兼容问题；允许官方合法响应，同时拒绝无消息结构、无有效发送回执的空响应。
+
+官方协议：[腾讯微信iLink说明](https://github.com/Tencent/openclaw-weixin/blob/main/docs/protocol.md)。凭据与会话信息通过现有Windows DPAPI加密保存在项目内，不写入报告、前端或聊天。
+
+## 实际验证
+
+- 全量Node自动测试：${count}/${count}通过，0失败。
+- Python实时行情适配：11/11通过；语法检查通过。
+- 桌面实际点击：导航位置、任务保存、三小周期、版本修改、暂停／恢复／归档、草稿保留、87行表格、搜索、警报点击已读、1920与1100宽度、真实腾讯二维码、未绑定拒发，均通过。
+- 闪烁与已读点击使用独立测试库的明确合成事件；没有把它保存进正式信号、推送给手机或冒充真实行情触发。
+- 已核对正式账户库、入场手法、火扫描脚本和风控边界指纹未被本轮修改。
+- 尚未等待真实市场自然出现一次完整拐头＋穿越；算法镜像与边界由回归测试覆盖。手机实际收取以上述微信状态为准。
+
+## 文件与证据
+
+- 点击记录：[click-verification.json](../output/trend-monitor-2026-11-03/click-verification.json)
+- 六所真实公开数据：[real-public-data.json](../output/trend-monitor-2026-11-03/real-public-data.json)
+- 正式首版核对：[formal-verification.json](../output/trend-monitor-2026-11-03/formal-verification.json)
+- 测试日志：[完整日志](../output/trend-monitor-tests-2026-11-03.txt)
+- 微信协议与安装记录：项目.runtime/vendor/weixin-20261103/。
+- 任务、事件、输入依据和通知回执：项目.runtime/monitor/monitor.sqlite；旧版本与卡片版备份在.runtime/ui-history/2026-11-03-trend-monitor-before/及2026-11-03-trend-monitor-card-ui-before/。
+- 新构建：项目.runtime/desktop-trend-monitor-20261103/小木-win32-x64/小木.exe。
+
+该功能只形成事件提醒，不创建计划、批准或订单。
+`;
+const path=resolve('docs/all-universe-monitor-2026-11-03.md');await writeFile(path,md);
+await writeFile(path.replace(/\.md$/,'.html'),'<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>全品种MA10监控与微信验收</title><style>body{font:16px/1.8 "Microsoft YaHei",sans-serif;color:#1e3455;background:#f6f8fe;max-width:1120px;margin:32px auto;padding:0 22px}h1{font-size:28px}h2{font-size:21px;margin-top:28px}a{color:#335caa}strong{color:#255da1}li{margin:6px 0}img{max-width:100%;border-radius:8px}</style>'+marked.parse(md)+'<h2>表格版独立桌面截图</h2><p>使用真实行情及独立业务库副本。截图中的合成警报已清除。</p><img src="../output/trend-monitor-2026-11-03/desktop-monitor-1920.png" alt="全品种MA10方向与警报表格"></html>');
+const indexPath='D:/五简个人资料/Codex/文件索引.md',index=await readFile(indexPath,'utf8');if(!index.includes('all-universe-monitor-2026-11-03'))await writeFile(indexPath,index+'\n\n- 2026-11-03｜小木全品种MA10监控、周期警报与微信推送｜D:\\五简个人资料\\2026年10月文件\\小木工作台\\wujian-jarvis\\docs\\all-universe-monitor-2026-11-03.html｜含使用口径、实际验收、实时来源、数据缺口与微信真实状态。\n');
+console.log(JSON.stringify({path,currentFormalBuild:verification.current===true,weixin:wxText}));

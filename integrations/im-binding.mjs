@@ -2,13 +2,15 @@ import {readFile,mkdir} from 'node:fs/promises';
 import {resolve,dirname} from 'node:path';
 import {randomBytes} from 'node:crypto';
 import {atomicWrite} from './research-storage.mjs';
+import {protectLocalSecret} from './local-secret.mjs';
 
 // Local binding overrides legacy env configuration, including an explicit disconnect.
 let saved=null;
 const file=resolve('.runtime/feishu/connection.json');
-export async function loadBinding(){try{saved=JSON.parse(await readFile(file,'utf8'));if(!saved||typeof saved!=='object')throw Error('invalid')}catch(e){if(e.code!=='ENOENT'){saved={disabled:true};throw Error('IM绑定记录不可读，通道已停用')}}}
+const encryptedFile=resolve('.runtime/feishu/connection.enc');
+export async function loadBinding(){try{const envelope=JSON.parse(await readFile(encryptedFile,'utf8'));saved=JSON.parse(await protectLocalSecret(envelope,'decrypt'));if(!saved||typeof saved!=='object')throw Error('invalid')}catch(e){if(e.code==='ENOENT'){try{saved=JSON.parse(await readFile(file,'utf8'))}catch(old){if(old.code!=='ENOENT')throw Error('旧IM绑定记录不可读')}}else{saved={disabled:true};throw Error('IM绑定记录不可读，通道已停用')}}}
 export function bindingOverride(){return saved}
-export async function persistBinding(value){await mkdir(dirname(file),{recursive:true});await atomicWrite(file,JSON.stringify(value));saved=value;}
+export async function persistBinding(value){const encrypted=await protectLocalSecret(JSON.stringify(value));await mkdir(dirname(encryptedFile),{recursive:true});await atomicWrite(encryptedFile,JSON.stringify(encrypted));saved=value;}
 export function bindingSummary(){return {bound:!!(saved?.appId&&!saved.disabled),disabled:saved?.disabled===true,boundAt:saved?.boundAt||null,channel:'feishu',agent:'小木 国内期货研究 Agent'};}
 
 export function createBindingService({register,qr,persist,activate,now=Date.now}){

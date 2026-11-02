@@ -7,7 +7,7 @@ export function compareEvidence(previous,current){
  return {status:same?'same-contract':'rollover',previousId:previous.id,previousCreated:previous.created,previousSymbol:previous.symbol,currentSymbol:current.symbol,priceChange:same?delta(current.last,old.last):null,openInterestChange:same?delta(current.openInterest,old.openInterest):null,notice:same?'差值为两次研究快照之差，不是当日涨跌或资金净流入；触发路径仍需历史证据核验':'合约已换月，不直接比较两个合约价格、成交量或持仓；旧判断需重新核验'};
 }
 export function reviewReport(text,trace){
- const sections=[['上一版审计',/上一|首次研究/],['支持与反证',/反证/],['三种情景',/基准[\s\S]*上行[\s\S]*下行/],['失效条件',/失效/],['下一次复盘',/下次|下一次|下一观察|下一检查/],['数据缺口',/缺口|待补/],['策略决策卡',/入场[\s\S]*止损[\s\S]*(风险|预算|手数)/],['人工拍板',/拍板|人工决策/]];
+ const sections=[['价格先验',/先验/],['四维证据',/基本面[\s\S]*消息面[\s\S]*政策面[\s\S]*资金面/],['后验判断',/后验/],['综合建议',/建议/],['反转信号',/反转|推翻/],['下一步验证',/下一步|验证/]];
  const missingSections=sections.filter(([,r])=>!r.test(text)).map(([n])=>n);
  const articles=trace.flatMap(t=>(t.result?.documents||[]).flatMap(d=>d.articles||[])).filter(a=>a.text);
  const known=new Set([...articles.map(a=>a.url),...trace.flatMap(t=>[t.result?.url,...(t.result?.items||[]).map(i=>i.url)])].filter(Boolean));

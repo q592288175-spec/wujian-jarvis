@@ -1,0 +1,27 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {mkdir,mkdtemp,writeFile} from 'node:fs/promises';
+import {resolve,join} from 'node:path';
+import {randomUUID} from 'node:crypto';
+await mkdir(resolve('output/final-release/tests'),{recursive:true});
+const dir=await mkdtemp(resolve('output/final-release/tests/research-'));
+process.env.WUJIAN_WORKBENCH_DB=join(dir,'business.sqlite');process.env.WUJIAN_RESEARCH_DIR=dir;
+const w=await import('../integrations/five-workbench.mjs');
+const {applyResearchDraft}=await import('../integrations/research-application.mjs');
+const {getReport}=await import('../integrations/research-agent.mjs');
+test('新报告独立保存；选择应用、并发冲突、归档与账户绑定均保护人工研究',async()=>{
+ const a=w.saveAccount({alias:'研究保护隔离账户',mode:'simulation',equity:1e6});
+ const c=w.saveCard({accountId:a.id,symbol:'BR',name:'丁二烯橡胶',contract:'BR2612',direction:'long',water:{change:'本人判断',evidence:'原证据',disproof:'本人反证'}});
+ const job={id:randomUUID(),cardId:c.id,contract:c.contract,productCode:'BR',status:'completed',application:'pending',waterDraft:{change:'AI新判断',evidence:'AI新证据'}};
+ await writeFile(join(dir,job.id+'.json'),JSON.stringify(job));
+ assert.equal((await getReport(job.id)).status,'completed');assert.deepEqual(w.getCard(c.id),c);
+ await applyResearchDraft(c.id,{reportId:job.id,fields:['change'],expected:{change:'本人判断'}});
+ assert.equal(w.getCard(c.id).water.change,'AI新判断');assert.equal(w.getCard(c.id).water.evidence,'原证据');assert.equal(w.getCard(c.id).water.disproof,'本人反证');
+ assert.ok(w.fullCard(c.id).timeline.some(x=>x.action==='应用AI研究前值'&&x.payload.water.change==='本人判断'));
+ await assert.rejects(applyResearchDraft(c.id,{reportId:job.id,fields:['change'],expected:{change:'本人判断'}}),/其他窗口/);
+ const other=w.saveCard({accountId:a.id,symbol:'BR',name:'丁二烯橡胶',contract:'BR2701',water:{change:'另一卡'}});
+ await assert.rejects(applyResearchDraft(other.id,{reportId:job.id,fields:['change'],expected:{change:'另一卡'}}),/不一致/);
+ w.deleteCard(c.id,{token:w.cardRemovalPreview(c.id).token,confirmed:true,noOpenOrdersConfirmed:true,reason:'隔离测试'});
+ await assert.rejects(applyResearchDraft(c.id,{reportId:job.id,fields:['change'],expected:{change:'AI新判断'}}),/归档/);
+ assert.equal(w.getCard(c.id).water.change,'AI新判断');
+});

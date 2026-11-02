@@ -1,0 +1,43 @@
+import assert from 'node:assert/strict';
+import {readFile,writeFile} from 'node:fs/promises';
+import {resolve,join} from 'node:path';
+import {_electron} from 'file:///C:/Users/86199/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs';
+import {databaseManifest} from './system-backup.mjs';
+import {MonitorStore} from '../integrations/monitor-store.mjs';
+import {randomUUID} from 'node:crypto';
+const out=resolve('output/trend-monitor-2026-11-03'),preview=JSON.parse(await readFile(join(out,'preview.json'),'utf8')),base=preview.base;
+const before=databaseManifest('.runtime/five-workbench.sqlite'),errors=[],checks=[];
+const env={...process.env,WUJIAN_DESKTOP_PORT:String(preview.port),WUJIAN_DESKTOP_PROFILE:join(preview.root,'desktop-verify-profile')};delete env.ELECTRON_RUN_AS_NODE;
+let app,page;
+try{
+ app=await _electron.launch({executablePath:resolve('.runtime/desktop-trend-monitor-20261103/小木-win32-x64/小木.exe'),env,timeout:45000});page=await app.firstWindow();page.on('pageerror',e=>errors.push(e.message));
+ await page.waitForSelector('#accountSelect option',{state:'attached',timeout:45000});await page.goto(base+'/#market/monitor');await page.waitForSelector('#trendTaskForm',{state:'attached',timeout:45000});await page.locator('.tm-settings > summary').click();
+ await fetch(base+'/api/monitor/provider',{method:'POST',headers:{Origin:base,'Content-Type':'application/json'},body:JSON.stringify({provider:'sina'})});
+ const names=await page.locator('#mainNav [data-route]').allTextContents();const monitorIndex=names.findIndex(s=>s.includes('全品种监控')),strengthIndex=names.findIndex(s=>s.includes('品种强弱'));assert.equal(monitorIndex,strengthIndex+1);assert.ok(monitorIndex>0);
+ await page.waitForFunction(()=>document.querySelectorAll('[data-trend-task]').length>0);checks.push({navigationPosition:true,defaultTask:true});
+ assert.equal(await page.locator('#trendTaskForm input[name="bigPeriods"][value="1w"]').isChecked(),true);assert.equal(await page.locator('#trendTaskForm input[name="bigPeriods"][value="1d"]').isChecked(),true);assert.equal(await page.locator('#trendTaskForm input[name="smallPeriods"][value="30m"]').isChecked(),true);
+ await page.locator('#trendTaskForm [name="title"]').fill('实际点击验收 · 月周日三周期');
+ await page.locator('[data-tm-preset="1mo,1w,1d"]').click();await page.locator('#trendTaskForm [name="smallPeriods"][value="60m"]').check();await page.locator('#trendTaskForm [name="smallPeriods"][value="120m"]').check();await page.locator('#trendTaskForm [name="channels"][value="weixin"]').uncheck();
+ await page.locator('[data-tm-save]').click();await page.waitForFunction(()=>[...document.querySelectorAll('[data-trend-task]')].some(e=>e.textContent.includes('实际点击验收')));
+ let tasks=await fetch(base+'/api/trend-monitor/tasks').then(r=>r.json());const saved=tasks.items.find(t=>t.title.includes('实际点击验收'));assert.deepEqual(saved.bigPeriods,['1mo','1w','1d']);assert.deepEqual(saved.smallPeriods,['30m','60m','120m']);assert.deepEqual(saved.channels,['desktop']);checks.push({saveEnabledTask:true,allPeriodChoices:true});
+ await page.locator(`[data-tm-edit="${saved.id}"]`).click();await page.locator('#trendTaskForm [name="direction"]').selectOption('short');await page.locator('[data-tm-save]').click();await page.waitForTimeout(350);tasks=await fetch(base+'/api/trend-monitor/tasks').then(r=>r.json());assert.equal(tasks.items.find(t=>t.id===saved.id).version,2);assert.equal(tasks.items.find(t=>t.id===saved.id).direction,'short');checks.push({editCreatesVersion:true});
+ await page.locator(`[data-tm-action="pause"][data-tm-id="${saved.id}"]`).click();await page.waitForFunction(id=>document.querySelector(`[data-trend-task="${id}"]`)?.textContent.includes('已暂停'),saved.id);
+ await page.locator(`[data-tm-action="activate"][data-tm-id="${saved.id}"]`).click();await page.waitForFunction(id=>document.querySelector(`[data-trend-task="${id}"]`)?.textContent.includes('已启用'),saved.id);
+ await page.locator(`[data-tm-action="archive"][data-tm-id="${saved.id}"]`).click();await page.waitForFunction(id=>!document.querySelector(`[data-trend-task="${id}"]`),saved.id);checks.push({pauseResumeArchive:true});
+ await page.locator('#trendTaskForm [name="title"]').fill('尚未保存的条件应保留');await page.waitForTimeout(4200);assert.equal(await page.locator('#trendTaskForm [name="title"]').inputValue(),'尚未保存的条件应保留');checks.push({pollPreservesDraft:true});
+ await page.locator('.tm-settings > summary').click();
+ await page.waitForFunction(()=>document.querySelectorAll('tr[data-tm-row]').length===87);
+ await page.waitForFunction(()=>[...document.querySelectorAll('.tm-slope')].some(e=>e.textContent.includes('向上')||e.textContent.includes('向下')),{},{timeout:45000});
+ assert.match(await page.locator('.tm-universe-table thead').innerText(),/月K/);assert.match(await page.locator('.tm-universe-table thead').innerText(),/警报/);
+ assert.equal(await page.locator('tr[data-tm-row]').count(),87);checks.push({all87Rows:true,maDirectionGrid:true});
+ const fixtureStore=new MonitorStore(join(preview.root,'monitor.sqlite')),eventId=randomUUID(),event={id:eventId,kind:'ma-turn',ruleId:'trend:fixture',symbol:'CFFEX.IF2612',code:'IF',name:'沪深300股指',period:'30m',direction:'up',price:100,ma:99,source:'验收合成信号',condition:'仅用于独立测试库的闪烁和已读验收',quoteAt:new Date().toISOString(),triggeredAt:new Date().toISOString(),channels:[],evidence:{fixture:true}};
+ fixtureStore.recordEvent(event);await page.locator('[data-tm-refresh]').click();await page.waitForSelector(`[data-tm-read="${eventId}"].tm-alert-unread`);await page.locator(`[data-tm-read="${eventId}"]`).click();await page.waitForSelector(`[data-tm-read="${eventId}"].tm-alert-read`);assert.ok(fixtureStore.event(eventId).readAt);checks.push({actualFlashingAlertClickAndRead:true,syntheticEventOnlyInFixture:true});fixtureStore.db.prepare('DELETE FROM monitor_events WHERE id=?').run(eventId);fixtureStore.close();await page.locator('[data-tm-refresh]').click();await page.waitForFunction(id=>!document.querySelector(`[data-tm-read="${id}"]`),eventId);
+ await page.locator('[data-tm-row-search]').fill('MA');assert.equal(await page.locator('tr[data-tm-row]').count(),1);await page.locator('[data-tm-row-search]').fill('');assert.equal(await page.locator('tr[data-tm-row]').count(),87);checks.push({matrixSearch:true});
+ await page.setViewportSize({width:1920,height:1080});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);await page.screenshot({path:join(out,'desktop-monitor-1920.png'),fullPage:true});
+ await page.setViewportSize({width:1100,height:900});await page.waitForTimeout(150);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);await page.screenshot({path:join(out,'desktop-monitor-1100.png'),fullPage:true});checks.push({widths:[1920,1100],noHorizontalOverflow:true});
+ await page.locator('[data-tm-login]').click();await page.waitForSelector('[data-tm-qr] img',{timeout:20000});assert.match(await page.locator('[data-tm-qr] img').getAttribute('src'),/^data:image\/png;base64,/);assert.equal(await page.locator('[data-tm-weixin-test]').isDisabled(),true);checks.push({officialQrActuallyGenerated:true,noSendBeforeBinding:true});
+ const response=await fetch(base+'/api/trend-monitor/weixin/test',{method:'POST',headers:{Origin:base,'Content-Type':'application/json'},body:'{}'});assert.equal(response.status,400);checks.push({unboundTestRejected:true});
+ assert.deepEqual(errors,[]);assert.deepEqual(databaseManifest('.runtime/five-workbench.sqlite'),before);
+ const result={passed:true,at:new Date().toISOString(),checks,errors,businessUnchanged:true,scope:'独立桌面与业务/监控库副本；腾讯官方真实二维码已生成，未扫码、未发送微信消息'};await writeFile(join(out,'click-verification.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result));
+}catch(e){await page?.screenshot({path:join(out,'failed.png'),fullPage:true}).catch(()=>{});await writeFile(join(out,'click-failed.json'),JSON.stringify({error:e.message,checks,errors},null,2));throw e}
+finally{await app?.close().catch(()=>{})}

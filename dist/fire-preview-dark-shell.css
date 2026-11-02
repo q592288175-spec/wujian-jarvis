@@ -1,0 +1,10 @@
+:root{color-scheme:dark;color:#bdc3bf;background:#111314}
+.preview-bar{background:#181b1c;border-color:#303435}
+.preview-title{color:#9fa8a2}
+.appearance-switch{background:#101213;border:1px solid #303638}
+.appearance-switch button{color:#9ba69f}
+.appearance-switch button[aria-pressed=true]{background:#2d3332;color:#e1e9e3;box-shadow:none}
+.swatch{border-color:#68736e}.swatch.dark{background:#2c3031}
+.preview-bar a{color:#b3bdb7}
+iframe,#previewLoading{background:#111314;color:#a8b4ad}
+button:focus-visible,a:focus-visible{outline-color:#9fbca9}

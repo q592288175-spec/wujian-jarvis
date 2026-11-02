@@ -1,0 +1,86 @@
+.monitor-bell{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-width:42px;min-height:42px;padding:8px 11px;border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:var(--r-md);cursor:pointer;flex-shrink:0;position:relative}
+.monitor-icon{width:19px;height:19px;display:block;filter:none;flex:none}
+.monitor-count{font-size:var(--fs-xs);color:var(--warn)}
+.monitor-count:empty{display:none}
+.monitor-health{font-size:var(--fs-xs);color:var(--text);display:block}
+.monitor-health.warn{color:var(--warn)}
+.monitor-page{color:var(--text);min-width:0}
+.monitor-page h2{font-size:var(--fs-xl);letter-spacing:0}
+.monitor-page h3{font-size:var(--fs-lg);letter-spacing:0}
+.monitor-toolbar{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:16px}
+.monitor-toolbar p{margin:6px 0;color:var(--text);font-size:var(--fs-sm)}
+.monitor-actions{display:flex;gap:8px;flex-wrap:wrap}
+.monitor-actions button,.monitor-tabs button,.monitor-editor button,.monitor-dialog button{cursor:pointer;min-height:38px}
+.monitor-statusbar{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin:12px 0 18px;background:var(--surface)}
+.monitor-statusbar>div{padding:12px 14px;min-width:0}
+.monitor-statusbar small{display:block;color:var(--text);margin-bottom:5px}
+.monitor-statusbar b{font-size:var(--fs-md);overflow-wrap:anywhere}
+.monitor-statusbar .warn{color:var(--warn)}
+.monitor-tabs{display:flex;border-bottom:1px solid var(--line);gap:12px;margin-bottom:18px}
+.monitor-tabs button{border:0;border-bottom:2px solid transparent;border-radius:0;padding:10px 6px;background:none;color:var(--text)}
+.monitor-tabs button.active{color:var(--text);border-color:var(--line)}
+.monitor-search{max-width:320px;width:100%;margin-bottom:14px}
+.monitor-table-wrap{overflow:auto}
+.monitor-table{width:100%;border-collapse:collapse;font-size:var(--fs-md)}
+.monitor-table th,.monitor-table td{padding:13px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.monitor-table th{color:var(--text);font-weight:500}
+.monitor-table td small{display:block;color:var(--text);line-height:1.7}
+.monitor-table button{white-space:nowrap}
+.monitor-table td:last-child{min-width:180px}
+.monitor-up{color:var(--up)}
+.monitor-down{color:var(--down)}
+.monitor-warning{color:var(--warn)}
+.monitor-neutral{color:var(--text)}
+.monitor-empty{padding:32px 8px;color:var(--text)}
+.monitor-settings{max-width:880px}
+.monitor-setting{padding:16px 0;border-bottom:1px solid var(--line)}
+.monitor-setting h3{margin-top:0}
+.monitor-setting p{font-size:var(--fs-md);color:var(--text);line-height:1.7}
+.monitor-credentials{display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:end}
+.monitor-setting label,.monitor-editor label{display:flex;flex-direction:column;gap:7px;font-size:var(--fs-md)}
+.monitor-setting input,.monitor-editor input,.monitor-editor select,.monitor-search{padding:10px;border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface);color:var(--text);min-width:0;font:inherit;box-sizing:border-box}
+.monitor-setting .monitor-source{display:flex;justify-content:space-between;gap:12px;padding:8px 0;font-size:var(--fs-md)}
+.monitor-setting a{color:var(--text)}
+.monitor-dialog{box-sizing:border-box;width:min(900px,calc(100vw - 28px));max-height:calc(100dvh - 30px);padding:20px;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface);color:var(--text);overflow:auto}
+.monitor-dialog::backdrop{background:color-mix(in srgb,var(--surface) 64%,transparent)}
+.monitor-dialog header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.monitor-dialog h2{font-size:var(--fs-xl);margin:0;letter-spacing:0}
+.monitor-dialog .monitor-close{width:36px;height:36px;min-width:36px;line-height:1;border:1px solid var(--line);background:none;color:var(--text);font-size:var(--fs-xl)}
+.monitor-dialog button{border-radius:var(--r-md);padding:8px 13px;border:1px solid var(--line);background:var(--raised);color:var(--text)}
+.monitor-dialog button.primary{background:var(--raised);color:var(--text);font-weight:600}
+.monitor-dialog small{color:var(--text)}
+.monitor-dialog .monitor-actions{margin-top:18px}
+.monitor-editor{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.monitor-editor .wide{grid-column:1/-1}
+.monitor-editor select[multiple]{min-height:170px}
+.monitor-editor .monitor-inline{display:flex;flex-direction:row;align-items:center;gap:8px}
+.monitor-editor .monitor-inline input{width:auto}
+.monitor-preview{padding:11px 14px;background:var(--raised);border-left:3px solid var(--line);font-size:var(--fs-md);line-height:1.8;overflow-wrap:anywhere}
+.monitor-error{color:var(--warn);white-space:pre-wrap}
+.monitor-inbox-item{width:100%;text-align:left;display:block;margin:8px 0;padding:14px}
+.monitor-inbox-item b,.monitor-inbox-item small{display:block}
+.monitor-inbox-item small{margin-top:5px}
+.monitor-evidence{display:grid;grid-template-columns:140px 1fr;gap:10px;font-size:var(--fs-md);line-height:1.6}
+.monitor-evidence dt{color:var(--text)}
+.monitor-evidence dd{margin:0;overflow-wrap:anywhere}
+.monitor-article{white-space:pre-wrap;overflow-wrap:anywhere;font-size:var(--fs-md);line-height:1.8}
+.monitor-qr{display:block;max-width:240px;width:100%;background:var(--surface);padding:10px;border-radius:var(--r-sm);margin:16px 0}
+@media (max-width:760px){.monitor-statusbar{grid-template-columns:repeat(2,minmax(0,1fr))}
+.monitor-credentials{grid-template-columns:1fr}
+.monitor-editor{grid-template-columns:1fr}
+.monitor-editor .wide{grid-column:auto}
+.monitor-table{min-width:760px}
+.monitor-evidence{grid-template-columns:1fr}
+.monitor-evidence dd{margin-bottom:8px}
+.monitor-dialog{padding:14px}
+.monitor-bell{padding:8px;min-width:38px;min-height:38px}
+.monitor-health{display:none}
+}
+.monitor-dialog [hidden],.monitor-page [hidden]{display:none}
+.monitor-provider{display:flex;align-items:end;gap:12px;flex-wrap:wrap}
+.monitor-provider label{flex:1;min-width:200px}
+.monitor-provider select{padding:10px;border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface);color:var(--text);font:inherit;width:100%;box-sizing:border-box}
+.monitor-provider button{min-height:40px}
+
+:root[data-theme="holo"] .monitor-icon{filter:brightness(0) invert(1)}
+.side-nav .monitor-icon{filter:brightness(0) invert(1)}

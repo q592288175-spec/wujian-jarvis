@@ -1,0 +1,25 @@
+/* Six trading pages share the quiet dark surface. Market and system pages keep their light palette. */
+#fireScanPanel{overflow-anchor:none}
+:root:has(body[data-area="trade"]:is([data-trade-view="home"],[data-trade-view="fire"],[data-trade-view="water"],[data-trade-view="metal"],[data-trade-view="earth"],[data-trade-view="wood"])){
+ color-scheme:dark;--scheme:dark;--bg:#0c1318;--surface:#111b22;--raised:#1b2832;--line:#2b3a44;--line-strong:#415560;
+ --text:#e8eff3;--muted:#afc0cb;--shadow:#000000;
+ --accent:#72afe8;--accent-strong:#a5d0f3;--accent-soft:#19384e;--on-accent:#081722;
+ --nav-bg:#101b25;--nav-text:#e1eaf2;--nav-muted:#a6b9c8;--nav-active:#3157a1;--nav-on-active:#ffffff;
+ --up:#ff7078;--up-soft:#3c242b;--up-mid:#ea9aa1;--up-ink:#4d1720;
+ --down:#56d892;--down-soft:#19382c;--down-mid:#84dca5;--down-ink:#103d27;
+ --warn:#e7bc76;--warn-soft:#342b1c;--danger:#ff8a83;--danger-soft:#3b2528;
+ --fire:#f38c72;--fire-soft:#372620;--water:#77c2e8;--water-soft:#193444;
+ --metal:#d9bf7b;--metal-soft:#332e21;--earth:#bda67c;--earth-soft:#302b22;--wood:#7ad198;--wood-soft:#1c3528;
+}
+html body[data-area="trade"][data-unified]:not([data-trade-view="monitor"]):not([data-trade-view="rules"]) .monitor-icon{filter:brightness(0) invert(1)}
+html body[data-area="trade"][data-unified]:not([data-trade-view="monitor"]):not([data-trade-view="rules"]) .conversation-tools img{filter:brightness(0) invert(1)}
+html body[data-area="trade"][data-unified]:not([data-trade-view="monitor"]):not([data-trade-view="rules"]) #content thead th{background:var(--raised);color:var(--text)}
+html body[data-area="trade"][data-unified]:not([data-trade-view="monitor"]):not([data-trade-view="rules"]) .fire-overview-group.fire-long .fire-strength-strong{background:#ff4d57;color:#291017}
+html body[data-area="trade"][data-unified]:not([data-trade-view="monitor"]):not([data-trade-view="rules"]) .fire-overview-group.fire-long .fire-strength-medium{background:#ff929b;color:#42121c}
+html body[data-area="trade"][data-unified]:not([data-trade-view="monitor"]):not([data-trade-view="rules"]) .fire-overview-group.fire-long .fire-strength-weak{background:#fac4c9;color:#42121c}
+html body[data-area="trade"][data-unified]:not([data-trade-view="monitor"]):not([data-trade-view="rules"]) .fire-overview-group.fire-short .fire-strength-strong{background:#25ca61;color:#082b18}
+html body[data-area="trade"][data-unified]:not([data-trade-view="monitor"]):not([data-trade-view="rules"]) .fire-overview-group.fire-short .fire-strength-medium{background:#78db9a;color:#103923}
+html body[data-area="trade"][data-unified]:not([data-trade-view="monitor"]):not([data-trade-view="rules"]) .fire-overview-group.fire-short .fire-strength-weak{background:#b6ebc8;color:#103923}
+html body[data-area="trade"][data-unified]:not([data-trade-view="monitor"]):not([data-trade-view="rules"]) .topbar,
+html body[data-area="trade"][data-unified]:not([data-trade-view="monitor"]):not([data-trade-view="rules"]) .account-funds-bar{background:var(--surface)}
+html body[data-area="trade"][data-unified]:not([data-trade-view="monitor"]):not([data-trade-view="rules"]) #mainNav a:hover{background:#233644}

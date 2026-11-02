@@ -1,0 +1,14 @@
+import {readFile,writeFile} from 'node:fs/promises';
+import {resolve} from 'node:path';
+import assert from 'node:assert/strict';
+import {createHash} from 'node:crypto';
+import {databaseManifest} from './system-backup.mjs';
+const out=resolve('output/quick-audit-2026-10-30'),base='http://127.0.0.1:4318';
+const source=await readFile('server.mjs','utf8'),head=source.slice(source.indexOf('const buildSources='),source.indexOf('const operationArchive='));
+const paths=[...head.matchAll(/'([^']+\.(?:mjs|js|py|ps1))'/g)].map(m=>m[1]);
+const expected=createHash('sha256').update(Buffer.concat(await Promise.all(paths.map(p=>readFile(p))))).digest('hex');
+const health=await fetch(base+'/api/health').then(r=>r.json());assert.equal(health.serverBuild,expected);assert.equal(health.projectRoot,resolve('.'));
+const snap=await fetch(base+'/api/market-panorama/snapshot').then(r=>r.json());assert.equal(snap.products.length,87);assert.ok(snap.closeOverview);
+const before=JSON.parse(await readFile('output/market-overview-2026-10-30/baseline.json','utf8'));assert.deepEqual(databaseManifest('.runtime/five-workbench.sqlite'),before.business);
+const result={passed:true,at:new Date().toISOString(),build:health.serverBuild,products:snap.products.length,closeDate:snap.closeOverview.day,valid:snap.closeOverview.products.filter(p=>p.status==='ok').length,businessUnchanged:true,activeExecutable:'.runtime/desktop-tq-verified-20261028/小木-win32-x64/小木.exe'};
+await writeFile(out+'/active-verification.json',JSON.stringify(result,null,2));console.log(JSON.stringify(result));

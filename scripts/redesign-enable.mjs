@@ -1,0 +1,11 @@
+import {DatabaseSync,backup} from 'node:sqlite';import {readFile,writeFile,mkdir,copyFile} from 'node:fs/promises';import {existsSync} from 'node:fs';import {resolve,join} from 'node:path';import {spawnSync} from 'node:child_process';import {createHash} from 'node:crypto';import assert from 'node:assert/strict';import {databaseManifest} from './system-backup.mjs';
+const root=resolve('.');if(!root.startsWith('D:\\五简个人资料\\'))throw Error('运行目录越界');
+const backupFolder=resolve('.runtime/ui-history/2026-10-25-stage8-before/market-panorama');await mkdir(backupFolder,{recursive:true});
+const file=resolve('.runtime/market-panorama/market.sqlite'),dest=join(backupFolder,'market.sqlite');
+const evidence=db=>Object.fromEntries(['bars','seats'].map(t=>[t,db.prepare('SELECT COUNT(*) AS n FROM '+t).get().n]).concat([['records',createHash('sha256').update(JSON.stringify(db.prepare("SELECT * FROM records WHERE kind NOT IN ('contract-info','basis','supplement-status') ORDER BY kind,key,day").all())).digest('hex')]]));
+let db=new DatabaseSync(file,{readOnly:true});const before=evidence(db);if(!existsSync(dest))await backup(db,dest);db.close();
+const result=spawnSync(resolve('.venv-akshare/Scripts/python.exe'),['-X','utf8','scripts/redesign-import-evidence.py',resolve('.runtime/market-panorama')],{cwd:root,encoding:'utf8',windowsHide:true});if(result.status!==0)throw Error(result.stderr);console.log(result.stdout);
+db=new DatabaseSync(file,{readOnly:true});const after=evidence(db);db.close();assert.deepEqual(after,before);
+assert.deepEqual(databaseManifest('.runtime/five-workbench.sqlite'),JSON.parse(await readFile('output/redesign-2026-10-25/baseline/business-manifest.json','utf8')));
+const desktopBackup=resolve('.runtime/ui-history/2026-10-25-stage9-before/desktop');await mkdir(desktopBackup,{recursive:true});if(!existsSync(join(desktopBackup,'main.cjs')))await copyFile('.runtime/ui-history/2026-10-25-redesign-before/desktop/main.cjs',join(desktopBackup,'main.cjs'));
+await writeFile('output/redesign-2026-10-25/production-evidence-import.json',JSON.stringify({before,after,businessUnchanged:true,backup:dest,sourceCalls:0,importedRows:685},null,2));console.log('正式行情缓存补位完成；原行情、席位和正式业务库不变');

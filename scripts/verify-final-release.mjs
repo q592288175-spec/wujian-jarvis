@@ -1,0 +1,22 @@
+import {spawn} from 'node:child_process';
+import {mkdir,writeFile,readFile} from 'node:fs/promises';
+import {resolve} from 'node:path';
+import {createHash} from 'node:crypto';
+import {databaseManifest} from './system-backup.mjs';
+const out=resolve('output/final-release'),results=[];await mkdir(out,{recursive:true});
+async function run(name,executable,args){const result=await new Promise(resolve=>{const child=spawn(executable,args,{windowsHide:true,env:{...process.env,PYTHONIOENCODING:'utf-8'}});let log='';child.stdout.on('data',b=>log+=b);child.stderr.on('data',b=>log+=b);child.once('error',e=>resolve({code:-1,log:e.message}));child.once('exit',code=>resolve({code,log}))});await writeFile(resolve(out,name+'.log'),result.log);results.push({name,code:result.code});console.log(JSON.stringify({name,code:result.code,tail:result.log.split(/\r?\n/).slice(-9).join('\n')}));}
+await run('syntax',process.execPath,['scripts/check-source.mjs']);
+const tests=['account-balance','trade-records','plan-lifecycle','fire-refresh','monitor-sina','research-storage','research-application','research-draft-ui','final-readiness','relative-strength','knowledge-rag','resonance-rule','simple-sizing','automatic-sizing','environment','environment-plan','five-workbench','monitor','monitor-recovery','official-sources','research-market','research-audit','postmarket-review','postmarket-comparison','postmarket-sources','rule-details','structure-condition-colors','sectors','cockpit-data'];
+await run('node-focused',process.execPath,['--test',...tests.map(n=>'tests/'+n+'.test.mjs')]);
+const py=resolve('.venv-akshare/Scripts/python.exe');
+await run('python-fire',py,['-X','utf8','tests/fire_scan_test.py']);
+await run('python-monitor',py,['-X','utf8','tests/test_monitor_market.py']);
+await run('python-eod',py,['-X','utf8','-m','pytest','tests/test_eod_market.py','-q','-p','no:cacheprovider']);
+const checkpoint='.runtime/checkpoints/final-2026-10-16T03-52-28-316Z';
+const baseline=JSON.parse(await readFile(resolve(checkpoint,'manifest.json'),'utf8'));
+const current=databaseManifest(resolve('.runtime/five-workbench.sqlite')),expected=baseline.databases['project/.runtime/five-workbench.sqlite'];
+const tableNames=['accounts','cards','plan_versions','executions','reviews','balance_changes','account_entries','operation_events'];
+const business=tableNames.map(table=>({table,before:expected.tables[table],after:current.tables[table],unchanged:JSON.stringify(expected.tables[table])===JSON.stringify(current.tables[table])}));
+const rules=await Promise.all(['integrations/resonance-rule.mjs','scripts/fire_scan.py','integrations/approval-boundary.mjs','integrations/trade-ledger.mjs','dist/position-sizing.js'].map(async path=>{const actual=createHash('sha256').update(await readFile(path)).digest('hex'),old=baseline.files.find(f=>f.path==='project/'+path);return{path,unchanged:old?.sha256===actual,sha256:actual}}));
+const report={checkedAt:new Date().toISOString(),results,business,rules,passed:results.every(r=>r.code===0)&&business.every(r=>r.unchanged)&&rules.every(r=>r.unchanged)};
+await writeFile(resolve(out,'verification.json'),JSON.stringify(report,null,2));console.log(JSON.stringify({passed:report.passed,businessUnchanged:business.every(r=>r.unchanged),rulesUnchanged:rules.every(r=>r.unchanged),output:out}));process.exitCode=report.passed?0:1;

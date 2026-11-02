@@ -1,0 +1,113 @@
+{
+  "version": "2026-10-26-gold-five-verified-1",
+  "files": [
+    {
+      "name": "工作台现行口径",
+      "path": "docs/current-workbench-contract.md",
+      "scope": "筛选、研究、余额、计划和归档",
+      "lifecycle": "current",
+      "sha256": "284d3e5f73b15a17967a363d8ada3c9c508789a60a4875020e95cacaca994fac"
+    },
+    {
+      "name": "极简测算说明",
+      "path": "docs/simple-plan.md",
+      "scope": "现行价差测算及未自动核验范围",
+      "lifecycle": "current",
+      "sha256": "bf4d9b5abb1b0802b4c11d9a3d57658120ce251049b90b5e836201f503813145"
+    },
+    {
+      "name": "交易记录与资金记账",
+      "path": "docs/trade-records.md",
+      "scope": "执行、净盈亏、修正与操作记录",
+      "lifecycle": "current",
+      "sha256": "f5774467ef3672fad381e80aca6b52fd39c2be6179e73692bcc889b68123e789"
+    },
+    {
+      "name": "多账户余额说明",
+      "path": "docs/account-balance-management-2026-10-12.md",
+      "scope": "账户与手动余额同步",
+      "lifecycle": "current",
+      "sha256": "da142fe7473728d897abda265bec2b82cb24b7b22cb4c078624598643fc16fa2"
+    },
+    {
+      "name": "金四法与本人审定",
+      "path": "docs/gold-methods-2026-10-19.md",
+      "scope": "10月19日四法保留；新增独立分时以10月26日增量为准",
+      "lifecycle": "current",
+      "sha256": "3f780375f493648be1c7f91283ef8c50f342cf5820b1a70f810f6b57f40fb288"
+    },
+    {
+      "name": "金独立分时第五法",
+      "path": "docs/gold-intraday-2026-10-26.md",
+      "scope": "独立分时参数、日内止损、最新余额0.5%及持有复入审定，不改原四法",
+      "lifecycle": "current",
+      "sha256": "bcb4761d713f0f033682d34c15147723c007848488f3b2389de509cd1d850ae4"
+    }
+  ],
+  "implementations": [
+    {
+      "path": "integrations/resonance-rule.mjs",
+      "sha256": "b6d65d2b898d26710316f097be37010a924afb5e64711f8f3b7d4d80e4999d6e"
+    },
+    {
+      "path": "integrations/approval-boundary.mjs",
+      "sha256": "c4de41825b0e54e3d7abe3ab80632733eb2d6d408e2e7751a2a80e810fd6b823"
+    },
+    {
+      "path": "integrations/trade-ledger.mjs",
+      "sha256": "ba412808db5295d24cea5c538dc9f6f9f423577a1ea5417553abd196374178b3"
+    },
+    {
+      "path": "integrations/account-balances.mjs",
+      "sha256": "482abc9cb22fa370befbb1afe43e339b15966f965542877c39113a468b0ac538"
+    },
+    {
+      "path": "dist/position-sizing.js",
+      "sha256": "46157d87e730297d35a3f1496b5059d3fbb91926da345bd78235e7f739b7cffa"
+    },
+    {
+      "path": "integrations/gold-planning.mjs",
+      "sha256": "16c6fa200ac1afcc99ab3a1025102c8f4368f053fe1edd8f65729030eee65a15"
+    },
+    {
+      "path": "dist/gold-methods.js",
+      "sha256": "7c4ffd99a13a141fff16d3e278b6b850eb661d08a0c7eef1cf05eedf4873b0d1"
+    },
+    {
+      "path": "integrations/environment.mjs",
+      "sha256": "c6472ab1b5e92b8cdca8c3e7d27d6418eaeab22cbaab57b5670aceadca243efb"
+    }
+  ],
+  "references": [
+    {
+      "path": "../../1_交易/账户与规则/00_规则入口.md",
+      "lifecycle": "reference",
+      "authority": "reference",
+      "weight": 55
+    },
+    {
+      "path": "../../1_交易/账户与规则/2026-10-02_交易纲领补充_绝不逆势_当前_v1.0.md",
+      "lifecycle": "reference",
+      "authority": "reference",
+      "weight": 55
+    },
+    {
+      "path": "../../1_交易/团队与私募/2026-10-04_五行交易团队职责框架_v1.0.md",
+      "lifecycle": "reference",
+      "authority": "reference",
+      "weight": 55
+    },
+    {
+      "path": "../../1_交易/2026-10-14_反K波段交易每日工作计划_v2.docx",
+      "lifecycle": "reference",
+      "authority": "reference",
+      "weight": 55
+    },
+    {
+      "path": "../../1_交易/2026-10-15_五简三维交易系统_一页入门说明_v1.docx",
+      "lifecycle": "reference",
+      "authority": "reference",
+      "weight": 55
+    }
+  ]
+}

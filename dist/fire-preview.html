@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>小木 · 火页面外观样稿</title>
+  <link rel="icon" href="/favicon.svg">
+  <link rel="stylesheet" href="/fire-preview-shell.css">
+</head>
+<body>
+  <header class="preview-bar">
+    <span class="preview-title">火页面样稿</span>
+    <div class="appearance-switch" role="group" aria-label="外观对比">
+      <button type="button" data-appearance="wood" aria-pressed="true"><i class="swatch wood"></i>浅木白 · 朱红</button>
+      <button type="button" data-appearance="original" aria-pressed="false"><i class="swatch original"></i>原版</button>
+    </div>
+    <a href="/?view=fire" target="_top">返回正式工作台 <span aria-hidden="true">↗</span></a>
+  </header>
+  <div id="previewLoading" role="status">正在读取火页面…</div>
+  <iframe id="workbenchPreview" title="火 · 识别机会外观预览" src="/?view=fire"></iframe>
+  <script type="module" src="/fire-preview.js"></script>
+</body>
+</html>

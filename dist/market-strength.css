@@ -1,0 +1,43 @@
+/* A compact observation workspace; directional values retain red/green. */
+#marketSurface #marketContent .strength-workspace{display:grid;gap:10px}
+#marketSurface #marketContent .strength-picker{margin:0}
+#marketSurface #marketContent .observation-pool-row{padding-top:9px;margin-top:8px;border-top:1px solid var(--line)}
+#marketSurface #marketContent .pool-source{margin:5px 0 9px 70px;font-size:12px;line-height:1.6;color:var(--muted)}
+#marketSurface #marketContent .observation-member-list{flex:1;min-width:0;display:grid;gap:8px}
+#marketSurface #marketContent .observation-members{display:flex;align-items:flex-start;gap:8px;min-width:0}
+#marketSurface #marketContent .observation-members>strong{flex:0 0 70px;font-size:12px;line-height:30px;white-space:nowrap}
+#marketSurface #marketContent .observation-members>strong small{font-size:11px;opacity:.7}
+#marketSurface #marketContent .observation-members .strength-product-tabs{flex:1;min-width:0}
+#marketSurface #marketContent .observation-tag{display:inline-flex;align-items:center;justify-content:center;min-width:19px;min-height:19px;margin-right:2px;border-radius:4px;font-size:11px;font-weight:750}
+#marketSurface #marketContent button[aria-pressed] .observation-tag.long{color:#ab3029;background:#fbe7e5}
+#marketSurface #marketContent button[aria-pressed] .observation-tag.short{color:#20633f;background:#e0f0e6}
+#marketSurface #marketContent .observation-chart-key{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;margin:0 0 8px;font-size:12px}
+#marketSurface #marketContent .observation-chart-key>span{display:inline-flex;align-items:center;gap:6px;font-weight:650}
+#marketSurface #marketContent .observation-chart-key i{display:inline-block;width:25px;border-top:2px solid currentColor}
+#marketSurface #marketContent .observation-chart-key .short i{border-top-style:dashed}
+#marketSurface #marketContent .observation-chart-key small{color:var(--muted);font-size:12px}
+#marketSurface #marketContent .comparison-toolbar{margin:0}
+#marketSurface #marketContent .strength-board{display:grid;grid-template-columns:minmax(0,1fr) minmax(255px,310px);gap:12px;align-items:start}
+#marketSurface #marketContent .strength-chart-panel,#marketSurface #marketContent .strength-rank-panel{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px;min-width:0}
+#marketSurface #marketContent .strength-chart-panel>.section{margin:0}
+#marketSurface #marketContent .strength-chart-panel{position:relative}
+#marketSurface #marketContent .strength-chart-panel .section-head{padding-right:115px}
+#marketSurface #marketContent .strength-chart-panel .chart-tools{position:absolute;right:14px;top:14px;margin:0}
+#marketSurface #marketContent .strength-chart-panel .comparison-status{margin:2px 0 6px}
+#marketSurface #marketContent .strength-chart-panel .chart.tall{height:520px}
+#marketSurface #marketContent .strength-rank-panel header{display:flex;justify-content:space-between;align-items:baseline;gap:8px;border-bottom:1px solid var(--line);padding-bottom:8px}
+#marketSurface #marketContent .strength-rank-panel header small{color:var(--muted);font-size:12px}
+#marketSurface #marketContent .strength-rank-panel header{flex-wrap:wrap}
+#marketSurface #marketContent .strength-rank-panel header h2{margin:0;font-size:15px;white-space:nowrap}
+#marketSurface #marketContent .live-rank-group h3{margin:12px 0 5px;font-size:13px}
+#marketSurface #marketContent .live-rank-item{display:grid;grid-template-columns:20px minmax(0,1fr) auto auto;gap:6px;width:100%;min-height:34px;margin:2px 0;padding:5px 7px;text-align:left;font-size:12px}
+#marketSurface #marketContent .live-rank-item .rank-index{color:inherit;opacity:.7}
+#marketSurface #marketContent .live-rank-item .rank-name{min-width:0;overflow:hidden;text-overflow:ellipsis}
+#marketSurface #marketContent .live-rank-item .rank-name small,#marketSurface #marketContent .live-rank-item .rank-time{font-size:11px;color:inherit;opacity:.72}
+#marketSurface #marketContent .live-rank-item .rank-change.long{color:#b72f25;background:#fdecea;padding:2px 4px;border-radius:3px}
+#marketSurface #marketContent .live-rank-item .rank-change.short{color:#286c50;background:#e6f4ee;padding:2px 4px;border-radius:3px}
+#marketSurface #marketContent .strength-rank-panel>.caption{display:block;margin:10px 0 0;line-height:1.6}
+#marketSurface #marketContent .strength-trend-details{padding:10px 14px;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+#marketSurface #marketContent .strength-trend-details>summary{cursor:pointer;font-weight:650;color:var(--text)}
+@media(max-width:1100px){#marketSurface #marketContent .strength-board{grid-template-columns:minmax(0,1fr)}#marketSurface #marketContent .strength-rank-panel{display:grid;grid-template-columns:1fr 1fr;gap:10px}#marketSurface #marketContent .strength-rank-panel header,#marketSurface #marketContent .strength-rank-panel>.caption{grid-column:1/-1}}
+@media(max-width:600px){#marketSurface #marketContent .strength-rank-panel{grid-template-columns:1fr}#marketSurface #marketContent .strength-chart-panel .chart.tall{height:360px}#marketSurface #marketContent .pool-source{margin-left:0}#marketSurface #marketContent .observation-members{display:block}#marketSurface #marketContent .observation-members>strong{line-height:24px}}

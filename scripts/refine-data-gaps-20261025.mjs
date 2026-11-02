@@ -1,0 +1,5 @@
+import {readFile,writeFile} from 'node:fs/promises';
+let back=await readFile('integrations/market-panorama.mjs','utf8');back=back.replace("warrantHistory:record('warrant-history',c.code,day),",'');back=back.replace('return {...product,bars:',"return {...product,warrantHistory:record('warrant-history',code,day),bars:");await writeFile('integrations/market-panorama.mjs',back);
+let ui=await readFile('dist/market-supplement-ui.js','utf8');ui=ui.replace('合约与现货证据','合约与产业证据');await writeFile('dist/market-supplement-ui.js',ui);
+let html=await readFile('dist/market-panorama.html','utf8');html=html.replace('<option value="supplement">合约与现货资料</option>','<option value="supplement">合约与产业资料</option>');await writeFile('dist/market-panorama.html',html);
+let css=await readFile('dist/market-panorama.css','utf8');css+='\n.evidence-history summary{cursor:pointer;color:var(--accent-strong);padding:7px 0}.evidence-history .table-wrap{max-height:280px}.evidence-history table{font-size:var(--fs-xs)}.supplement-grid [data-evidence] table th,.supplement-grid [data-evidence] table td{padding:6px 8px}\n';await writeFile('dist/market-panorama.css',css);

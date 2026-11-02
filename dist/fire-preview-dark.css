@@ -1,0 +1,126 @@
+@import url('./fire-preview-theme.css');
+
+/* Reuse the preview layout. This palette is loaded only by the dark preview entry. */
+:root{
+  color-scheme:dark;
+  --bg:#111314;--side:#181b1c;--panel:#1c2021;--line:#303536;
+  --text:#e1e6e3;--muted:#9da6a1;--green:#9fbca9;--fire:#dd8980;
+  --water:#9bb2bc;--metal:#c8b58c;--danger:#e69b94;--warn:#cbb079;
+  --long:#ee9991;--short:#8dcaa8;
+}
+.side-nav{background:var(--side);border-color:#303536;padding-top:24px}
+.brand{padding-bottom:27px}
+.brand-mark{background:#9fbca9;color:#18241e}
+.brand b{color:#e3e8e4}.brand small{color:#9fa8a2;font-size:11px}
+nav button{color:#a2aca6}
+nav button span{color:#87978e}
+nav button:hover{background:#232929;color:#e1e6e3}
+nav button.active{background:#24312b;color:#d3e3d9;box-shadow:inset 3px 0 #9fbca9}
+nav button.active span{color:#b0ceb9}
+.assistant-entry{background:#1c2222;color:#c0cbc4;border-color:#39433e}
+.assistant-entry:hover{background:#28312c;border-color:#687d70}
+.side-foot{color:#98a49c}.side-foot i.ok{background:#80b796}
+.topbar{background:#181b1c;padding-block:16px;min-height:82px}
+.page-title h1{color:#edf0ed}.page-title small{color:#99a79e}
+.top-meta b{color:#d3dbd5}.top-meta label,.top-meta small{color:#a0aaa4;font-size:11px}
+select,input,textarea{background:#202526;border-color:#3b4441;color:var(--text)}
+select:focus,input:focus,textarea:focus{border-color:#8cae98;box-shadow:0 0 0 2px #8cae981c}
+button:focus-visible,a:focus-visible,summary:focus-visible{outline-color:#9fbca9}
+.icon-button,.toolbar-button{background:#202526;color:#c2cdc5;border-color:#3b4441}
+.toolbar-button:hover{background:#2b3430;border-color:#6b7a70;color:#e6eee8}
+.danger-icon{color:#d8a09a!important}
+.rule-version-button{color:#b6c1ba;border-color:#59665e}
+.rule-version-button:hover{color:#dfebe3;border-color:#9fbca9}
+.account-funds-bar{background:#151819;border-color:#303536;padding-block:8px}
+.account-summary{color:#99a79e;font-size:12px;gap:6px 18px}
+.account-summary b{color:#d7e0d9}
+#teamBoundary{color:#93a097;font-size:11px;padding-top:9px}
+main{padding-top:17px}
+.section-head{margin-bottom:12px}.section-head h2{font-size:18px}
+.section-head p{color:#98a49b;font-size:12px;line-height:1.5}
+button.primary{background:#9fbca9;border-color:#9fbca9;color:#17231b;font-weight:600}
+button.primary:hover{background:#b4cebd;border-color:#b4cebd}
+button.secondary,button.quiet{background:#1e2424;color:#c2ccc6;border-color:#3a4540}
+button.secondary:hover,button.quiet:hover{background:#29342e;border-color:#6b7f71}
+.hint{background:#202b2c;color:#c3d0cf;border-color:#688485}
+.hint.warning{background:#2a2720;color:#cfbc95;border-color:#9d865b}
+.hint.error-box{background:#302222;color:#e5aaa4;border-color:#b0716c}
+#fireRefreshStatus:not(.error-box){color:#9cad9f;font-size:11px;margin-bottom:6px}
+.data-coverage{color:#a7b0a9;margin:8px 0 12px;font-size:11px}
+.data-coverage[open]{background:#1b2020}
+.fire-modebar>.tabs{border-color:#343c38}
+.tabs button{color:#a4b0a7;font-size:14px}
+.tabs button.active{color:#cee2d4;border-bottom-color:#9fbca9}
+.tabs button:hover{color:#e1eae3;background:#222a26}
+.badge{background:#2a352f;color:#bfcec3}
+.tabs .badge{background:#2a302f;color:#adb8b0}
+.tabs button.active .badge{background:#344a3c;color:#d7e6dc}
+.strength-summary{padding:14px 0;gap:18px}
+.strength-heading{font-size:14px}
+.strength-heading small{color:#a1aaa4;font-size:11px}
+.strength-pair{background:#1b2021;border-color:#343d38;min-height:66px}
+.strength-pair small{color:#a3afa6}
+.strength-pair:hover{background:#232d27;border-color:#7d9384;box-shadow:none}
+.strength-vacant,.strength-loading{color:#a7b1a9}
+.fire-overview-group{padding:17px 0 18px;gap:11px}
+.fire-overview-group+.fire-overview-group{border-color:#39413d}
+.fire-overview-group.fire-long{--direction:#ee9991;--tone-strong:#c86d64;--tone-medium:#9d6861;--tone-weak:#634b48;--tone-fill:#322425;--tone-medium-fill:#272122}
+.fire-overview-group.fire-short{--direction:#8dcaa8;--tone-strong:#5f9e78;--tone-medium:#587f65;--tone-weak:#41584b;--tone-fill:#1e3027;--tone-medium-fill:#1f2723}
+.fire-overview-group h3{font-size:14px}
+.fire-overview-group h3 small{color:#a0aaa2;font-size:11px}
+.fire-overview-group ol{gap:6px 14px}
+.fire-rank{color:#8c9a90;font-size:11px}
+.fire-overview .fire-overview-group button[data-strength]{background:#1b2021;border-color:#323b37;border-left-color:var(--tone-weak);color:#d2dad4}
+.fire-overview-group button[data-strength] small{color:#a1afa5;font-size:10px}
+.fire-overview .fire-overview-group button.fire-strength-strong{background:var(--tone-fill);border-color:#3e4440;border-left-color:var(--tone-strong);color:var(--direction)}
+.fire-overview .fire-overview-group button.fire-strength-medium{background:var(--tone-medium-fill);border-left-color:var(--tone-medium);color:#d4dcd5}
+.fire-overview .fire-overview-group button.fire-strength-weak{background:#1b2021;border-left-color:var(--tone-weak);color:#c5cec7}
+.fire-overview .fire-overview-group button.fire-strength-unknown{background:#262929;color:#a9b3ad;border-left-color:#677169}
+.fire-overview .fire-overview-group button[data-strength]:hover{background:var(--tone-fill);border-color:var(--tone-strong);box-shadow:none}
+.fire-overview-group .monitor-bell{opacity:.72}
+.fire-overview-group .monitor-bell:hover{background:#2e3831}
+.monitor-icon,.monitor-bell img{filter:brightness(0) invert(.75)}
+.monitor-bell svg{color:#abb9af}
+#monitorBell{background:#202526;color:#c2cdc5;border-color:#3b4441}
+#monitorBell:hover{background:#2b3430;border-color:#6b7a70}
+#monitorBell .monitor-health{color:#b0bdb4}
+.filters label{color:#b0bdb3}
+.filters select{background:#202526}
+.filters .status-line{color:#a3b1a7;font-size:12px}
+.status-line i{background:#92b29c}
+table{background:#1a1e1f}
+th{color:#a9b8ad;background:#222828;border-color:#35403a}
+td{border-color:#303a34}
+tbody tr:hover{background:#222b25}
+.fire-long{--direction:#ee9991;--direction-bg:#2b2223;--direction-row:#1a1e1f}
+.fire-short{--direction:#8dcaa8;--direction-bg:#202e26;--direction-row:#1a1e1f}
+.fire-decisions .fire-decision.long .badge{background:#34272a;color:#eeaaa1;border-color:#724b4a}
+.fire-decisions .fire-decision.short .badge{background:#25382c;color:#aed5b9;border-color:#4b6c54}
+.fire-decisions .fire-decision.neutral .badge{background:#2c3330;color:#bbc6bd;border-color:#46534b}
+.fire-structure.long-strong{background:#34262a;border-color:#cb756b}.fire-structure.long-strong span,.fire-structure.long-strong small{color:#e5a097}
+.fire-structure.long-partial{background:#332d23;border-color:#b28d56}.fire-structure.long-partial span,.fire-structure.long-partial small{color:#d8b689}
+.fire-structure.short-strong{background:#25352a;border-color:#76a986}.fire-structure.short-strong span,.fire-structure.short-strong small{color:#a2ceaf}
+.fire-structure.short-partial{background:#243139;border-color:#799aa9}.fire-structure.short-partial span,.fire-structure.short-partial small{color:#b3cbd5}
+.table-wrap{border-color:#354039}
+.table-wrap .primary{background:#29372e;color:#c3d7c9;border-color:#526957}
+.table-wrap .quiet{color:#bac9bf}
+dialog,.scan-rule-dialog,.account-editor{background:#1c2122;color:var(--text);border-color:#4d5952;box-shadow:0 20px 70px #0008}
+dialog::backdrop,.scan-rule-dialog::backdrop,.account-editor::backdrop{background:#080b0cad}
+.evidence div{background:#242c29;border-color:#404e44}.evidence small{color:#a9b8ad}
+.rule-dialog-close,.rule-retry{background:#26312a;color:#d0ded3;border-color:#4d5f51}
+.rule-detail-meta,.rule-field,.rule-mode-tabs,.strength-evidence{border-color:#3c4840}
+.rule-field b,.rule-evidence summary{color:#ccd9ce}
+.rule-detail-meta span,.rule-mode-version,.rule-boundary,.rule-evidence code,.strength-table td small{color:#aab7ad}
+.rule-mode-tabs button{color:#acb9af}
+.rule-mode-tabs button[aria-selected=true]{background:#2a3a2f;color:#d6e7db;border-color:#9fbca9}
+.rule-alert{background:#302d23;color:#d6c197;border-color:#b39760}
+.chart{border-color:#3d4a41}
+.account-editor input,.account-editor select,.account-editor textarea{background:#202826;color:#e1e6e3;border-color:#45564b}
+.account-editor button{background:#29372e;color:#c3d7c9;border-color:#526957}
+.account-editor button.primary{background:#9fbca9;border-color:#9fbca9;color:#17231b}
+.account-editor input[readonly]{color:#a9b8ad}.account-editor .account-error{color:#ecb3a9}
+#toast{background:#c7d8ca;color:#1c291f;box-shadow:0 5px 25px #0005}#toast.error{background:#dab0a7;color:#34221d}
+.assistant-drawer{background:#1c2122;border-color:#45564b}
+.assistant-messages p{background:#27312b;color:#d4e1d7}.assistant-messages .user{background:#314237}
+@media(min-width:1800px){main{padding-top:20px}.fire-overview-group{padding:18px 0 20px}.fire-overview-group ol{gap:7px 18px}}
+@media(max-width:760px){.side-nav{border-bottom-color:#303536}.topbar{padding:16px;min-height:0}.account-summary{font-size:11px}.section-head p{font-size:11px}.filters .status-line{font-size:11px}.strength-heading small{font-size:10px}.fire-overview-group button[data-strength] small{font-size:9px}.fire-rank{font-size:9px}}

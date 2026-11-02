@@ -1,0 +1,16 @@
+/* One selection language for all market filters. Directional data keeps red/green. */
+#marketSurface{--selection-bg:#365ecb;--selection-hover:#2e53b9;--selection-ink:#ffffff;--control-ink:#314566;--control-line:#c5d0e7;--control-hover:#edf2ff}
+#marketSurface :is(#marketContent,#sectorButtons) button:is([aria-pressed],.active){background:var(--surface);color:var(--control-ink);border:1px solid var(--control-line);box-shadow:none;font-weight:550}
+#marketSurface :is(#marketContent,#sectorButtons) button:is([aria-pressed],.active) :is(b,.product-code,.comparison-name){color:inherit;opacity:1}
+#marketSurface :is(#marketContent,#sectorButtons) button[aria-pressed=false]:hover:not(:disabled){background:var(--control-hover);border-color:#8da6e8;color:#254da8}
+#marketSurface :is(#marketContent,#sectorButtons) button:is([aria-pressed=true],.active),
+#marketSurface #autoToggle[aria-pressed=true]{background:var(--selection-bg);color:var(--selection-ink);border-color:var(--selection-bg);box-shadow:none;font-weight:700}
+#marketSurface :is(#marketContent,#sectorButtons) button:is([aria-pressed=true],.active):hover:not(:disabled),
+#marketSurface #autoToggle[aria-pressed=true]:hover{background:var(--selection-hover);color:var(--selection-ink);border-color:var(--selection-hover)}
+#marketSurface :is(#marketContent,#sectorButtons) button:is([aria-pressed=true],.active) :is(span,b,small,svg){color:inherit;opacity:1}
+#marketSurface :is(#marketContent,#sectorButtons) button:is([aria-pressed=true],.active) .comparison-change.long{color:var(--up);background:var(--up-soft);border-radius:3px;padding:0 4px}
+#marketSurface :is(#marketContent,#sectorButtons) button:is([aria-pressed=true],.active) .comparison-change.short{color:var(--down);background:var(--down-soft);border-radius:3px;padding:0 4px}
+#marketSurface button:focus:not(:focus-visible){outline:none}
+#marketSurface button:focus-visible{outline:2px solid var(--selection-bg);outline-offset:3px}
+#marketSurface :is(select,input):focus-visible{outline:2px solid var(--selection-bg);outline-offset:2px;border-color:var(--selection-bg)}
+#marketSurface input[type=checkbox]{accent-color:var(--selection-bg)}

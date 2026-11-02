@@ -1,0 +1,20 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {mkdir,mkdtemp} from 'node:fs/promises';
+import {resolve} from 'node:path';
+await mkdir(resolve('.runtime/test-environment'),{recursive:true});
+const directory=await mkdtemp(resolve('.runtime/test-environment/run-'));
+process.env.WUJIAN_WORKBENCH_DB=resolve(directory,'business.sqlite');
+const {saveCard,getCard,savePlan,approvePlan,cardEnvironment}=await import('../integrations/five-workbench.mjs');
+test('冻结计划重算自动环境并保留快照，拒绝旧证据批准',async()=>{
+ const card=saveCard({symbol:'BU',name:'沥青',contract:'BU2611',direction:'long',layers:{day:{direction:'long',source:'不能信任的手工输入'}}});
+ const before=await cardEnvironment(card.id,{cycle:'day'});
+ const saved=await savePlan(card.id,{mainCycle:'day',environmentHash:'user-supplied',environmentLayers:{}});
+ assert.equal(saved.plan.payload.environmentHash,before.hash);
+ assert.deepEqual(saved.plan.payload.environmentLayers,before.layers);
+ assert.equal(saved.layers.day.direction,before.layers.day.direction);
+ const historical=saved.plan.payload.environmentLayers;
+ saveCard({...getCard(card.id),contract:'BU9999'});
+ await assert.rejects(approvePlan(card.id),/环境证据已变化/);
+ assert.deepEqual(getCard(card.id).plan.payload.environmentLayers,historical);
+});

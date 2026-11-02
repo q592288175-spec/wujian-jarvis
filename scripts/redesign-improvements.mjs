@@ -1,0 +1,15 @@
+import {readFile,writeFile} from 'node:fs/promises';import {backupFiles,replaceFile} from './redesign-files.mjs';
+await backupFiles('stage7',['server.mjs','dist/market-panorama.js','dist/workbench.js','dist/market-panorama.css']);
+await replaceFile('server.mjs',[["if(req.method==='GET'&&path==='status')", "if(req.method==='GET'&&path==='fee-rating')return json(res,200,JSON.parse(await readFile(resolve(ROOT,'data/fee-rating.json'),'utf8')));\n  if(req.method==='GET'&&path==='status')"]]);
+let app=await readFile('dist/workbench.js','utf8');app=app.replace('fireTotal=Object.values(s.fireCounts||{}).reduce((sum,item)=>sum+(Number(item?.long)||0)+(Number(item?.short)||0),0)','fireTotal=(state.fire?.rows||[]).filter(row=>Object.values(row.modes||{}).some(value=>value===\'多头观察\'||value===\'空头观察\')).length');app=app.replace('${fireTotal} 条模式候选','${fireTotal} 个去重候选品种</small><small>${modeOrder.map(mode=>`${modes[mode]} ${(s.fireCounts?.[mode]?.long||0)+(s.fireCounts?.[mode]?.short||0)}`).join(\' · \')}');await writeFile('dist/workbench.js',app);
+let p=await readFile('dist/market-panorama.js','utf8');p="import {feeRating,undrawnSeatSeries} from './fee-rating.js';\nconst feeConfig=await fetch('/api/market-panorama/fee-rating').then(r=>r.ok?r.json():null).catch(()=>null);\n"+p;
+p=p.replace("cost:f.open!==null", "rating:feeRating({...f,volume:typeof f['成交量']==='number'?f['成交量']:f.contract===p.contract?p.volume:null,interest:typeof f['持仓量']==='number'?f['持仓量']:f.contract===p.contract?p.interest:null},feeConfig),cost:f.open!==null");
+p=p.replace("['计费类型','feeType'", "['成本评价','',r=>`<span class=\"fee-rating ${r.rating.tone}\">${r.rating.label}</span>${r.rating.ratio===null?'':`<small>平昨成本 / 每跳 ${(r.rating.ratio*100).toFixed(1)}%</small>`}${r.rating.todayExpensive?'<small class=\"fee-rating high\">平今贵</small>':''}`],['计费类型','feeType'");
+p=p.replace("`${rows.length} 个合约 · 金额以每手计算", "`当前：${esc(state.feeSector??strengthSectorFor(list().find(p=>p.code===state.product)||{}))} · ${state.mainOnly?'已核验主力':'全部合约'} · ${rows.length} 个合约 · 金额以每手计算");
+p=p.replace("+' · 明细保留当前筛选的全部记录';}", "+' · 明细保留当前筛选的全部记录'+(undrawnSeatSeries(series).length?' · 未绘：'+undrawnSeatSeries(series).map(s=>s.name+'（'+s.reason+'）').join('、'):'');}");
+p=p.replace("function renderStrength(){", "function renderStrength(){");
+// Keep the existing trend ranking criteria, add only an explicit relationship note.
+p=p.replace("return strengthPicker()", "return note('品种强弱用于比较月周日MA10共振与斜率，火候选仍以既有筛选规则为准；强弱排名不授予交易许可。')+strengthPicker()");
+await writeFile('dist/market-panorama.js',p);
+let style=await readFile('dist/market-panorama.css','utf8');style+='\n.fee-rating{display:inline-block;padding:3px 7px;border-radius:var(--r-sm);font-weight:600;background:var(--raised);color:var(--muted)}.fee-rating.low{color:var(--accent-strong);background:var(--accent-soft)}.fee-rating.high{color:var(--warn);background:var(--warn-soft)}\n';await writeFile('dist/market-panorama.css',style);
+console.log('display corrections and cost rating ready');

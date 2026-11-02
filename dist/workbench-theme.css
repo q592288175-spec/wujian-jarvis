@@ -1,0 +1,398 @@
+/* Appearance follows the existing active navigation; business state stays untouched. */
+body {
+  --scene: url('/assets/wujian/themes/home.png');
+  --page-accent: #a6d6e5;
+  --page-accent-soft: #a6d6e524;
+  --page-frame: #a6d6e548;
+  --page-action: #a6d6e5;
+  --page-ink: #10171b;
+  --panel: #11171b;
+  --line: #d4dde52b;
+  --text: #f0f3f5;
+  --muted: #aeb9c2;
+  isolation: isolate;
+  background: #080c10;
+  color: var(--text);
+  letter-spacing: 0;
+}
+body:has(#mainNav [data-view='monitor'].active) {
+  --scene: url('/assets/wujian/themes/monitor.png');
+  --page-accent: #f1c16e;
+  --page-accent-soft: #f1c16e23;
+  --page-frame: #9fb9e34a;
+  --page-action: #f1c16e;
+}
+body:has(#mainNav [data-view='fire'].active) {
+  --scene: url('/assets/wujian/themes/fire.png');
+  --page-accent: #ff8a79;
+  --page-accent-soft: #ff8a792b;
+  --page-frame: #ff8a7955;
+  --page-action: #52d69b;
+}
+body:has(#mainNav [data-view='water'].active) {
+  --scene: url('/assets/wujian/themes/water.png');
+  --page-accent: #75d1ff;
+  --page-accent-soft: #75d1ff24;
+  --page-frame: #75d1ff50;
+  --page-action: #75d1ff;
+}
+body:has(#mainNav [data-view='metal'].active) {
+  --scene: url('/assets/wujian/themes/metal.png');
+  --page-accent: #f4dfad;
+  --page-accent-soft: #f4dfad27;
+  --page-frame: #f4dfad65;
+  --page-action: #f4dfad;
+  --panel: #11171b;
+}
+body:has(#mainNav [data-view='earth'].active) {
+  --scene: url('/assets/wujian/themes/earth.png');
+  --page-accent: #d7ba70;
+  --page-accent-soft: #d7ba7026;
+  --page-frame: #b9a57564;
+  --page-action: #d7ba70;
+  --panel: #11171b;
+}
+body:has(#mainNav [data-view='wood'].active) {
+  --scene: url('/assets/wujian/themes/wood.png');
+  --page-accent: #75e3ac;
+  --page-accent-soft: #75e3ac24;
+  --page-frame: #75e3ac50;
+  --page-action: #75e3ac;
+}
+body:has(#mainNav [data-view='rules'].active) {
+  --scene: url('/assets/wujian/themes/rules.png');
+  --page-accent: #cad5de;
+  --page-accent-soft: #cad5de23;
+  --page-frame: #cad5de50;
+  --page-action: #bbd0ce;
+}
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: var(--scene);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  /* Only the scenic layer is subdued; signals and text keep their original contrast. */
+  filter: saturate(.32) brightness(.55);
+  opacity: .22;
+}
+body:not(.cockpit) .side-nav {
+  background: #0a0f13d6;
+  border-color: #c8d0d51f;
+  backdrop-filter: blur(16px);
+}
+body:not(.cockpit) .topbar {
+  background: #0a0f13df;
+  border-color: var(--line);
+  backdrop-filter: blur(18px);
+}
+body:not(.cockpit) .page-title small { color: var(--page-accent); }
+body:not(.cockpit) .brand-mark,.cockpit .brand-emblem {
+  width: 124px;
+  height: 104px;
+  flex: 0 0 124px;
+  display: block;
+  object-fit: contain;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  outline: 0;
+  box-shadow: none;
+}
+body:not(.cockpit) .brand {
+  flex-direction: column;
+  align-items: center;
+  gap: 9px;
+  padding: 0 0 24px;
+  text-align: center;
+}
+body:not(.cockpit) .brand-mark { width: 116px; height: 116px; flex: 0 0 auto; }
+body:not(.cockpit) .brand b {
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: #e1e6e8;
+  white-space: nowrap;
+}
+.cockpit .brand {
+  min-width: 136px;
+  flex-direction: column;
+  align-items: center;
+  gap: 9px;
+  text-align: center;
+}
+.cockpit .brand-emblem { width: 116px; height: 116px; flex: 0 0 auto; }
+.cockpit .brand b {
+  font-family: 'Microsoft YaHei UI','Microsoft YaHei',sans-serif;
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: #e1e6e8;
+  text-shadow: none;
+}
+.cockpit .brand small { color: var(--muted); }
+body:not(.cockpit) .page-title h1 { font-size: 21px; line-height: 1.4; }
+body:not(.cockpit) #mainNav button {
+  min-height: 46px;
+  color: #b7c0c7;
+  border: 1px solid transparent;
+  border-radius: 7px;
+}
+body:not(.cockpit) #mainNav button:hover { color: #fff; background: #ffffff0c; }
+body:not(.cockpit) #mainNav button.active {
+  background: var(--page-accent-soft);
+  border-color: var(--page-frame);
+  color: #fff;
+  box-shadow: inset 0 1px 0 #ffffff10;
+}
+body:not(.cockpit) #mainNav button.active span {
+  background: var(--page-accent);
+  border-color: transparent;
+  color: var(--page-ink);
+}
+body:not(.cockpit) #content { padding-top: 24px; }
+body:not(.cockpit) #teamBoundary {
+  padding: 11px 14px;
+  background: #10171bf2;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: #c5cdd3;
+}
+body:not(.cockpit) #teamBoundary summary { margin: 0; color: inherit; }
+body:not(.cockpit) :is(.panel,.kpi) {
+  background: var(--panel);
+  border-color: #c8d0d526;
+  border-radius: 8px;
+  box-shadow: 0 12px 32px #00000026, inset 0 1px 0 #ffffff0a;
+}
+body:not(.cockpit) .section-head h2 { line-height: 1.45; }
+body:not(.cockpit) .section-head p { color: var(--muted); line-height: 1.6; }
+body:not(.cockpit) :is(.card-row,.evidence>div,.risk-result>div,.source-item) {
+  background: #0b1116df;
+  border-color: var(--line);
+  border-radius: 6px;
+}
+body:not(.cockpit) .card-row.selected {
+  background: var(--page-accent-soft);
+  border-color: var(--page-accent);
+}
+body:not(.cockpit) :is(input,select,textarea) {
+  background-color: #0b1117f5;
+  border-color: #6d7f8e66;
+  color: var(--text);
+  border-radius: 5px;
+}
+body:not(.cockpit) :is(input,select,textarea):focus {
+  border-color: var(--page-accent);
+  outline: 2px solid var(--page-accent-soft);
+  outline-offset: 1px;
+}
+body:not(.cockpit) button.primary {
+  background: var(--page-action);
+  color: var(--page-ink);
+  border-color: transparent;
+  box-shadow: inset 0 1px 0 #ffffff38;
+}
+body:not(.cockpit) :is(button.secondary,.toolbar-button,.assistant-entry,.icon-button) {
+  background-color: #151e25e8;
+  border-color: #8496a244;
+  color: #f0f3f5;
+}
+body:not(.cockpit) :is(button.secondary,.toolbar-button,.assistant-entry,.icon-button):hover {
+  background-color: #22303bed;
+  border-color: var(--page-frame);
+}
+body:not(.cockpit) button.quiet {
+  background: #10181fe8;
+  border-color: var(--line);
+}
+body:not(.cockpit) .flow button { background: #10181fe8; }
+body:not(.cockpit) :is(button,a):focus-visible {
+  outline: 2px solid var(--page-accent);
+  outline-offset: 3px;
+}
+body:not(.cockpit) :is(.tabs button.active,.rule-mode-tabs button[aria-selected=true]) {
+  border-bottom-color: var(--page-accent);
+}
+body:not(.cockpit) :is(.strength-pair,.batch-progress,.research-state,.research-report) {
+  background: #10171feb;
+  border-color: var(--line);
+}
+body:not(.cockpit) :is(.research-snapshot,.strategy-summary,.research-advice) {
+  background: #0c141bf2;
+  border-top-color: var(--line);
+  border-right-color: var(--line);
+  border-bottom-color: var(--line);
+}
+body:not(.cockpit) .water-tabs { padding-bottom: 1px; }
+body:not(.cockpit) :is(#governancePanel,#maintenancePanel) {
+  background: #0d141bf0;
+  padding: 16px 18px;
+  margin-bottom: 18px;
+  border-block: 1px solid var(--line);
+}
+body:not(.cockpit) .monitor-page {
+  padding: 18px;
+  min-height: 650px;
+  background: #0a111bd9;
+}
+body:not(.cockpit) .monitor-statusbar { background: #141c28; }
+body:not(.cockpit) .monitor-tabs button.active { border-color: var(--page-accent); }
+body:not(.cockpit) .fire-modebar { gap: 16px; }
+body:not(.cockpit) .fire-overview { margin-bottom: 22px; }
+body:not(.cockpit) .fire-overview-group { padding-block: 16px; }
+body:not(.cockpit) .fire-overview-group ol { row-gap: 8px; }
+body:not(.cockpit) .fire-structure { max-width: 100%; }
+body:not(.cockpit) tbody tr:hover { background-color: #ffffff07; }
+body:not(.cockpit) .balance-panel {
+  border-color: var(--page-frame);
+  background: #10171bec;
+  padding: 18px;
+  border-radius: 8px;
+}
+body:not(.cockpit) .panel .balance-panel {
+  background: transparent;
+  padding: 0 0 18px;
+  border-radius: 0;
+  border-top: 0;
+  border-inline: 0;
+}
+.account-funds-bar {
+  background: #0b1117e8;
+  border-color: var(--line);
+  backdrop-filter: blur(12px);
+}
+.account-summary { color: #b9c3cb; }
+.account-summary b { color: #f1f4f6; }
+.balance-scroll th,.balance-scroll td:last-child { background: #141e26; }
+body:not(.cockpit) :is(dialog,.assistant-drawer) {
+  background: #10171b;
+  border-color: #71849188;
+  color: var(--text);
+}
+body:not(.cockpit) .assistant-messages p { background: #19232b; }
+body:not(.cockpit) .assistant-messages .user { background: #20372e; }
+body:not(.cockpit) .account-editor :is(input,select,textarea) { background: #0b1117; }
+body:not(.cockpit) .account-editor button { background: #19232b; border-color: #71849166; }
+body:not(.cockpit) .account-editor button.primary { background: var(--page-action); color: var(--page-ink); }
+
+/* The existing Three.js globe stays live in front of a quiet, neutral star field. */
+body.cockpit {
+  --scene: url('/assets/wujian/themes/holographic.png');
+  --bg: #040609;
+  --surface: #0b1016;
+  --surface-2: #151f28;
+  --line: #b6c9d32b;
+  --line-strong: #91a9b756;
+  --text: #f0f4f6;
+  --muted: #aebcc6;
+  --cyan: #8fced9;
+}
+.cockpit #cockpit-shell { background: transparent; }
+.cockpit .cockpit-header {
+  background: #070c12ef;
+  border-color: var(--line);
+  backdrop-filter: blur(16px);
+}
+.cockpit :is(.panel,.control-strip) {
+  background: var(--surface);
+  border-color: var(--line);
+  border-radius: 8px;
+  box-shadow: 0 12px 30px #0004,inset 0 1px 0 #ffffff08;
+}
+.cockpit .panel::before,.cockpit .panel::after { content: none; }
+.cockpit .market-map { background: #05090e38; border-color: #b6c9d318; }
+.cockpit .globe-stage::before,.cockpit .globe-stage::after { opacity: .4; }
+.cockpit :is(.panel-head,.control-strip,.workflow-step) { background-color: #0b1117ed; }
+.cockpit :is(.header-account-link,.assistant-button,.version-switch a,.header-context select) {
+  background-color: #141e27;
+  border-color: var(--line-strong);
+  color: var(--text);
+}
+.cockpit .opportunity-group+.opportunity-group { border-top-color: #070c12; }
+.cockpit .sector-button { background: #0c1219f2; border-color: var(--line); }
+.cockpit .sector-button[data-sector='all'] { background: #17212a; }
+.cockpit .sector-button:is(:hover,.active) { border-color: var(--pool-resonance); }
+.cockpit .signal-cell { background: #101821; }
+.cockpit .detail-actions { background: #090f15fa; }
+.cockpit .brand b,.cockpit .brand small,.cockpit .eyebrow { letter-spacing: 0; }
+.cockpit .globe-affection { color: #d7c9b6; }
+
+/* Let short windows scroll rather than clipping the sector controls below the globe. */
+html:has(body.cockpit),body.cockpit { height: auto; overflow-y: auto; }
+.cockpit #cockpit-shell {
+  height: auto;
+  min-height: 100dvh;
+  overflow: visible;
+  grid-template-rows: auto auto minmax(580px,1fr) auto;
+}
+.cockpit .cockpit-main { height: max(580px,calc(100dvh - 300px)); }
+.cockpit .market-map { grid-template-rows: auto minmax(150px,1fr) auto auto; }
+.cockpit .globe-stage { min-height: 0; }
+.cockpit .sector-nav { grid-template-columns: repeat(3,minmax(0,1fr)); }
+.cockpit .sector-button { min-height: 52px; }
+.cockpit .sector-button:focus-visible { outline: 2px solid #d8b36a; outline-offset: 2px; }
+.cockpit .signal-cell { min-width: 0; border-left-width: 3px; }
+.cockpit .signal-cell em { display: block; overflow-wrap: anywhere; line-height: 1.6; }
+.cockpit .signal-long { border-left-color: #ff7779; }
+.cockpit .signal-short { border-left-color: #5bd99b; }
+.cockpit .signal-long b,.cockpit .signal-long em { color: #ff7779; }
+.cockpit .signal-short b,.cockpit .signal-short em { color: #5bd99b; }
+.cockpit .signal-neutral b { color: var(--muted); }
+.cockpit .signal-basis { font-size: 11px; color: var(--muted); line-height: 1.6; }
+.cockpit .cycle-mini { flex-wrap: wrap; }
+.cockpit .pool-switch button[data-pool='day-trend'] small { color: var(--pool-month); }
+@media (max-width:1120px) {
+  .cockpit #cockpit-shell { grid-template-rows: auto auto auto auto; }
+  .cockpit .cockpit-main { height: auto; }
+}
+@media (max-width:760px) {
+  .cockpit .market-map { min-height: 650px; }
+  .cockpit .sector-nav { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+
+/* Desktop is one viewport. Lists scroll locally; the globe uses the remaining space. */
+@media (min-width:1121px) {
+  html:has(body.cockpit),body.cockpit { height: 100%; min-height: 0; overflow: hidden; }
+  .cockpit #cockpit-shell { height: 100dvh; min-height: 0; overflow: hidden; grid-template-rows: auto auto minmax(0,1fr) auto; }
+  .cockpit .cockpit-header { min-height: 88px; padding: 6px 18px; flex-wrap: nowrap; }
+  .cockpit .brand { min-width: 90px; gap: 2px; }
+  .cockpit .brand-emblem { width: 56px; height: 56px; }
+  .cockpit .brand b { font-size: 16px; line-height: 20px; }
+  .cockpit .header-context { flex-basis: 0; }
+  .cockpit .account-funds-bar { padding-block: 5px; }
+  .cockpit .cockpit-main { height: auto; min-height: 0; padding-block: 8px; }
+  .cockpit .market-map { grid-template-rows: auto minmax(0,1fr) auto auto; }
+  .cockpit .map-heading { padding: 9px 12px 0; }
+  .cockpit .map-heading p { margin-top: 3px; margin-bottom: 3px; }
+  .cockpit .sector-nav { gap: 4px; padding: 6px 9px; }
+  .cockpit .sector-button { min-height: 40px; padding: 4px 7px; }
+  .cockpit .market-legend { padding-block: 5px; }
+  .cockpit .control-strip { margin-bottom: 8px; padding: 6px 10px; }
+  .cockpit .workflow-step { padding-block: 5px; }
+}
+
+@media (min-width:761px) and (max-width:1050px) {
+  body:not(.cockpit) .brand-mark { width: 54px; height: 54px; flex-basis: auto; }
+}
+
+@media (min-width:1800px) {
+  body:not(.cockpit) #content { max-width: 1780px; }
+}
+@media (max-width:760px) {
+  body:not(.cockpit) .side-nav { background: #0b1117f7; }
+  body:not(.cockpit) #mainNav button { min-height: 42px; padding: 4px 2px; }
+  body:not(.cockpit) #content { padding-top: 18px; }
+  body:not(.cockpit) .balance-panel { padding: 14px; }
+  body:not(.cockpit) .fire-overview-group { padding-block: 12px; }
+  body:not(.cockpit) .fire-overview-group ol { gap: 6px 8px; }
+  .cockpit .header-context,.cockpit .header-account-controls { min-width: 0; }
+  .cockpit .header-account-controls { flex-wrap: wrap; }
+}
+@media print {
+  body::before { display: none; }
+}

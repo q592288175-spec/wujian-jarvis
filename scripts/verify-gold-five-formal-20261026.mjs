@@ -1,0 +1,12 @@
+import{readFile,writeFile}from'node:fs/promises';import{createHash}from'node:crypto';import assert from'node:assert/strict';import{chromium,project}from'./redesign-harness.mjs';import{databaseManifest}from'./system-backup.mjs';
+const base='http://127.0.0.1:4318',out='output/gold-intraday-2026-10-26',errors=[];
+const before=databaseManifest('.runtime/five-workbench.sqlite'),baseline=JSON.parse(await readFile(out+'/baseline.json','utf8'));
+const server=await readFile('server.mjs','utf8'),files=JSON.parse(server.match(/const buildSources=(\[[^\n]+\]);/)[1].replaceAll("'",'"')).concat('integrations/day-trend.mjs','integrations/gold-planning.mjs','dist/gold-methods.js');
+const expected=createHash('sha256').update(Buffer.concat(await Promise.all(files.map(p=>readFile(p))))).digest('hex');const health=await fetch(base+'/api/health').then(r=>r.json());assert.equal(health.projectRoot,project);assert.equal(health.serverBuild,expected);
+const browser=await chromium.launch({headless:true,executablePath:'E:/AppCache/Playwright/chromium-1228/chrome-win64/chrome.exe'});
+try{
+ const p=await browser.newPage({viewport:{width:1440,height:960}});p.on('pageerror',e=>errors.push(e.message));await p.goto(base+'/');await p.locator('[data-view=metal]').click();await p.locator('#analyzeGold').waitFor();assert.equal(await p.locator('#analyzeGold').innerText(),'分析五种手法');await p.locator('#goldPanel').scrollIntoViewIfNeeded();await p.screenshot({path:out+'/formal-gold-five.png'});
+ const rules=await fetch(base+'/api/workbench/rules').then(r=>r.json());const hashes={};for(const[f,h]of Object.entries(baseline.hashes))hashes[f]=createHash('sha256').update(await readFile(f)).digest('hex')===h;assert.ok(Object.values(hashes).every(Boolean));
+ const after=databaseManifest('.runtime/five-workbench.sqlite');assert.deepEqual(after,before);assert.deepEqual(errors,[]);
+ await writeFile(out+'/formal-activation.json',JSON.stringify({checkedAt:new Date().toISOString(),health,loadedCurrentCode:true,clicked:'金导航；未点分析、方法确认、审定或拍板',errors,hashes,businessUnchangedDuringRead:true,businessUnchangedSinceStart:JSON.stringify(after)===JSON.stringify(baseline.business),oldRunPreserved:rules.runId||null,sourceChanged:rules.sourceChanged||false,boundary:'保留现有轮次锁定，不自动结束或批准真实方案'},null,2));console.log(JSON.stringify({loadedCurrentCode:true,errors,hashes,businessUnchangedDuringRead:true,businessUnchangedSinceStart:JSON.stringify(after)===JSON.stringify(baseline.business),oldRunPreserved:rules.runId||null,sourceChanged:rules.sourceChanged||false}));
+}finally{await browser.close()}

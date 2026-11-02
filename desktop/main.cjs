@@ -1,34 +1,40 @@
-const {app,BrowserWindow,Menu,shell,dialog,session}=require('electron');
+const {app,BrowserWindow,Menu,shell,dialog,session,ipcMain}=require('electron');
 const {spawn}=require('node:child_process');
 const fs=require('node:fs');const path=require('node:path');
+const {createHash}=require('node:crypto');
+const {installMonitor}=require('./monitor.cjs');
+const {installZoom}=require('./zoom.cjs');
 const config=JSON.parse(fs.readFileSync(path.join(__dirname,'project.json'),'utf8'));
-const base='http://127.0.0.1:4318';let window,quitting=false;const children=[];
-async function health(){try{const r=await fetch(base+'/api/health',{signal:AbortSignal.timeout(1500)});if(!r.ok)return 'foreign';const j=await r.json();return j.app==='wujian-jarvis'?'ready':'foreign'}catch(e){return e.cause?.code==='ECONNREFUSED'?'offline':'unknown'}}
-function launch(script){const child=spawn(process.execPath,['--env-file-if-exists=.env',script],{cwd:config.project,env:{...process.env,ELECTRON_RUN_AS_NODE:'1'},stdio:'ignore'});children.push(child);child.on('error',()=>{if(!quitting)dialog.showErrorBox('服务启动失败','请检查项目目录及本地运行环境。')});return child}
+if(config.projectRelative){config.project=path.resolve(path.dirname(process.execPath),config.projectRelative);const profile=path.join(config.project,'.runtime/desktop-profile');fs.mkdirSync(profile,{recursive:true});app.setPath('userData',profile)}
+if(process.env.WUJIAN_DESKTOP_PROFILE){const profile=path.resolve(config.project,process.env.WUJIAN_DESKTOP_PROFILE),relative=path.relative(config.project,profile);if(relative.startsWith('..')||path.isAbsolute(relative))throw Error('验收配置目录必须在项目内');fs.mkdirSync(profile,{recursive:true});app.setPath('userData',profile);}
+const port=Number(process.env.WUJIAN_DESKTOP_PORT||4318);
+const base='http://127.0.0.1:'+port;let window,quitting=false,monitorDesktop;const children=[];
+async function health(){try{const r=await fetch(base+'/api/health',{signal:AbortSignal.timeout(1500)});if(!r.ok)return 'foreign';const j=await r.json();const sources=['integrations/relative-strength.mjs','integrations/knowledge-policy.mjs','integrations/knowledge-base.mjs','integrations/research-application.mjs','integrations/maintenance.mjs','integrations/monitor-health.mjs','scripts/system-backup.mjs','server.mjs','integrations/five-workbench.mjs','integrations/fire-refresh.mjs','integrations/eod-refresh.mjs','scripts/fire_scan.py','integrations/eod_market.py','integrations/trade-ledger.mjs','integrations/account-balances.mjs','integrations/team-governance.mjs','integrations/approval-boundary.mjs','integrations/assistant.mjs','integrations/research-agent.mjs','integrations/research-market.mjs','integrations/research.mjs','integrations/research-evidence.mjs','integrations/team-context.mjs','integrations/postmarket-review.mjs','integrations/postmarket-evidence.mjs','integrations/postmarket-sources.mjs','scripts/postmarket_calendar.py','integrations/monitor-service.mjs','integrations/monitor-engine.mjs','integrations/monitor-store.mjs','integrations/monitor-announcements.mjs','integrations/monitor_market.py','integrations/monitor-sina.mjs','integrations/feishu-core.mjs','integrations/feishu.mjs','integrations/im-binding.mjs','integrations/local-secret.mjs','scripts/protect-local-secret.ps1','integrations/volc-voice.mjs','integrations/volc-duplex.mjs','integrations/voice-config.mjs'];sources.push('integrations/tq-login.mjs','integrations/tq-panorama.mjs');sources.push('integrations/market-panorama.mjs','integrations/market-overview.mjs','integrations/market-panorama-data.py','integrations/overview_closes.py');sources.push('integrations/trend-monitor-runtime.mjs','integrations/trend-monitor-engine.mjs','integrations/trend-monitor-service.mjs','integrations/trend-market.mjs','integrations/weixin-channel.mjs','integrations/trend-monitor-table.mjs');sources.push('integrations/day-trend.mjs','integrations/gold-planning.mjs','dist/gold-methods.js');const expected=createHash('sha256').update(Buffer.concat(sources.map(p=>fs.readFileSync(path.join(config.project,p))))).digest('hex');return j.app==='wujian-jarvis'&&path.resolve(j.projectRoot||'')===path.resolve(config.project)&&j.serverBuild===expected?'ready':'foreign'}catch(e){return e.cause?.code==='ECONNREFUSED'?'offline':'unknown'}}
+function launch(script){const child=spawn(process.execPath,['--env-file-if-exists=.env',script],{cwd:config.project,env:{...process.env,ELECTRON_RUN_AS_NODE:'1',PORT:String(port)},stdio:'ignore'});children.push(child);child.on('error',()=>{if(!quitting)dialog.showErrorBox('服务启动失败','请检查项目目录及本地运行环境。')});return child}
 async function boot(){
  if(!fs.existsSync(path.join(config.project,'server.mjs')))throw Error('项目目录不可用，请从项目重新构建应用。');
- let state=await health();if(state==='foreign'||state==='unknown')throw Error('4318端口无法确认属于本工作台，请检查现有服务。');
+ let state=await health();if(state==='foreign'||state==='unknown')throw Error(port+'端口无法确认属于本工作台，请检查现有服务。');
  if(state==='offline'){launch('server.mjs');for(let i=0;i<40;i++){await new Promise(r=>setTimeout(r,250));state=await health();if(state==='ready')break}if(state!=='ready')throw Error('本地服务未能启动，请使用项目中的启动脚本检查。')}
- const market=await fetch(base+'/api/live-market',{signal:AbortSignal.timeout(5000)}).then(r=>{if(!r.ok)throw Error('行情服务状态读取失败，请重新启动工作台。');return r.json()});
- // The collector owns an exclusive file lock; a fresh snapshot does not prove a live process.
- launch('integrations/start-market.mjs');
- launch('integrations/start-akshare.mjs');
- await window.loadURL(base+'/');
+ await fetch(base+'/api/live-market',{signal:AbortSignal.timeout(5000)}).then(r=>{if(!r.ok)throw Error('盘后行情状态读取失败，请重新启动工作台。');return r.json()});
+ await window.loadURL(base+'/market-panorama.html'+(process.env.WUJIAN_DESKTOP_INITIAL_ROUTE==='market/monitor'?'#market/monitor':''));
+ monitorDesktop=installMonitor({base,project:config.project,getWindow:()=>window,isQuitting:()=>quitting,requestQuit:()=>app.quit()});
+ await monitorDesktop.ready;
 }
 function external(url){try{const u=new URL(url);if(['https:','http:'].includes(u.protocol)&&!u.username&&!u.password)shell.openExternal(url)}catch{}}
 if(!app.requestSingleInstanceLock()){app.quit()}else{
- app.on('second-instance',()=>{window?.show();window?.focus()});
+ app.on('second-instance',()=>{if(!window||window.isDestroyed())return;if(window.isMinimized())window.restore();window.show();window.focus()});
  app.whenReady().then(async()=>{
   window=new BrowserWindow({width:1500,height:980,minWidth:1100,minHeight:720,backgroundColor:'#030b15',title:'小木',...(process.platform==='darwin'?{titleBarStyle:'hiddenInset'}:{}),webPreferences:{preload:path.join(__dirname,'preload.cjs'),nodeIntegration:false,contextIsolation:true,sandbox:true,webSecurity:true}});
-  Menu.setApplicationMenu(Menu.buildFromTemplate([{label:'小木',submenu:[{role:'about'},{type:'separator'},{role:'hide'},{role:'quit'}]},{label:'编辑',submenu:[{role:'undo'},{role:'redo'},{type:'separator'},{role:'cut'},{role:'copy'},{role:'paste'},{role:'selectAll'}]},{label:'工作台',submenu:[{label:'稳定版',click:()=>window.loadURL(base+'/')},{label:'预览版',click:()=>window.loadURL(base+'/cockpit.html')},{role:'reload'},{role:'togglefullscreen'},{label:'在浏览器打开',click:()=>shell.openExternal(base+'/')}]}]));
+  const zoom=installZoom(window,{ipcMain,file:path.join(process.env.WUJIAN_DESKTOP_PROFILE?path.resolve(config.project,process.env.WUJIAN_DESKTOP_PROFILE):path.join(config.project,'.runtime/ui-preferences'),'zoom.json')});
+  Menu.setApplicationMenu(Menu.buildFromTemplate([{label:'小木',submenu:[{role:'about'},{type:'separator'},{role:'hide'},{role:'quit'}]},{label:'编辑',submenu:[{role:'undo'},{role:'redo'},{type:'separator'},{role:'cut'},{role:'copy'},{role:'paste'},{role:'selectAll'}]},{label:'工作台',submenu:[{label:'市场全景',click:()=>window.loadURL(base+'/market-panorama.html')},{label:'全息版',click:()=>window.loadURL(base+'/cockpit.html')},{role:'reload'},{type:'separator'},{label:'放大',accelerator:'CommandOrControl+Plus',click:()=>zoom.increase()},{label:'缩小',accelerator:'CommandOrControl+-',click:()=>zoom.decrease()},{label:'恢复100%',accelerator:'CommandOrControl+0',click:()=>zoom.reset()},{type:'separator'},{role:'togglefullscreen'},{label:'在浏览器打开',click:()=>shell.openExternal(base+'/market-panorama.html')}]}]));
   session.defaultSession.setPermissionCheckHandler((contents,permission,origin)=>permission==='media'&&origin===base&&contents===window.webContents);
   session.defaultSession.setPermissionRequestHandler(async(contents,permission,callback,details)=>{if(contents!==window.webContents||!contents.getURL().startsWith(base+'/')||permission!=='media'||!details.mediaTypes?.length||details.mediaTypes.some(t=>t!=='audio'))return callback(false);const result=await dialog.showMessageBox(window,{type:'question',message:'允许本次语音使用麦克风？',detail:'音频将交给你选择的语音服务处理。',buttons:['不允许','允许'],defaultId:0,cancelId:0});callback(result.response===1)});
   window.webContents.setWindowOpenHandler(({url})=>{external(url);return{action:'deny'}});
   window.webContents.on('will-navigate',(event,url)=>{if(new URL(url).origin!==base){event.preventDefault();external(url)}});
   window.webContents.on('will-attach-webview',e=>e.preventDefault());
-  window.on('close',event=>{if(!quitting){event.preventDefault();window.hide()}});
   try{await window.loadFile(path.join(__dirname,'loading.html'));await boot()}catch(e){dialog.showErrorBox('小木 启动提示',e.message);app.quit()}
  });
- app.on('activate',()=>window?.show());
- app.on('before-quit',()=>{quitting=true;for(const child of children)child.kill('SIGTERM')});
+ app.on('activate',()=>{if(window&&!window.isDestroyed())window.show()});
+ app.on('window-all-closed',()=>app.quit());
+ app.on('before-quit',event=>{if(quitting)return;event.preventDefault();quitting=true;void Promise.resolve(monitorDesktop?.stop()).finally(()=>{for(const child of children)child.kill('SIGTERM');app.quit();});});
 }

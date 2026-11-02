@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <script src="/vendor/echarts/echarts.min.js" defer></script><script src="/vendor/lucide/lucide.min.js" defer></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <link rel="icon" href="/assets/wujian/brand/xiaomu-five-elements.png">
+  <title>市场全景 · 小木五简交易系统</title>
+  <link rel="stylesheet" href="/workbench.css">
+  <link rel="stylesheet" href="/gold-ui.css">
+  <link rel="stylesheet" href="/knowledge.css">
+  <link rel="stylesheet" href="/monitor.css">
+  <link rel="stylesheet" href="/rule-details.css">
+  <link rel="stylesheet" href="/ui/conversation-window.css">
+  <link rel="stylesheet" href="/account-ui.css">
+  <link rel="stylesheet" href="/water-expert.css?v=20261021">
+<link rel="stylesheet" href="/theme/tokens.css"><link rel="stylesheet" href="/shell.css"><link rel="stylesheet" href="/market-surface.css"><link rel="stylesheet" href="/unified-workbench.css"><link rel="stylesheet" href="/trade-dark.css"><link rel="stylesheet" href="/market-selection.css"><link rel="stylesheet" href="/market-strength.css"></head>
+<body data-unified="true" data-shell="stable" data-area="market">
+  <div class="app-shell">
+    <aside class="side-nav">
+      <div class="brand"><img class="brand-mark" src="/assets/wujian/brand/wujian-complete-logo.png" alt="五简交易系统"><div><b>小木</b><small>五简交易系统</small></div></div>
+      <nav id="mainNav" aria-label="主导航"></nav>
+      <button class="voice-entry" id="voiceButton" type="button" disabled><i data-lucide="mic"></i>语音通话</button>
+      <button class="assistant-entry" id="assistantButton" type="button" disabled aria-controls="assistantDrawer" aria-expanded="false">小木对话</button>
+      <div class="side-foot"><i id="healthDot"></i><span id="healthText">正在连接本机服务</span></div>
+    </aside>
+    <div class="main-shell">
+      <header class="topbar">
+        <div class="page-title"><small id="viewEyebrow">TODAY</small><h1 id="viewTitle">今日交易总览</h1></div>
+        <div class="top-meta">
+          <div class="account-picker"><label for="accountSelect">账户</label><div class="account-controls"><select id="accountSelect" aria-label="当前账户"></select><button type="button" class="icon-button" id="addAccount" title="添加账户" aria-label="添加账户">+</button><button type="button" class="toolbar-button" id="syncAccount">修改余额</button><button type="button" class="icon-button danger-icon" id="removeAccount" title="删除或停用账户" aria-label="删除或停用账户">−</button></div></div>
+          <div><small>行情截止</small><b id="marketDate">--</b></div>
+          <div class="rule-meta"><small>规则版本</small><button id="ruleVersion" class="rule-version-button" type="button" aria-haspopup="dialog" aria-controls="modal" title="查看当前筛选规则">--</button></div>
+          <div class="top-actions"><button class="toolbar-button" id="printButton" type="button" title="打开交易卡、账户风险或复盘的A4打印页">A4打印</button><a class="toolbar-button version-link" href="/cockpit.html">全息版</a></div>
+        </div>
+      </header>
+      <div class="account-funds-bar"><div id="accountSummary" class="account-summary" aria-live="polite"></div></div>
+      <div id="tradeSurface"><main id="content" tabindex="-1"><div class="loading">正在读取本地交易工作台…</div></main></div>
+      <section id="marketSurface" class="market-surface" hidden aria-label="市场分析"><div class="market-toolbar"><button id="autoToggle" aria-pressed="true" title="暂停自动更新"><i data-lucide="pause"></i><span>自动更新</span></button><button id="sourcesButton" title="数据来源与口径"><i data-lucide="database"></i></button><button id="exportButton" title="导出当前表格"><i data-lucide="download"></i></button><a href="/?view=fire" title="火识别机会"><i data-lucide="flame"></i></a></div><b id="pageTitle" hidden></b><main>
+   <div class="page-heading"><div><small>国内期货 · 市场观察</small><h1 id="heading">市场总览</h1></div><div class="date-tools"><button id="previousDate" title="上一交易日"><i data-lucide="chevron-left"></i></button><input type="date" id="date" aria-label="数据日期"><button id="nextDate" title="下一交易日"><i data-lucide="chevron-right"></i></button><select id="refreshMode" aria-label="同步内容"><option value="quotes">最新报价</option><option value="full">全部数据</option><option value="supplement">合约与产业资料</option><option value="minutes">分钟K线</option><option value="holdings">公开持仓排名</option><option value="fees">手续费参考</option></select><button class="primary" id="refreshButton"><i data-lucide="refresh-cw"></i>同步数据</button></div></div>
+   <div class="statusbar"><span id="status" role="status">正在读取市场数据…</span><button id="cancelSync" hidden title="取消当前同步">取消同步</button></div>
+   <p id="dataNotice" class="source-note">公开行情可能延迟；席位为盘后样本；手续费为第三方参考。</p>
+   <div class="global-filters"><label>范围<select id="scope"><option value="all">全部期货</option><option value="commodity">商品期货</option><option value="financial">金融期货</option><option value="watch">我的自选</option></select></label><label id="sectorFilter">板块<select id="sector"><option value="all">全部板块</option></select></label><label class="search"><i data-lucide="search"></i><input id="search" placeholder="搜索品种、代码或合约" aria-label="搜索品种"></label><button id="resetFilters" title="重置筛选"><i data-lucide="rotate-ccw"></i></button></div>
+   <div id="sectorButtons" class="sector-buttons" hidden></div>
+   <div id="marketContent" aria-busy="true"><div class="empty">正在读取已有行情与市场记录…</div></div>
+  </main><footer><span id="coverageText">数据覆盖核验中</span><span id="connection">正在连接市场数据</span></footer><dialog id="sourcesDialog"><header><h2>数据来源与计算口径</h2><button data-close title="关闭"><i data-lucide="x"></i></button></header><div id="sourceBody"></div></dialog>
+<dialog id="detailDialog"><header><h2 id="detailTitle">指标明细</h2><button data-close title="关闭"><i data-lucide="x"></i></button></header><div id="detailBody"></div></dialog></section>
+    </div>
+  </div>
+  <aside id="assistantDrawer" class="assistant-drawer" hidden>
+    <header><div><b>小木</b><small id="callStatus" role="status">语音未接通</small><span id="knowledgeStatus" class="knowledge-status">知识库读取中</span></div><span id="callTime">00:00</span><div id="voiceCoreCall" hidden></div><div class="assistant-tools conversation-tools"><button id="minAssistant" title="缩小窗口" aria-label="缩小窗口">−</button><button id="maxAssistant" title="放大窗口" aria-label="放大窗口" aria-pressed="false"><img src="/assets/wujian/icons/expand.svg" alt=""></button><button id="closeAssistant" title="关闭窗口" aria-label="关闭">×</button></div></header>
+    <div id="voiceCoreMain" hidden></div><div id="callDraft" hidden></div><div id="assistantMessages" class="assistant-messages"><p class="assistant-note">助手会读取当前页面和交易卡上下文；未配置模型时，五行工作台仍可正常使用。</p></div>
+    <form id="assistantForm"><textarea id="assistantInput" rows="3" placeholder="输入问题或复核要求"></textarea><button class="primary">发送</button></form><div class="assistant-voice-controls"><button id="connectCall" type="button">接通语音</button><button id="muteCall" type="button" disabled aria-pressed="false">静音</button><button id="stopCall" type="button" disabled>停止播报</button><button id="hangup" type="button" disabled>挂断</button></div>
+  </aside>
+  <button class="secondary" id="restoreAssistant" hidden>小木对话</button>
+  <div id="drawerShade" class="drawer-shade" hidden></div>
+  <dialog id="modal"><header><h2 id="modalTitle"></h2><button class="icon-button" id="modalClose" aria-label="关闭">×</button></header><div id="modalBody"></div></dialog>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="/unified-workbench.js"></script>
+</body>
+</html>

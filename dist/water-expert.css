@@ -1,0 +1,45 @@
+.water-expert{min-width:0;margin-block:20px;color:var(--text,var(--text))}
+.water-report-heading{display:flex;gap:20px;align-items:flex-start;justify-content:space-between;padding-block:6px 20px;border-bottom:1px solid var(--line)}
+.water-report-heading h3{font-size:var(--fs-xl);line-height:1.6;max-width:64ch;margin:8px 0;overflow-wrap:anywhere}
+.water-report-heading p,.water-report-heading small,.water-evidence-caption{color:var(--text);font-size:var(--fs-sm)}
+.water-quality{white-space:nowrap;font-size:var(--fs-xs);padding:4px 8px;border:1px solid var(--line);border-radius:var(--r-sm);color:var(--down)}
+.water-quality.partial{color:var(--warn);border-color:var(--line)}
+.water-report-tools{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin:18px 0}
+.water-report-tools [role=tablist]{display:flex;gap:4px;flex-wrap:wrap}
+.water-report-tools [role=tab]{border:0;border-bottom:2px solid transparent;border-radius:0;background:transparent;color:var(--text);padding:10px 14px;font-weight:600}
+.water-report-tools [aria-selected=true]{border-color:var(--accent);color:var(--text)}
+.water-brief-line{display:grid;grid-template-columns:140px minmax(0,1fr);gap:20px;padding:16px 0;border-bottom:1px solid var(--line)}
+.water-brief-line h4{font-size:var(--fs-md);margin:0;color:var(--text)}
+.water-brief-line p{margin:0;line-height:1.85;font-size:var(--fs-md);max-width:80ch;white-space:pre-wrap;overflow-wrap:anywhere}
+.water-section-title{font-size:var(--fs-lg);margin-top:24px}
+.water-expert table{width:100%;font-size:var(--fs-sm);border-collapse:collapse;text-align:left;table-layout:fixed}
+.water-expert th,.water-expert td{padding:12px;vertical-align:top;line-height:1.7;overflow-wrap:anywhere;border-bottom:1px solid var(--line)}
+.water-expert th{color:var(--text)}
+.water-expert td small,.water-expert th small{display:block;color:var(--text);margin-top:4px}
+.water-report-toc{display:flex;gap:8px 20px;flex-wrap:wrap;padding:12px 0 22px;border-bottom:1px solid var(--line)}
+.water-report-toc a{font-size:var(--fs-sm);color:var(--accent)}
+.water-report-markdown{max-width:92ch;font-size:var(--fs-md);line-height:1.9;overflow-wrap:anywhere}
+.water-report-markdown h1{font-size:var(--fs-kpi)}
+.water-report-markdown h2{font-size:var(--fs-xl);margin-top:32px;scroll-margin-top:180px}
+.water-report-markdown h3{font-size:var(--fs-lg);margin-top:24px}
+.water-report-markdown table{table-layout:auto}
+.water-evidence-detail{padding:14px 0;border-bottom:1px solid var(--line)}
+.water-evidence-detail summary{cursor:pointer;line-height:1.7;overflow-wrap:anywhere}
+.water-evidence-detail summary span{color:var(--text);font-size:var(--fs-xs);margin-left:12px}
+.water-evidence-detail p{font-size:var(--fs-sm);line-height:1.7;color:var(--text)}
+.water-evidence-detail pre{font-family:var(--font);font-size:var(--fs-sm);line-height:1.8;white-space:pre-wrap;overflow-wrap:anywhere;max-height:340px;overflow:auto;padding:12px;background:var(--surface)}
+.water-history{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:18px}
+.water-history select{max-width:100%;min-width:0}
+.water-completed-meta{font-size:var(--fs-xs);color:var(--text);padding:10px 0;border-bottom:1px solid var(--line)}
+.water-completed-meta summary{cursor:pointer;line-height:1.8}
+.water-completed-meta p{line-height:1.7}
+.water-draft-action{border-top:1px solid var(--line);padding-top:16px;margin-top:20px}
+.water-questions{margin-top:24px;border-top:1px solid var(--line);padding-top:18px}
+[data-report-panel][hidden]{display:none}
+@media (max-width:700px){.water-report-heading{flex-direction:column;gap:6px}
+.water-report-heading h3{font-size:var(--fs-lg)}
+.water-brief-line{grid-template-columns:minmax(0,1fr);gap:8px;padding:14px 0}
+.water-expert table{min-width:620px}
+.water-report-tools [role=tab]{padding:10px 8px}
+.water-report-markdown h1{font-size:var(--fs-xl)}
+}

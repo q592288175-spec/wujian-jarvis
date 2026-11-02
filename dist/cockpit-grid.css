@@ -1,0 +1,44 @@
+.cockpit .opportunity-panel .panel-head{padding:10px 12px}
+.cockpit .opportunity-panel .pool-switch{padding:5px}
+.cockpit .opportunity-panel .pool-switch button{padding:5px 7px}
+.cockpit .opportunity-panel .opportunity-summary>div{padding:5px 12px;display:flex;align-items:center;gap:8px}
+.cockpit .opportunity-panel .opportunity-summary b{font-size:var(--fs-xl)}
+.cockpit .opportunity-panel .direction-switch{padding:5px}
+.cockpit .opportunity-panel .direction-switch button{padding:5px}
+.cockpit .opportunity-list{padding:5px;scrollbar-gutter:stable}
+.cockpit .opportunity-group{padding:3px 0}
+.cockpit .opportunity-group+.opportunity-group{border:0;margin-top:6px}
+.cockpit .group-title{padding:4px 5px 6px}
+.cockpit .opportunity-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:3px;align-items:stretch}
+.cockpit .opportunity-item{min-width:0;min-height:0;border:1px solid transparent;padding:4px;position:relative;display:block}
+.cockpit .opportunity-item.long,.cockpit .opportunity-item.short{border-left-color:transparent}
+.cockpit .opportunity-item:hover{background:var(--surface-2);border-color:transparent}
+.cockpit .opportunity-item.active{background:var(--surface-2);border-color:var(--line-strong)}
+.cockpit .opportunity-item:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
+.cockpit .opportunity-item b{display:block;padding-right:17px;font-size:var(--fs-md);line-height:18px;overflow-wrap:anywhere}
+.cockpit .opportunity-item small{font-size:var(--fs-holo);line-height:14px;margin-top:1px;overflow-wrap:anywhere}
+.cockpit .opportunity-item .rank{position:absolute;top:5px;right:4px;font-size:var(--fs-holo)}
+.cockpit .opportunity-item .cycle-mini{flex-wrap:wrap;gap:2px 5px;margin-top:2px}
+.cockpit .opportunity-item .cycle-mini span{font-size:var(--fs-holo);line-height:14px;padding:0;border:0;border-radius:0}
+.cockpit .opportunity-panel>:not(.opportunity-list){flex-shrink:0}
+.cockpit .sector-nav{grid-template-columns:repeat(4,minmax(0,1fr))}
+
+/* A quiet handwritten dedication beside the globe; it never intercepts dragging. */
+.cockpit .globe-affection{right:clamp(12px,1.4vw,26px);top:52%;display:flex;flex-direction:column;align-items:center;gap:13px;writing-mode:horizontal-tb;line-height:1;transform:translateY(-50%);color:#f0dfc9;pointer-events:none}
+.cockpit .affection-words{writing-mode:vertical-rl;text-orientation:upright;font-family:"STXingkai","华文行楷","KaiTi","楷体",serif;font-size:clamp(30px,2.8vw,44px);font-weight:400;line-height:1.12;letter-spacing:.13em;text-shadow:0 2px 4px #0009,0 0 16px #edc6a32b;animation:affection-glow 5.2s ease-in-out infinite}
+.cockpit .affection-heart{position:relative;display:block;flex:none;width:clamp(52px,4.4vw,68px);height:clamp(52px,4.4vw,68px);transform-origin:center;animation:affection-heartbeat 1.65s ease-in-out infinite;isolation:isolate}
+.cockpit .affection-heart-gem{position:relative;z-index:1;display:block;width:100%;height:100%;overflow:visible;filter:drop-shadow(0 0 7px #ff82c47a) drop-shadow(0 0 15px #8b9fff5c)}
+.cockpit .affection-heart-halo{position:absolute;inset:7%;z-index:0;border-radius:50%;background:conic-gradient(#ff76bc,#ff9c62,#ffe47a,#70efac,#66e6ff,#8a9bff,#d58bff,#ff76bc);filter:blur(12px);opacity:.62;animation:affection-halo 6s linear infinite}
+.cockpit .affection-rainbow-stop{animation:affection-spectrum 6s linear infinite;animation-delay:var(--phase)}
+.cockpit .affection-spark{position:absolute;z-index:2;line-height:1;text-shadow:0 0 8px currentColor;animation:affection-sparkle 2.6s ease-in-out infinite}
+.cockpit .affection-spark-one{left:-9px;top:1px;font-size:16px;color:#ffeaaa}
+.cockpit .affection-spark-two{right:-7px;top:10px;font-size:20px;color:#a0ecff;animation-delay:-.9s}
+.cockpit .affection-spark-three{right:5px;bottom:-2px;font-size:10px;color:#f4b5ff;animation-delay:-1.7s}
+@keyframes affection-glow{0%,100%{text-shadow:0 2px 4px #0009,0 0 14px #edc6a32b}50%{text-shadow:0 2px 4px #0009,0 0 20px #edc6a34d}}
+@keyframes affection-heartbeat{0%,48%,100%{transform:scale(.88)}10%{transform:scale(1.2)}20%{transform:scale(.97)}30%{transform:scale(1.14)}}
+@keyframes affection-halo{to{transform:rotate(360deg)}}
+@keyframes affection-spectrum{0%,100%{stop-color:#ff76bc}14.3%{stop-color:#ff9c62}28.6%{stop-color:#ffe47a}42.9%{stop-color:#70efac}57.2%{stop-color:#66e6ff}71.5%{stop-color:#8a9bff}85.8%{stop-color:#d58bff}}
+@keyframes affection-sparkle{0%,100%{opacity:.4;transform:scale(.75)}50%{opacity:1;transform:scale(1.12)}}
+@media(max-height:760px) and (min-width:761px){.cockpit .globe-affection{gap:9px;right:14px}.cockpit .affection-words{font-size:30px;letter-spacing:.09em}.cockpit .affection-heart{width:50px;height:50px}}
+@media(max-width:760px){.cockpit .globe-affection{top:50%;gap:8px}.cockpit .affection-words{font-size:30px;letter-spacing:.1em;height:2.3em;white-space:normal}.cockpit .affection-heart{width:48px;height:48px}.cockpit .affection-heart-halo{filter:blur(9px)}}
+@media(prefers-reduced-motion:reduce){.cockpit .affection-words,.cockpit .affection-heart,.cockpit .affection-heart-halo,.cockpit .affection-rainbow-stop,.cockpit .affection-spark{animation:none}}

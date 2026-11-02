@@ -1,0 +1,37 @@
+#callPanel{width:min(460px,calc(100vw - 32px));height:min(680px,calc(100dvh - 48px));right:16px;bottom:16px;border-radius:var(--r-lg);overflow:hidden;letter-spacing:0;background:var(--surface);box-shadow:0 16px 60px color-mix(in srgb,var(--shadow) 53.33%,transparent);backdrop-filter:none}
+#callPanel .call-head{flex:0 0 auto;min-height:76px;height:auto;padding:14px 16px;gap:10px;align-items:center;letter-spacing:0}
+#callPanel .call-head>div:not(.conversation-tools){min-width:0;flex:1}
+#callPanel .call-head b{font:700 18px"Microsoft YaHei",sans-serif;letter-spacing:0}
+#callPanel #callStatus{font-size:var(--fs-xs);line-height:1.5;max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#callPanel #callTime{flex:0 0 auto;margin:0;font-size:var(--fs-xs);font-variant-numeric:tabular-nums;color:var(--text)}
+#callPanel #voiceCoreCall{flex:0 0 36px;width:36px;height:36px}
+#callPanel #voiceCoreCall .wj-core-caption{display:none}
+.conversation-tools{display:flex;flex:0 0 auto;gap:4px;align-items:center}
+.conversation-tools button{display:grid;place-items:center;width:30px;height:30px;padding:0;border:1px solid transparent;border-radius:var(--r-sm);background:transparent;color:var(--text);font-size:var(--fs-xl)}
+.conversation-tools button:hover{background:var(--raised);color:var(--text)}
+.conversation-tools button:last-child:hover{background:var(--up-soft);color:var(--text)}
+.conversation-tools img{width:15px;height:15px}
+#callPanel .messages{flex:1;min-height:0;padding:10px 16px;overflow:auto;overscroll-behavior:contain}
+#callPanel .bubble{border-radius:var(--r-md);overflow-wrap:anywhere;max-width:94%;background:var(--raised);border-color:var(--line);white-space:normal}
+#callPanel .bubble.user{background:var(--raised);color:var(--text)}
+#callPanel .bubble small{color:var(--text)}
+#callPanel #callDraft{flex:0 0 auto;max-height:76px;overflow:auto;padding:8px 16px;color:var(--text);font-size:var(--fs-xs);border-top:1px solid var(--line)}
+#callPanel #chatForm{flex:0 0 auto;margin:8px 16px 0;padding:6px;border-radius:var(--r-md)}
+#callPanel #chatForm button{background:var(--raised)}
+#callPanel .call-controls{flex:0 0 auto;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:12px 16px}
+#callPanel .call-controls button{min-height:40px;padding:8px 6px;border:1px solid var(--line);border-radius:var(--r-md);background:var(--raised);font-size:var(--fs-sm);white-space:nowrap}
+#callPanel #connectCall{background:var(--down);color:var(--text);border-color:var(--down);font-weight:700}
+#callPanel #hangup{color:var(--up);background:var(--raised);border-color:var(--line)}
+#callPanel.conversation-expanded{width:min(1040px,calc(100vw - 32px));height:calc(100dvh - 32px);max-height:none}
+#assistantDrawer.conversation-expanded{width:min(1040px,calc(100vw - 32px));height:calc(100dvh - 32px);top:16px;right:16px;border:1px solid var(--line);border-radius:var(--r-lg)}
+#restoreAssistant{position:fixed;bottom:20px;right:20px;z-index:45}
+#restoreAssistant[hidden]{display:none}
+@media (max-width:600px){#callPanel{width:calc(100vw - 16px);height:calc(100dvh - 90px);right:8px;bottom:72px}
+#callPanel.conversation-expanded{width:calc(100vw - 16px);height:calc(100dvh - 16px);right:8px;bottom:8px}
+#callPanel .call-head{padding:10px;gap:6px}
+#callPanel #voiceCoreCall{display:none}
+#callPanel #callStatus{max-width:150px}
+#callPanel #callTime{font-size:var(--fs-xs)}
+.conversation-tools{gap:2px}
+.conversation-tools button{width:28px;height:30px}
+}

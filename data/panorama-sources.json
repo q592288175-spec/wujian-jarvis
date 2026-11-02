@@ -1,0 +1,129 @@
+{
+  "version": "2026-10-25",
+  "targetDay": "2026-10-23",
+  "sources": [
+    {
+      "key": "contract_ine",
+      "interface": "futures_contract_info_ine",
+      "enabled": true,
+      "status": "ok",
+      "reason": "",
+      "rows": 63,
+      "source": "INE交易所公开合约信息",
+      "checkedAt": "2026-10-25T02:22:00.150535+08:00"
+    },
+    {
+      "key": "contract_shfe",
+      "interface": "futures_contract_info_shfe",
+      "enabled": true,
+      "status": "ok",
+      "reason": "",
+      "rows": 301,
+      "source": "SHFE交易所公开合约信息",
+      "checkedAt": "2026-10-25T02:22:00.156598+08:00"
+    },
+    {
+      "key": "contract_czce",
+      "interface": "futures_contract_info_czce",
+      "enabled": true,
+      "status": "ok",
+      "reason": "",
+      "rows": 243,
+      "source": "CZCE交易所公开合约信息",
+      "checkedAt": "2026-10-25T02:22:00.470568+08:00"
+    },
+    {
+      "key": "contract_dce",
+      "interface": "futures_contract_info_dce",
+      "enabled": false,
+      "status": "unavailable",
+      "reason": "2026-10-25实测：HTTP接口返回412安全校验HTML；HTTPS TLS连接提前断开；未绕过验证。AKShare与上游当前源码同一路径。",
+      "source": "DCE交易所公开合约信息",
+      "checkedAt": "2026-10-25T04:08:05.040Z"
+    },
+    {
+      "key": "contract_dce_public",
+      "interface": "xiaomu_dce_contracts_public",
+      "enabled": true,
+      "status": "ok",
+      "source": "OpenCTP公开合约字典（大商所备用，非交易所直连）",
+      "reason": "仅读取上市、到期及源交割日期；查询批次日，源未给资料发布日期；不采用其账户费率或保证金"
+    },
+    {
+      "key": "contract_gfex",
+      "interface": "futures_contract_info_gfex",
+      "enabled": true,
+      "status": "ok",
+      "reason": "",
+      "rows": 48,
+      "source": "GFEX交易所公开合约信息",
+      "checkedAt": "2026-10-25T02:22:01.015849+08:00"
+    },
+    {
+      "key": "contract_cffex",
+      "interface": "futures_contract_info_cffex",
+      "enabled": true,
+      "status": "ok",
+      "reason": "",
+      "rows": 740,
+      "source": "CFFEX交易所公开合约信息",
+      "checkedAt": "2026-10-25T02:22:01.243248+08:00"
+    },
+    {
+      "key": "warrant_history",
+      "interface": "futures_inventory_em",
+      "enabled": true,
+      "status": "ok",
+      "reason": "已修复代码大小写适配，改用现有同源公开JSON按品种、日期读取；实际覆盖见缓存核验",
+      "source": "东方财富注册仓单（与既有来源相同）",
+      "checkedAt": "2026-10-25T02:22:01.859500+08:00"
+    },
+    {
+      "key": "spot_price",
+      "interface": "futures_spot_price",
+      "enabled": true,
+      "status": "ok",
+      "reason": "",
+      "rows": 2,
+      "source": "生意社现货及主力期货",
+      "checkedAt": "2026-10-25T02:22:01.981547+08:00"
+    },
+    {
+      "key": "spot_sys",
+      "interface": "futures_spot_sys",
+      "enabled": false,
+      "status": "unavailable",
+      "reason": "RuntimeError: AttributeError: 'NoneType' object has no attribute 'find_all'",
+      "source": "AKShare公开接口",
+      "checkedAt": "2026-10-25T02:22:02.041473+08:00"
+    },
+    {
+      "key": "roll_yield",
+      "interface": "get_roll_yield_bar",
+      "enabled": true,
+      "status": "partial",
+      "reason": "改为六交易所独立采集同日日行情，程序计算持仓前二合约年化对数价差率；大商所失败单列",
+      "source": "交易所日行情 / AKShare；小木计算展期参考",
+      "checkedAt": "2026-10-25T02:22:02.735175+08:00"
+    },
+    {
+      "key": "futures_rule",
+      "interface": "futures_rule",
+      "enabled": false,
+      "status": "ok",
+      "reason": "",
+      "rows": 162,
+      "source": "AKShare公开接口",
+      "checkedAt": "2026-10-25T02:22:03.186098+08:00"
+    },
+    {
+      "key": "inventory_99",
+      "interface": "futures_inventory_99",
+      "enabled": false,
+      "status": "unavailable",
+      "reason": "RuntimeError: JSONDecodeError: Expecting value: line 1 column 1 (char 0)",
+      "source": "AKShare公开接口",
+      "checkedAt": "2026-10-25T02:22:04.120014+08:00"
+    }
+  ]
+}

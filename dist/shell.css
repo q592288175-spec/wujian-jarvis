@@ -1,0 +1,31 @@
+/* Shared shell only. Page modules keep their own geometry and behaviour. */
+.shell-version-switch{display:inline-flex;gap:2px;padding:3px;border:1px solid var(--line-strong);border-radius:var(--r-md);background:var(--surface);align-items:center;flex-shrink:0}
+.shell-version-switch a{display:inline-flex;width:auto;height:auto;min-height:28px;align-items:center;justify-content:center;padding:4px 8px;border:0;border-radius:var(--r-sm);font-size:var(--fs-xs);font-weight:600;color:var(--muted);text-decoration:none;white-space:nowrap}
+.shell-version-switch a.active{color:var(--on-accent);background:var(--accent)}
+.nav-group-title{font-size:var(--fs-xs);font-weight:500;color:var(--nav-muted);margin:15px 9px 5px;letter-spacing:0}
+html body .side-nav,html body .sidebar{width:var(--sidebar-w);background:var(--nav-bg);color:var(--nav-text)}
+html body .main-shell,html body .workspace{margin-left:var(--sidebar-w);min-width:0}
+html body #mainNav,html body #navigation{display:flex;flex-direction:column;overflow-y:auto;min-height:0;gap:3px}
+html body #mainNav :is(button,a),html body #navigation a{display:flex;align-items:center;gap:8px;min-height:34px;padding:7px 10px;border:0;border-radius:var(--r-md);background:transparent;color:var(--nav-text);font-size:var(--fs-sm);text-align:left;text-decoration:none;white-space:nowrap;font-weight:500}
+html body #mainNav :is(button,a):hover,html body #navigation a:hover{background:var(--nav-active)}
+html body #mainNav button.active,html body #navigation a.active{background:var(--nav-active);color:var(--nav-on-active)}
+html body #mainNav button span{width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;font-size:var(--fs-xs);background:transparent;color:inherit}
+html body .topbar{min-height:var(--topbar-h);height:auto;gap:10px;background:var(--surface);flex-wrap:wrap}
+html body .topbar .toolbar,html body .top-meta{flex-wrap:wrap;min-width:0;gap:8px}
+.shell-account-bar{display:flex;gap:6px 18px;align-items:center;flex-wrap:wrap;padding:7px 24px;background:var(--surface);border-bottom:1px solid var(--line);font-size:var(--fs-xs);color:var(--muted)}
+.shell-account-bar b{color:var(--text)}
+.page-context{font-size:var(--fs-sm);color:var(--muted);margin:10px 0 14px;line-height:1.7;display:flex;gap:9px;align-items:baseline}
+body[data-shell=stable] .page-context{margin:12px 24px 0}
+.page-step{font-size:var(--fs-xs);font-weight:600;padding:2px 7px;border-radius:var(--r-sm);color:var(--accent-strong);background:var(--accent-soft);white-space:nowrap}
+@media(max-width:760px){html body .side-nav,html body .sidebar{width:100%;position:static;padding:10px}html body .main-shell,html body .workspace{margin-left:0}html body #mainNav,html body #navigation{flex-direction:row;max-height:116px;flex-wrap:wrap;overflow:auto}html body .nav-group-title{width:100%;margin:5px 0 0}html body #mainNav :is(button,a),html body #navigation a{min-height:30px;padding:5px 8px;font-size:var(--fs-xs)}.shell-version-switch{flex-wrap:wrap}.shell-account-bar{padding:7px 14px}html body .topbar{padding:10px 14px}.page-context{align-items:flex-start}.cockpit .shell-version-switch{margin-left:auto}}
+
+html body[data-shell=stable] #mainNav :is(button,a) :is(b,span){color:inherit}
+html body[data-shell=stable] .side-nav .assistant-entry{background:var(--nav-active);color:var(--nav-on-active);border-color:var(--nav-active)}
+html body[data-shell=stable] .side-nav #mainNav :is(button,a,b,span){color:var(--nav-text)}
+html body[data-shell=stable] .side-nav #mainNav .active :is(b,span){color:var(--nav-on-active)}
+html body[data-shell=stable] .side-nav #mainNav{flex:1;min-height:0}
+html body[data-shell=stable] .side-nav .assistant-entry{position:static;margin-top:12px;width:100%;flex-shrink:0}
+html body[data-shell=stable] .side-nav .brand,html body[data-shell=stable] .side-nav .side-foot{flex-shrink:0}
+html body[data-shell=panorama] #content .primary,html body[data-shell=panorama] #content .chips button.active{background:var(--accent);color:var(--on-accent)}
+
+@media(max-width:760px){html body[data-shell=stable] .account-picker,html body[data-shell=stable] .account-picker select{display:block}html body[data-shell=stable] .account-controls{display:flex;flex-wrap:wrap}html body[data-shell=stable] #mainNav{max-height:160px}html body[data-shell=stable] .side-nav .assistant-entry{align-self:flex-end}}

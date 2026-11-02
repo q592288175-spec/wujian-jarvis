@@ -1,4 +1,4 @@
-import {bindingOverride,bindingSummary} from './im-binding.mjs';
+import {bindingOverride,bindingSummary,persistBinding} from './im-binding.mjs';
 import * as lark from '@larksuiteoapi/node-sdk';
 import {readFile,mkdir} from 'node:fs/promises';
 import {resolve} from 'node:path';
@@ -7,7 +7,7 @@ import {buildAxesReport} from './three-axes.mjs';
 import {assistantReply} from './assistant.mjs';
 import {getReport} from './research-agent.mjs';
 import {atomicWrite} from './research-storage.mjs';
-import {Ledger,deliveryId,scheduleTimes,dueSlots,acceptedMessage} from './feishu-core.mjs';
+import {Ledger,deliveryId,scheduleTimes,dueSlots,acceptedMessage,sendMonitorNotification,monitorNotificationConfig,monitorConversation} from './feishu-core.mjs';
 const dir=resolve('.runtime/feishu'),settingsPath=resolve(dir,'settings.json');
 const split=v=>String(v||'').split(',').map(s=>s.trim()).filter(Boolean);
 function config(){const override=bindingOverride();if(override)return override.disabled?{allowedUsers:[],allowedChats:[]}:override;return {appId:process.env.FEISHU_APP_ID,appSecret:process.env.FEISHU_APP_SECRET,allowedUsers:split(process.env.FEISHU_ALLOWED_OPEN_IDS),allowedChats:split(process.env.FEISHU_ALLOWED_CHAT_IDS),botOpenId:process.env.FEISHU_BOT_OPEN_ID,target:process.env.FEISHU_RECEIVE_ID,type:process.env.FEISHU_RECEIVE_ID_TYPE||'open_id'};}
@@ -15,7 +15,7 @@ let ws,client,ledger,timer,busy=false,lastError=null,settings={enabled:false,tim
 const conversations=new Map(),active=new Set();
 function configured(c=config()){return !!(c.appId&&c.appSecret&&c.allowedUsers.length)}
 function targetAllowed(c=config()){return c.type==='open_id'?c.allowedUsers.includes(c.target):c.type==='chat_id'?c.allowedChats.includes(c.target):false;}
-export function feishuStatus(){const c=config();return {...bindingSummary(),configured:configured(c),targetConfigured:targetAllowed(c),transport:ws?.getConnectionStatus()?.state||'未连接',enabled:settings.enabled,times:settings.times,timezone:'Asia/Shanghai',lastError,ready,notice:'工作台服务需持续运行；仅交易日定时，错过5分钟窗口不补发。没有凭据时不发送。'};}
+export function feishuStatus(){const c=config();return {...bindingSummary(),configured:configured(c),targetConfigured:targetAllowed(c),transport:ws?.getConnectionStatus()?.state||'未连接',enabled:settings.enabled,times:settings.times,timezone:'Asia/Shanghai',lastError,ready,monitorChatBound:monitorNotificationConfig(c).type==='chat_id'&&!!c.notificationChat,botUrl:/^cli_[A-Za-z0-9]+$/.test(c.appId||'')?'https://applink.feishu.cn/client/bot/open?appId='+encodeURIComponent(c.appId):null,notice:'工作台服务需持续运行；仅交易日定时，错过5分钟窗口不补发。没有凭据时不发送。'};}
 export async function setFeishuSchedule(input){if(typeof input.enabled!=='boolean')throw Error('请明确是否启用定时推送');const next={enabled:input.enabled,times:scheduleTimes(input.times)};if(next.enabled&&(!ready||!configured()||!targetAllowed()))throw Error('请先在本机配置飞书应用、授权用户和推送目标');await mkdir(dir,{recursive:true});await atomicWrite(settingsPath,JSON.stringify(next));settings=next;return feishuStatus();}
 async function send(chatId,text,key,type='chat_id'){
  const c=config();const safeTarget=type==='open_id'?c.allowedUsers.includes(chatId):c.allowedChats.includes(chatId)||[...conversations.values()].some(v=>v.chatId===chatId&&v.chatType==='p2p'&&c.allowedUsers.includes(v.user));
@@ -23,10 +23,17 @@ async function send(chatId,text,key,type='chat_id'){
  try{const result=await client.im.v1.message.create({params:{receive_id_type:type},data:{receive_id:chatId,msg_type:'text',content:JSON.stringify({text:text.length>5500?text.slice(0,5400)+'\n（内容较长，完整报告请在工作台查看）':text}),uuid:deliveryId(key)}});if(result.code!==0||!result.data?.message_id)throw Error('send_failed');await ledger.finish('send:'+key,'sent');return {sent:true}}catch{await ledger.finish('send:'+key,'uncertain');lastError='飞书发送未确认，请核对权限和目标；为避免重复未自动重发';throw Error(lastError)}
 }
 export async function previewFeishuReport(){return buildAxesReport(await marketSnapshot());}
+export async function pushMonitorMessage(text,key){
+ const c=config();if(!ready||!configured(c)||!targetAllowed(c))throw Error('请先绑定本人飞书');
+ try{const result=await sendMonitorNotification({client,ledger,config:monitorNotificationConfig(c),text,key});lastError=null;return result;}catch(error){lastError=error.providerCode===21001?'飞书访问控制策略拒绝（21001），请在飞书核对应用权限或联系管理员':error.providerCode===230101?'飞书暂不允许按用户ID发送，请在本人小木单聊中发送“绑定提醒”':error.providerCode?'飞书拒绝发送，错误码 '+error.providerCode:error.message;throw error;}
+}
 export async function pushFeishuReport(){if(!ready||!targetAllowed())throw Error('飞书推送目标尚未配置');const report=await previewFeishuReport();if(report.status!=='observing'||!report.rows.length)throw Error('真实行情未就绪，不发送正式日报');const c=config();return send(c.target,report.text,'manual:'+new Date().toISOString().slice(0,16),c.type);}
 async function processMessage(message){const scope=message.chatId+':'+message.user;let acquired=false;try{
  if(active.has(scope)){await send(message.chatId,'上一条问题仍在处理；已启动的深度研究在后台继续。','busy:'+message.id);return}active.add(scope);acquired=true;
  const old=conversations.get(scope)||{chatId:message.chatId,chatType:message.chatType,user:message.user,history:[]};conversations.set(scope,old);
+ if(message.text==='绑定提醒'){
+  const c=config(),peer=monitorConversation(c,message);if(!bindingOverride())throw Error('请先通过小木扫码绑定本人');await persistBinding({...c,notificationChat:peer});await send(message.chatId,'本人盯盘通知单聊已绑定。请回小木“连接与通知”点“测试手机通知”核对送达。','monitor-binding:'+message.id);lastError=null;return;
+ }
  await send(message.chatId,'收到，正在查询。你可以继续使用工作台；深度研究会在后台运行。','ack:'+message.id);
  if(/^(日报|复盘日报|三板斧|帮助)$/.test(message.text)){const text=message.text==='帮助'?'可以说：日报、研究沪铜、查询原油行情、查看研究任务。仅只读研究，不下单。':(await previewFeishuReport()).text;await send(message.chatId,text,'answer:'+message.id);return}
  const messages=[...old.history.slice(-18),{role:'user',content:message.text}];const result=await assistantReply(messages);old.history=[...messages,{role:'assistant',content:result.text.slice(0,5500)}].slice(-20);

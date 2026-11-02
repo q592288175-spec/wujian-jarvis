@@ -1,12 +1,12 @@
 {
   "name": "wujian-jarvis",
-  "version": "0.4.4",
+  "version": "0.5.1",
   "private": true,
   "type": "module",
   "scripts": {
     "start": "node --env-file-if-exists=.env server.mjs",
-    "check": "node --check server.mjs && node --check dist/app.js && node --check dist/voice.js && node --check dist/hologram.js && node --check dist/panels.js && node --check dist/data-hub.js && node --check integrations/providers.mjs && node --check finance.mjs && node --check dist/live-news.js && node --check dist/live-market.js && node --check integrations/market.mjs && node --check integrations/start-market.mjs",
-    "market": "node --env-file-if-exists=.env integrations/start-market.mjs",
+    "check": "node scripts/check-source.mjs",
+    "market": ".venv-akshare\\Scripts\\python.exe integrations\\eod_market.py",
     "test": "node --test tests/*.test.mjs",
     "desktop:build": "node scripts/build-desktop.mjs",
     "desktop:icon": "node scripts/build-app-icon.mjs"
@@ -23,6 +23,7 @@
     "@larksuiteoapi/node-sdk": "1.74.0",
     "dompurify": "3.4.15",
     "marked": "18.0.13",
+    "parse5": "8.0.1",
     "qrcode": "1.5.4",
     "ws": "8.21.3"
   }

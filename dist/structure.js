@@ -16,7 +16,7 @@ export function analyzeStructure(quote){
  let cross='历史不足';if(daily.length>=11){const prev=daily.at(-2),old=mean(daily.slice(-11,-1));cross=prev.close<=old&&last.close>day.ma10?'完成日K上穿MA10':prev.close>=old&&last.close<day.ma10?'完成日K下穿MA10':'本根无穿越';}
  const range=daily.length>=60?{high:Math.max(...daily.slice(-60).map(b=>b.high)),low:Math.min(...daily.slice(-60).map(b=>b.low)),close:last.close}:null;
  const platforms=Array.from({length:6},(_,i)=>i+3).filter(n=>daily.length>=n).map(n=>{const bs=daily.slice(-n),high=Math.max(...bs.map(b=>b.high)),low=Math.min(...bs.map(b=>b.low));return {days:n,high,low,widthPct:(high-low)/last.close*100}});
- return {symbol:quote?.symbol,source:'TqSdk实际合约日K',asOf:last?barDate(last):null,day,week,month,cross,range,platforms,permission:false,notice:'周/月由日K按日历聚合，保守排除首尾周期。方向仅为MA10斜率与收盘同侧测量；明确斜率、60日区域及平台阈值未校准，不构成完整信号。'};
+ return {symbol:quote?.symbol,source:quote?.seriesType==='main_continuous'?'AKShare免费主力连续完成日K':'实际合约完成日K',asOf:last?barDate(last):null,day,week,month,cross,range,platforms,permission:false,notice:'周/月由完成日K按日历聚合，保守排除首尾周期。主力连续可能受换月影响；方向仅为MA10斜率与收盘同侧测量，不构成完整信号。'};
 }
 export function closingQuote(q){
  if(Number.isFinite(q?.close)&&q.close>0)return {value:q.close,previous:q.preClose,changePct:Number.isFinite(q.preClose)&&q.preClose>0?(q.close-q.preClose)/q.preClose*100:null,asOf:q.tradingDay||q.quoteTime,basis:'交易所收盘字段'};

@@ -1,0 +1,32 @@
+.fire-modebar{display:flex;align-items:stretch;gap:16px;border-bottom:1px solid var(--line,var(--line));flex-wrap:wrap;margin:12px 0 18px}
+.fire-modebar>.tabs{flex:0 1 auto;margin:0;border-bottom:0;align-self:flex-end}
+.fire-modebar>.tabs{flex-wrap:wrap;min-width:0}
+.strength-summary{flex:1 1 530px;min-width:0;display:flex;align-items:center;gap:12px;padding:10px 0}
+.strength-heading{flex:0 0 108px;display:grid;gap:5px;font-size:var(--fs-md)}
+.strength-heading small{font-size:var(--fs-xs);color:var(--text)}
+.strength-pairs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;flex:1;min-width:0}
+.strength-pair{display:grid;gap:4px;align-content:center;text-align:left;min-width:0;min-height:76px;padding:8px 10px;border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface);color:var(--text);font-size:var(--fs-md);line-height:1.3;overflow-wrap:anywhere}
+.strength-pair small{color:var(--text);font-size:var(--fs-xs)}
+.strength-pair:hover{background:var(--raised);border-color:var(--line)}
+.strength-pair>span{display:grid;gap:2px;min-width:0}
+.strength-pair>span small{font-size:var(--fs-xs);line-height:1.4}
+.strength-pair>span+span{margin-top:5px;padding-top:5px;border-top:1px solid var(--line)}
+.strength-long{color:var(--up)}
+.strength-short{color:var(--down)}
+.strength-vacant{color:var(--text)}
+.strength-loading{padding:12px;color:var(--text)}
+.strength-table{min-width:660px}
+.strength-table td{white-space:normal}
+.strength-table td small{color:var(--text)}
+.strength-evidence{padding:14px 0;border-bottom:1px solid var(--line)}
+.strength-evidence summary{cursor:pointer;font-weight:600}
+.strength-evidence p{line-height:1.65;margin:8px 0}
+.strength-evidence>div{padding:8px 0}
+@media (max-width:700px){.fire-modebar{gap:0}
+.fire-modebar>.tabs{width:100%;display:flex}
+.fire-modebar>.tabs button{flex:1;padding:12px 6px;font-size:var(--fs-sm)}
+.strength-summary{display:block;flex-basis:100%}
+.strength-heading{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.strength-pair{font-size:var(--fs-sm);padding:8px 6px}
+.strength-pairs{gap:5px}
+}

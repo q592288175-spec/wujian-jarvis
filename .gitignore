@@ -20,3 +20,15 @@ dist/assets/wujian-logo-v1.png
 logs/
 data/
 .pytest_cache/
+.playwright-cli/
+output/playwright/
+操作记录/
+
+# Local-only market caches, source backups and verification artifacts
+output/
+source-snapshots/
+contract-bars/
+.wujian-futures-multi-cycle-scan/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm

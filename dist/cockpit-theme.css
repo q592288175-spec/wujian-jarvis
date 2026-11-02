@@ -1,0 +1,84 @@
+body{--scene:url(/assets/wujian/themes/home.png);--page-accent:var(--holo-color-410);--page-accent-soft:var(--holo-color-411);--page-frame:var(--holo-color-412);--page-action:var(--holo-color-410);--page-ink:var(--holo-color-413);isolation:isolate;background:var(--holo-color-418);color:var(--text);letter-spacing:0}
+body:has(#mainNav [data-view="monitor"].active){--scene:url(/assets/wujian/themes/monitor.png);--page-accent:var(--holo-color-419);--page-accent-soft:var(--holo-color-420);--page-frame:var(--holo-color-421);--page-action:var(--holo-color-419)}
+body:has(#mainNav [data-view="fire"].active){--scene:url(/assets/wujian/themes/fire.png);--page-accent:var(--holo-color-422);--page-accent-soft:var(--holo-color-423);--page-frame:var(--holo-color-424);--page-action:var(--holo-color-425)}
+body:has(#mainNav [data-view="water"].active){--scene:url(/assets/wujian/themes/water.png);--page-accent:var(--holo-color-426);--page-accent-soft:var(--holo-color-427);--page-frame:var(--holo-color-428);--page-action:var(--holo-color-426)}
+body:has(#mainNav [data-view="metal"].active){--scene:url(/assets/wujian/themes/metal.png);--page-accent:var(--holo-color-429);--page-accent-soft:var(--holo-color-430);--page-frame:var(--holo-color-431);--page-action:var(--holo-color-429)}
+body:has(#mainNav [data-view="earth"].active){--scene:url(/assets/wujian/themes/earth.png);--page-accent:var(--holo-color-432);--page-accent-soft:var(--holo-color-433);--page-frame:var(--holo-color-434);--page-action:var(--holo-color-432)}
+body:has(#mainNav [data-view="wood"].active){--scene:url(/assets/wujian/themes/wood.png);--page-accent:var(--holo-color-435);--page-accent-soft:var(--holo-color-436);--page-frame:var(--holo-color-437);--page-action:var(--holo-color-435)}
+body:has(#mainNav [data-view="rules"].active){--scene:url(/assets/wujian/themes/rules.png);--page-accent:var(--holo-color-438);--page-accent-soft:var(--holo-color-439);--page-frame:var(--holo-color-440);--page-action:var(--holo-color-441)}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background-image:var(--scene);background-size:cover;background-position:center;background-repeat:no-repeat;filter:saturate(.32) brightness(.55);opacity:.22}
+.cockpit .brand-emblem{width:124px;height:104px;flex:0 0 124px;display:block;object-fit:contain;background:transparent;border:0;border-radius:0;outline:0;box-shadow:none}
+.cockpit .brand{min-width:136px;flex-direction:column;align-items:center;gap:9px;text-align:center}
+.cockpit .brand-emblem{width:116px;height:116px;flex:0 0 auto}
+.cockpit .brand b{font-family:var(--font);font-size:var(--fs-lg);font-weight:500;line-height:1.4;color:var(--holo-color-442);text-shadow:none}
+.cockpit .brand small{color:var(--muted)}
+.account-funds-bar{background:var(--holo-color-443);border-color:var(--line);backdrop-filter:blur(12px)}
+.account-summary{color:var(--holo-color-444)}
+.account-summary b{color:var(--holo-color-445)}
+.balance-scroll th,.balance-scroll td:last-child{background:var(--holo-color-446)}
+body.cockpit{--scene:url(/assets/wujian/themes/holographic.png);--surface-2:var(--holo-color-449);--cyan:var(--holo-color-454)}
+.cockpit #cockpit-shell{background:transparent}
+.cockpit .cockpit-header{background:var(--holo-color-455);border-color:var(--line);backdrop-filter:blur(16px)}
+.cockpit :is(.panel,.control-strip){background:var(--surface);border-color:var(--line);border-radius:var(--r-lg);box-shadow:0 12px 30px var(--holo-color-456),inset 0 1px 0 var(--holo-color-457)}
+.cockpit .panel::before,.cockpit .panel::after{content:none}
+.cockpit .market-map{background:var(--holo-color-458);border-color:var(--holo-color-459)}
+.cockpit .globe-stage::before,.cockpit .globe-stage::after{opacity:.4}
+.cockpit :is(.panel-head,.control-strip,.workflow-step){background-color:var(--holo-color-460)}
+.cockpit :is(.header-account-link,.assistant-button,.version-switch a,.header-context select){background-color:var(--holo-color-461);border-color:var(--line-strong);color:var(--text)}
+.cockpit .opportunity-group+.opportunity-group{border-top-color:var(--holo-color-462)}
+.cockpit .sector-button{background:var(--holo-color-463);border-color:var(--line)}
+.cockpit .sector-button[data-sector="all"]{background:var(--holo-color-464)}
+.cockpit .sector-button:is(:hover,.active){border-color:var(--pool-resonance)}
+.cockpit .signal-cell{background:var(--holo-color-465)}
+.cockpit .detail-actions{background:var(--holo-color-466)}
+.cockpit .brand b,.cockpit .brand small,.cockpit .eyebrow{letter-spacing:0}
+.cockpit .globe-affection{color:var(--holo-color-467)}
+html:has(body.cockpit),body.cockpit{height:auto;overflow-y:auto}
+.cockpit #cockpit-shell{height:auto;min-height:100dvh;overflow:visible;grid-template-rows:auto auto minmax(580px,1fr) auto}
+.cockpit .cockpit-main{height:max(580px,calc(100dvh - 300px))}
+.cockpit .market-map{grid-template-rows:auto minmax(150px,1fr) auto auto}
+.cockpit .globe-stage{min-height:0}
+.cockpit .sector-nav{grid-template-columns:repeat(3,minmax(0,1fr))}
+.cockpit .sector-button{min-height:52px}
+.cockpit .sector-button:focus-visible{outline:2px solid var(--holo-color-389);outline-offset:2px}
+.cockpit .signal-cell{min-width:0;border-left-width:3px}
+.cockpit .signal-cell em{display:block;overflow-wrap:anywhere;line-height:1.6}
+.cockpit .signal-long{border-left-color:var(--holo-color-468)}
+.cockpit .signal-short{border-left-color:var(--holo-color-469)}
+.cockpit .signal-long b,.cockpit .signal-long em{color:var(--holo-color-468)}
+.cockpit .signal-short b,.cockpit .signal-short em{color:var(--holo-color-469)}
+.cockpit .signal-neutral b{color:var(--muted)}
+.cockpit .signal-basis{font-size:var(--fs-holo);color:var(--muted);line-height:1.6}
+.cockpit .cycle-mini{flex-wrap:wrap}
+.cockpit .pool-switch button[data-pool="day-trend"] small{color:var(--pool-month)}
+@media (max-width:1120px){.cockpit #cockpit-shell{grid-template-rows:auto auto auto auto}
+.cockpit .cockpit-main{height:auto}
+}
+@media (max-width:760px){.cockpit .market-map{min-height:650px}
+.cockpit .sector-nav{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (min-width:1121px){html:has(body.cockpit),body.cockpit{height:100%;min-height:0;overflow:hidden}
+.cockpit #cockpit-shell{height:100dvh;min-height:0;overflow:hidden;grid-template-rows:auto auto minmax(0,1fr) auto}
+.cockpit .cockpit-header{min-height:88px;padding:6px 18px;flex-wrap:nowrap}
+.cockpit .brand{min-width:90px;gap:2px}
+.cockpit .brand-emblem{width:56px;height:56px}
+.cockpit .brand b{font-size:var(--fs-lg);line-height:20px}
+.cockpit .header-context{flex-basis:0}
+.cockpit .account-funds-bar{padding-block:5px}
+.cockpit .cockpit-main{height:auto;min-height:0;padding-block:8px}
+.cockpit .market-map{grid-template-rows:auto minmax(0,1fr) auto auto}
+.cockpit .map-heading{padding:9px 12px 0}
+.cockpit .map-heading p{margin-top:3px;margin-bottom:3px}
+.cockpit .sector-nav{gap:4px;padding:6px 9px}
+.cockpit .sector-button{min-height:40px;padding:4px 7px}
+.cockpit .market-legend{padding-block:5px}
+.cockpit .control-strip{margin-bottom:8px;padding:6px 10px}
+.cockpit .workflow-step{padding-block:5px}
+}
+@media (min-width:761px) and (max-width:1050px){}
+@media (min-width:1800px){}
+@media (max-width:760px){.cockpit .header-context,.cockpit .header-account-controls{min-width:0}
+.cockpit .header-account-controls{flex-wrap:wrap}
+}
+@media print{body::before{display:none}
+}

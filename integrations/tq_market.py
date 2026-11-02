@@ -1,5 +1,6 @@
 """Independent read-only market collector. No broker account or order tools."""
 import os, json, math, time, re
+from contextlib import contextmanager
 from pathlib import Path
 from datetime import datetime, timezone, timedelta
 from zoneinfo import ZoneInfo
@@ -31,6 +32,32 @@ def write(status, quotes, error=None):
     temp=TARGET.with_suffix('.tmp')
     temp.write_text(json.dumps(payload,ensure_ascii=False,allow_nan=False))
     temp.replace(TARGET)
+
+@contextmanager
+def collector_lock(path):
+    lock=path.open('a+b')
+    try:
+        if os.name=='nt':
+            import msvcrt
+            lock.seek(0,2)
+            if lock.tell()==0:
+                lock.write(b'\0');lock.flush()
+            lock.seek(0)
+            msvcrt.locking(lock.fileno(),msvcrt.LK_NBLCK,1)
+            unlock=lambda: msvcrt.locking(lock.fileno(),msvcrt.LK_UNLCK,1)
+        else:
+            import fcntl
+            fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+            unlock=lambda: fcntl.flock(lock,fcntl.LOCK_UN)
+    except (BlockingIOError,OSError):
+        lock.close()
+        raise SystemExit('行情采集器已在运行，不重复启动')
+    try:
+        yield
+    finally:
+        lock.seek(0)
+        unlock()
+        lock.close()
 
 def run():
     user,password=os.getenv('TQ_USER'),os.getenv('TQ_PASSWORD')
@@ -104,9 +131,6 @@ def run():
         finally:
             if api: api.close()
 if __name__=='__main__':
-    import fcntl
     TARGET.parent.mkdir(exist_ok=True)
-    with (TARGET.parent/'collector.lock').open('a') as lock:
-        try: fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
-        except BlockingIOError: raise SystemExit('行情采集器已在运行，不重复启动')
+    with collector_lock(TARGET.parent/'collector.lock'):
         run()

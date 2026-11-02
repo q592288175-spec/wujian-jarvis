@@ -1,0 +1,44 @@
+.gold-steps{display:flex;gap:24px;flex-wrap:wrap;padding:12px 24px;border-block:1px solid var(--line,var(--line));font-size:var(--fs-md);color:var(--muted,var(--text))}
+.gold-method-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 22px}
+#goldPanel [hidden]{display:none}
+#goldPanel .gold-back{margin:4px 0 12px}
+.gold-method{display:flex;gap:12px;padding:16px 0;border-bottom:1px solid var(--line,var(--line));align-items:flex-start;cursor:pointer}
+.gold-method input{width:18px;height:18px;flex:none;margin-top:4px}
+.gold-method small{display:block;line-height:1.6;margin-top:5px;color:var(--muted,var(--text))}
+.gold-chart{width:100%;margin:14px 0;background:var(--surface);border:1px solid var(--line,var(--line));border-radius:0;box-sizing:border-box}
+.gold-chart canvas{width:100%;aspect-ratio:7/3;display:block}
+.gold-check{display:flex;gap:10px;align-items:flex-start;margin:18px 0;line-height:1.6}
+.gold-check input,.gold-accounts input[type=checkbox]{width:18px;height:18px;flex:none;margin-top:3px}
+.gold-accounts input[type=number]{min-width:76px;max-width:110px;width:100%}
+.gold-accounts td{vertical-align:top}
+.gold-accounts td:last-child{min-width:180px}
+#goldPanel{min-width:0}
+#goldPanel h2{font-size:var(--fs-xl)}
+#goldPanel h3{font-size:var(--fs-lg)}
+#goldPanel .form-section{border-radius:0;box-shadow:none;background:transparent}
+#goldPanel .table-wrap{overflow:auto}
+#goldPanel .field input,#goldPanel .field select{min-width:0;width:100%;box-sizing:border-box}
+@media (max-width:900px){.gold-method-list{grid-template-columns:1fr}
+#goldPanel .form-grid.three{grid-template-columns:repeat(2,minmax(0,1fr))}
+.gold-steps{gap:12px;font-size:var(--fs-xs)}
+}
+@media (max-width:550px){#goldPanel .form-grid.three{grid-template-columns:1fr}
+.gold-chart canvas{min-height:150px}
+.gold-steps{padding-left:18px;gap:10px 24px}
+}
+.gold-steps~details #goldEnvironment small{display:block;font-size:var(--fs-xs);line-height:1.6;color:var(--muted)}
+
+#goldPanel .gold-sizing.form-section{margin:20px 0;padding:18px;border:1px solid var(--line-strong);border-left:3px solid var(--metal);border-radius:8px;background:var(--surface)}
+#goldPanel .gold-sizing h3{font-size:19px;margin:0 0 5px;color:var(--text)}
+#goldPanel .gold-sizing .section-head p{margin:0;color:var(--muted);font-size:13px}
+.gold-sizing-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0}
+.gold-sizing-metrics>div{padding:12px;border:1px solid var(--line);background:var(--raised);border-radius:6px;min-width:0}
+.gold-sizing-metrics small{display:block;color:var(--muted);font-size:12px;line-height:1.6}
+.gold-sizing-metrics output{display:block;margin-top:6px;color:var(--text);font-size:21px;font-weight:700;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.gold-sizing-metrics .gold-sizing-quantity{background:var(--accent-soft);border-color:var(--line-strong)}
+.gold-sizing-metrics .gold-sizing-quantity output{font-size:28px;color:var(--accent-strong)}
+.gold-sizing-suggestion{font-size:13px;line-height:1.7;color:var(--muted)}
+.gold-accounts [data-gold-sizing-loss]{display:block;max-width:160px;font-size:12px;line-height:1.6;color:var(--muted)}
+.gold-sizing input[readonly]{background:var(--raised)}
+@media(max-width:1000px){.gold-sizing-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:550px){#goldPanel .gold-sizing.form-section{padding:12px}.gold-sizing .section-head{align-items:flex-start;gap:10px}.gold-sizing-metrics output{font-size:18px}.gold-sizing-metrics .gold-sizing-quantity output{font-size:24px}}

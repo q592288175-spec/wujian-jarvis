@@ -1,0 +1,7 @@
+{
+  "version": "2026-10-25",
+  "lower": 0.3,
+  "upper": 0.6,
+  "todayExpensiveMultiple": 2,
+  "basis": "一开一平昨费用 ÷ 每跳毛利；仅作显示，不参与交易规则"
+}

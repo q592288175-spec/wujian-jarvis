@@ -1,0 +1,12 @@
+import {readFile,writeFile} from 'node:fs/promises';
+import {resolve} from 'node:path';
+import assert from 'node:assert/strict';
+import {databaseManifest} from './system-backup.mjs';
+const base='http://127.0.0.1:4318',out=resolve('output/market-overview-2026-10-30');
+const [health,snap]=await Promise.all(['health','market-panorama/snapshot'].map(p=>fetch(base+'/api/'+p).then(r=>{assert.ok(r.ok);return r.json()})));
+assert.equal(health.projectRoot,resolve('.'));
+assert.equal(snap.closeOverview.day,'2026-10-29');
+const valid=snap.closeOverview.products.filter(p=>p.status==='ok');assert.equal(valid.length,81);
+const before=JSON.parse(await readFile(out+'/baseline.json','utf8'));assert.deepEqual(databaseManifest('.runtime/five-workbench.sqlite'),before.business);
+const result={passed:true,base,at:new Date().toISOString(),build:health.serverBuild,date:snap.closeOverview.day,previous:snap.closeOverview.previousDay,valid:valid.length,missing:snap.closeOverview.products.length-valid.length,businessUnchanged:true};
+await writeFile(out+'/active-verification.json',JSON.stringify(result,null,2));console.log(JSON.stringify(result));

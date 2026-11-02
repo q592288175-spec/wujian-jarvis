@@ -6,13 +6,17 @@ import {existsSync,readFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 import {packager} from '@electron/packager';
 const project=resolve('.'),stage=resolve('.runtime/desktop-stage');
+const platform=process.platform,arch=process.arch,electronVersion='44.4.3';
 await mkdir(stage,{recursive:true});
 await copyFile('desktop/main.cjs',resolve(stage,'main.cjs'));
+await copyFile('desktop/monitor.cjs',resolve(stage,'monitor.cjs'));
+await copyFile('desktop/zoom.cjs',resolve(stage,'zoom.cjs'));
 await copyFile('desktop/preload.cjs',resolve(stage,'preload.cjs'));
 await copyFile('desktop/loading.html',resolve(stage,'loading.html'));
-await writeFile(resolve(stage,'project.json'),JSON.stringify({project},null,2));
-await writeFile(resolve(stage,'package.json'),JSON.stringify({name:'wujian-jarvis-desktop',version:appVersion,main:'main.cjs',private:true}));
-const zipDir=resolve('.runtime/electron-download'),zip=resolve(zipDir,'electron-v44.4.3-darwin-arm64.zip');
-if(existsSync(zip)){const expected=JSON.parse(readFileSync('node_modules/electron/checksums.json','utf8'))['electron-v44.4.3-darwin-arm64.zip'];if(createHash('sha256').update(readFileSync(zip)).digest('hex')!==expected)throw Error('Electron下载校验失败');}
-const output=await packager({dir:stage,...(existsSync(zip)?{electronZipDir:zipDir}:{}),name:'小木',icon:resolve('desktop/assets/wujian-app.icns'),platform:'darwin',arch:'arm64',electronVersion:'44.4.3',out:resolve(process.env.WUJIAN_DESKTOP_OUT||'.runtime/desktop-build'),overwrite:true,asar:true,appBundleId:'com.wujian.jarvis',appVersion,extendInfo:{NSMicrophoneUsageDescription:'用于你主动发起的 小木 语音通话。'}});
+await writeFile(resolve(stage,'project.json'),JSON.stringify(process.env.WUJIAN_DESKTOP_PORTABLE==='1'?{projectRelative:'../../..'}:{project},null,2));
+await writeFile(resolve(stage,'package.json'),JSON.stringify({name:'wujian-jarvis-desktop',version:appVersion,main:'main.cjs',private:true,author:'五简'}));
+const zipDir=resolve('.runtime/electron-download'),zipName=`electron-v${electronVersion}-${platform}-${arch}.zip`,zip=resolve(zipDir,zipName);
+if(existsSync(zip)){const expected=JSON.parse(readFileSync('node_modules/electron/checksums.json','utf8'))[zipName];if(!expected||createHash('sha256').update(readFileSync(zip)).digest('hex')!==expected)throw Error('Electron下载校验失败');}
+const platformOptions=platform==='darwin'?{icon:resolve('desktop/assets/wujian-app.icns'),appBundleId:'com.wujian.jarvis',extendInfo:{NSMicrophoneUsageDescription:'用于你主动发起的 小木 语音通话。'}}:{};
+const output=await packager({dir:stage,...(existsSync(zip)?{electronZipDir:zipDir}:{download:{cacheRoot:resolve('.runtime/electron-cache')}}),...platformOptions,name:'小木',platform,arch,electronVersion,out:resolve(process.env.WUJIAN_DESKTOP_OUT||'.runtime/desktop-build'),overwrite:true,asar:true,appVersion});
 console.log(output.join('\n'));

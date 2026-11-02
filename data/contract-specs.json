@@ -1,0 +1,713 @@
+{
+  "source": "国泰君安期货交易日历",
+  "sourceUrl": "https://www.gtjaqh.com/pc/calendar?date=20260930",
+  "sourceDate": "2026-09-30",
+  "fetchedAt": "2026-10-02T15:04:24.010648+00:00",
+  "sourceSha256": "877de69012681de40511af7cbeeaebb3b276a881cd6c477b1abaeb7671ed6c90",
+  "products": {
+    "CU": {
+      "symbol": "CU",
+      "name": "铜",
+      "exchange": "上期所",
+      "pointValue": 5.0,
+      "tickSize": 10.0,
+      "tickValue": 50.0
+    },
+    "AL": {
+      "symbol": "AL",
+      "name": "铝",
+      "exchange": "上期所",
+      "pointValue": 5.0,
+      "tickSize": 5.0,
+      "tickValue": 25.0
+    },
+    "ZN": {
+      "symbol": "ZN",
+      "name": "锌",
+      "exchange": "上期所",
+      "pointValue": 5.0,
+      "tickSize": 5.0,
+      "tickValue": 25.0
+    },
+    "PB": {
+      "symbol": "PB",
+      "name": "铅",
+      "exchange": "上期所",
+      "pointValue": 5.0,
+      "tickSize": 5.0,
+      "tickValue": 25.0
+    },
+    "NI": {
+      "symbol": "NI",
+      "name": "镍",
+      "exchange": "上期所",
+      "pointValue": 1.0,
+      "tickSize": 10.0,
+      "tickValue": 10.0
+    },
+    "SN": {
+      "symbol": "SN",
+      "name": "锡",
+      "exchange": "上期所",
+      "pointValue": 1.0,
+      "tickSize": 10.0,
+      "tickValue": 10.0
+    },
+    "SS": {
+      "symbol": "SS",
+      "name": "不锈钢",
+      "exchange": "上期所",
+      "pointValue": 5.0,
+      "tickSize": 5.0,
+      "tickValue": 25.0
+    },
+    "RB": {
+      "symbol": "RB",
+      "name": "螺纹钢",
+      "exchange": "上期所",
+      "pointValue": 10.0,
+      "tickSize": 1.0,
+      "tickValue": 10.0
+    },
+    "HC": {
+      "symbol": "HC",
+      "name": "热轧卷板",
+      "exchange": "上期所",
+      "pointValue": 10.0,
+      "tickSize": 1.0,
+      "tickValue": 10.0
+    },
+    "WR": {
+      "symbol": "WR",
+      "name": "线材",
+      "exchange": "上期所",
+      "pointValue": 10.0,
+      "tickSize": 1.0,
+      "tickValue": 10.0
+    },
+    "AU": {
+      "symbol": "AU",
+      "name": "黄金",
+      "exchange": "上期所",
+      "pointValue": 1000.0,
+      "tickSize": 0.02,
+      "tickValue": 20.0
+    },
+    "AG": {
+      "symbol": "AG",
+      "name": "白银",
+      "exchange": "上期所",
+      "pointValue": 15.0,
+      "tickSize": 1.0,
+      "tickValue": 15.0
+    },
+    "BR": {
+      "symbol": "BR",
+      "name": "丁二烯橡胶",
+      "exchange": "上期所",
+      "pointValue": 5.0,
+      "tickSize": 5.0,
+      "tickValue": 25.0
+    },
+    "RU": {
+      "symbol": "RU",
+      "name": "天然橡胶",
+      "exchange": "上期所",
+      "pointValue": 10.0,
+      "tickSize": 5.0,
+      "tickValue": 50.0
+    },
+    "FU": {
+      "symbol": "FU",
+      "name": "燃料油",
+      "exchange": "上期所",
+      "pointValue": 10.0,
+      "tickSize": 1.0,
+      "tickValue": 10.0
+    },
+    "BU": {
+      "symbol": "BU",
+      "name": "石油沥青",
+      "exchange": "上期所",
+      "pointValue": 10.0,
+      "tickSize": 1.0,
+      "tickValue": 10.0
+    },
+    "SP": {
+      "symbol": "SP",
+      "name": "纸浆",
+      "exchange": "上期所",
+      "pointValue": 10.0,
+      "tickSize": 2.0,
+      "tickValue": 20.0
+    },
+    "AO": {
+      "symbol": "AO",
+      "name": "氧化铝",
+      "exchange": "上期所",
+      "pointValue": 20.0,
+      "tickSize": 1.0,
+      "tickValue": 20.0
+    },
+    "AD": {
+      "symbol": "AD",
+      "name": "铸造铝合金",
+      "exchange": "上期所",
+      "pointValue": 10.0,
+      "tickSize": 5.0,
+      "tickValue": 50.0
+    },
+    "OP": {
+      "symbol": "OP",
+      "name": "胶版印刷纸",
+      "exchange": "上期所",
+      "pointValue": 40.0,
+      "tickSize": 2.0,
+      "tickValue": 80.0
+    },
+    "SC": {
+      "symbol": "SC",
+      "name": "原油",
+      "exchange": "能源中心",
+      "pointValue": 1000.0,
+      "tickSize": 0.1,
+      "tickValue": 100.0
+    },
+    "LU": {
+      "symbol": "LU",
+      "name": "低硫燃料油",
+      "exchange": "能源中心",
+      "pointValue": 10.0,
+      "tickSize": 1.0,
+      "tickValue": 10.0
+    },
+    "NR": {
+      "symbol": "NR",
+      "name": "20号胶",
+      "exchange": "能源中心",
+      "pointValue": 10.0,
+      "tickSize": 5.0,
+      "tickValue": 50.0
+    },
+    "BC": {
+      "symbol": "BC",
+      "name": "国际铜",
+      "exchange": "能源中心",
+      "pointValue": 5.0,
+      "tickSize": 10.0,
+      "tickValue": 50.0
+    },
+    "EC": {
+      "symbol": "EC",
+      "name": "集运指数(欧线)",
+      "exchange": "能源中心",
+      "pointValue": 50.0,
+      "tickSize": 0.5,
+      "tickValue": 25.0
+    },
+    "A": {
+      "symbol": "A",
+      "name": "黄大豆1号",
+      "exchange": "大商所",
+      "pointValue": 10.0,
+      "tickSize": 1.0,
+      "tickValue": 10.0
+    },
+    "B": {
+      "symbol": "B",
+      "name": "黄大豆2号",
+      "exchange": "大商所",
+      "pointValue": 10.0,
+      "tickSize": 1.0,
+      "tickValue": 10.0
+    },
+    "M": {
+      "symbol": "M",
+      "name": "豆粕",
+      "exchange": "大商所",
+      "pointValue": 10.0,
+      "tickSize": 1.0,
+      "tickValue": 10.0
+    },
+    "Y": {
+      "symbol": "Y",
+      "name": "豆油",
+      "exchange": "大商所",
+      "pointValue": 10.0,
+      "tickSize": 1.0,
+      "tickValue": 10.0
+    },
+    "P": {
+      "symbol": "P",
+      "name": "棕榈油",
+      "exchange": "大商所",
+      "pointValue": 10.0,
+      "tickSize": 1.0,
+      "tickValue": 10.0
+    },
+    "C": {
+      "symbol": "C",
+      "name": "玉米",
+      "exchange": "大商所",
+      "pointValue": 10.0,
+      "tickSize": 1.0,
+      "tickValue": 10.0
+    },
+    "CS": {
+      "symbol": "CS",
+      "name": "玉米淀粉",
+      "exchange": "大商所",
+      "pointValue": 10.0,
+      "tickSize": 1.0,
+      "tickValue": 10.0
+    },
+    "JD": {
+      "symbol": "JD",
+      "name": "鸡蛋",
+      "exchange": "大商所",
+      "pointValue": 10.0,
+      "tickSize": 1.0,
+      "tickValue": 10.0
+    },
+    "RR": {
+      "symbol": "RR",
+      "name": "粳米",
+      "exchange": "大商所",
+      "pointValue": 10.0,
+      "tickSize": 1.0,
+      "tickValue": 10.0
+    },
+    "L": {
+      "symbol": "L",
+      "name": "聚乙烯",
+      "exchange": "大商所",
+      "pointValue": 5.0,
+      "tickSize": 1.0,
+      "tickValue": 5.0
+    },
+    "V": {
+      "symbol": "V",
+      "name": "聚氯乙烯",
+      "exchange": "大商所",
+      "pointValue": 5.0,
+      "tickSize": 1.0,
+      "tickValue": 5.0
+    },
+    "PP": {
+      "symbol": "PP",
+      "name": "聚丙烯",
+      "exchange": "大商所",
+      "pointValue": 5.0,
+      "tickSize": 1.0,
+      "tickValue": 5.0
+    },
+    "EB": {
+      "symbol": "EB",
+      "name": "苯乙烯",
+      "exchange": "大商所",
+      "pointValue": 5.0,
+      "tickSize": 1.0,
+      "tickValue": 5.0
+    },
+    "EG": {
+      "symbol": "EG",
+      "name": "乙二醇",
+      "exchange": "大商所",
+      "pointValue": 10.0,
+      "tickSize": 1.0,
+      "tickValue": 10.0
+    },
+    "PG": {
+      "symbol": "PG",
+      "name": "液化石油气",
+      "exchange": "大商所",
+      "pointValue": 20.0,
+      "tickSize": 1.0,
+      "tickValue": 20.0
+    },
+    "I": {
+      "symbol": "I",
+      "name": "铁矿石",
+      "exchange": "大商所",
+      "pointValue": 100.0,
+      "tickSize": 0.5,
+      "tickValue": 50.0
+    },
+    "JM": {
+      "symbol": "JM",
+      "name": "焦煤",
+      "exchange": "大商所",
+      "pointValue": 60.0,
+      "tickSize": 0.5,
+      "tickValue": 30.0
+    },
+    "J": {
+      "symbol": "J",
+      "name": "焦炭",
+      "exchange": "大商所",
+      "pointValue": 100.0,
+      "tickSize": 0.5,
+      "tickValue": 50.0
+    },
+    "FB": {
+      "symbol": "FB",
+      "name": "纤维板",
+      "exchange": "大商所",
+      "pointValue": 10.0,
+      "tickSize": 0.5,
+      "tickValue": 5.0
+    },
+    "BB": {
+      "symbol": "BB",
+      "name": "胶合板",
+      "exchange": "大商所",
+      "pointValue": 500.0,
+      "tickSize": 0.05,
+      "tickValue": 25.0
+    },
+    "LH": {
+      "symbol": "LH",
+      "name": "生猪",
+      "exchange": "大商所",
+      "pointValue": 16.0,
+      "tickSize": 5.0,
+      "tickValue": 80.0
+    },
+    "LG": {
+      "symbol": "LG",
+      "name": "原木期货",
+      "exchange": "大商所",
+      "pointValue": 90.0,
+      "tickSize": 0.5,
+      "tickValue": 45.0
+    },
+    "BZ": {
+      "symbol": "BZ",
+      "name": "纯苯期货",
+      "exchange": "大商所",
+      "pointValue": 30.0,
+      "tickSize": 1.0,
+      "tickValue": 30.0
+    },
+    "SI": {
+      "symbol": "SI",
+      "name": "工业硅",
+      "exchange": "广期所",
+      "pointValue": 5.0,
+      "tickSize": 5.0,
+      "tickValue": 25.0
+    },
+    "LC": {
+      "symbol": "LC",
+      "name": "碳酸锂",
+      "exchange": "广期所",
+      "pointValue": 1.0,
+      "tickSize": 20.0,
+      "tickValue": 20.0
+    },
+    "PD": {
+      "symbol": "PD",
+      "name": "钯",
+      "exchange": "广期所",
+      "pointValue": 1000.0,
+      "tickSize": 0.05,
+      "tickValue": 50.0
+    },
+    "PS": {
+      "symbol": "PS",
+      "name": "多晶硅",
+      "exchange": "广期所",
+      "pointValue": 3.0,
+      "tickSize": 5.0,
+      "tickValue": 15.0
+    },
+    "PT": {
+      "symbol": "PT",
+      "name": "铂",
+      "exchange": "广期所",
+      "pointValue": 1000.0,
+      "tickSize": 0.05,
+      "tickValue": 50.0
+    },
+    "WH": {
+      "symbol": "WH",
+      "name": "强麦",
+      "exchange": "郑商所",
+      "pointValue": 20.0,
+      "tickSize": 1.0,
+      "tickValue": 20.0
+    },
+    "PM": {
+      "symbol": "PM",
+      "name": "普麦",
+      "exchange": "郑商所",
+      "pointValue": 50.0,
+      "tickSize": 1.0,
+      "tickValue": 50.0
+    },
+    "RI": {
+      "symbol": "RI",
+      "name": "早籼稻",
+      "exchange": "郑商所",
+      "pointValue": 20.0,
+      "tickSize": 1.0,
+      "tickValue": 20.0
+    },
+    "LR": {
+      "symbol": "LR",
+      "name": "晚籼稻",
+      "exchange": "郑商所",
+      "pointValue": 20.0,
+      "tickSize": 1.0,
+      "tickValue": 20.0
+    },
+    "JR": {
+      "symbol": "JR",
+      "name": "粳稻",
+      "exchange": "郑商所",
+      "pointValue": 20.0,
+      "tickSize": 1.0,
+      "tickValue": 20.0
+    },
+    "AP": {
+      "symbol": "AP",
+      "name": "苹果",
+      "exchange": "郑商所",
+      "pointValue": 10.0,
+      "tickSize": 1.0,
+      "tickValue": 10.0
+    },
+    "CJ": {
+      "symbol": "CJ",
+      "name": "红枣",
+      "exchange": "郑商所",
+      "pointValue": 5.0,
+      "tickSize": 5.0,
+      "tickValue": 25.0
+    },
+    "CF": {
+      "symbol": "CF",
+      "name": "棉花",
+      "exchange": "郑商所",
+      "pointValue": 5.0,
+      "tickSize": 5.0,
+      "tickValue": 25.0
+    },
+    "CY": {
+      "symbol": "CY",
+      "name": "棉纱",
+      "exchange": "郑商所",
+      "pointValue": 5.0,
+      "tickSize": 5.0,
+      "tickValue": 25.0
+    },
+    "SR": {
+      "symbol": "SR",
+      "name": "白糖",
+      "exchange": "郑商所",
+      "pointValue": 10.0,
+      "tickSize": 1.0,
+      "tickValue": 10.0
+    },
+    "RS": {
+      "symbol": "RS",
+      "name": "油菜籽",
+      "exchange": "郑商所",
+      "pointValue": 10.0,
+      "tickSize": 1.0,
+      "tickValue": 10.0
+    },
+    "OI": {
+      "symbol": "OI",
+      "name": "菜籽油",
+      "exchange": "郑商所",
+      "pointValue": 10.0,
+      "tickSize": 1.0,
+      "tickValue": 10.0
+    },
+    "RM": {
+      "symbol": "RM",
+      "name": "菜籽粕",
+      "exchange": "郑商所",
+      "pointValue": 10.0,
+      "tickSize": 1.0,
+      "tickValue": 10.0
+    },
+    "ZC": {
+      "symbol": "ZC",
+      "name": "动力煤",
+      "exchange": "郑商所",
+      "pointValue": 100.0,
+      "tickSize": 0.2,
+      "tickValue": 20.0
+    },
+    "FG": {
+      "symbol": "FG",
+      "name": "玻璃",
+      "exchange": "郑商所",
+      "pointValue": 20.0,
+      "tickSize": 1.0,
+      "tickValue": 20.0
+    },
+    "SA": {
+      "symbol": "SA",
+      "name": "纯碱",
+      "exchange": "郑商所",
+      "pointValue": 20.0,
+      "tickSize": 1.0,
+      "tickValue": 20.0
+    },
+    "MA": {
+      "symbol": "MA",
+      "name": "甲醇",
+      "exchange": "郑商所",
+      "pointValue": 10.0,
+      "tickSize": 1.0,
+      "tickValue": 10.0
+    },
+    "PR": {
+      "symbol": "PR",
+      "name": "瓶片",
+      "exchange": "郑商所",
+      "pointValue": 15.0,
+      "tickSize": 2.0,
+      "tickValue": 30.0
+    },
+    "TA": {
+      "symbol": "TA",
+      "name": "PTA",
+      "exchange": "郑商所",
+      "pointValue": 5.0,
+      "tickSize": 2.0,
+      "tickValue": 10.0
+    },
+    "UR": {
+      "symbol": "UR",
+      "name": "尿素",
+      "exchange": "郑商所",
+      "pointValue": 20.0,
+      "tickSize": 1.0,
+      "tickValue": 20.0
+    },
+    "SM": {
+      "symbol": "SM",
+      "name": "锰硅",
+      "exchange": "郑商所",
+      "pointValue": 5.0,
+      "tickSize": 2.0,
+      "tickValue": 10.0
+    },
+    "SF": {
+      "symbol": "SF",
+      "name": "硅铁",
+      "exchange": "郑商所",
+      "pointValue": 5.0,
+      "tickSize": 2.0,
+      "tickValue": 10.0
+    },
+    "PF": {
+      "symbol": "PF",
+      "name": "短纤",
+      "exchange": "郑商所",
+      "pointValue": 5.0,
+      "tickSize": 2.0,
+      "tickValue": 10.0
+    },
+    "PX": {
+      "symbol": "PX",
+      "name": "对二甲苯",
+      "exchange": "郑商所",
+      "pointValue": 5.0,
+      "tickSize": 2.0,
+      "tickValue": 10.0
+    },
+    "SH": {
+      "symbol": "SH",
+      "name": "烧碱",
+      "exchange": "郑商所",
+      "pointValue": 30.0,
+      "tickSize": 1.0,
+      "tickValue": 30.0
+    },
+    "PK": {
+      "symbol": "PK",
+      "name": "花生",
+      "exchange": "郑商所",
+      "pointValue": 5.0,
+      "tickSize": 2.0,
+      "tickValue": 10.0
+    },
+    "PL": {
+      "symbol": "PL",
+      "name": "丙烯",
+      "exchange": "郑商所",
+      "pointValue": 20.0,
+      "tickSize": 1.0,
+      "tickValue": 20.0
+    },
+    "IC": {
+      "symbol": "IC",
+      "name": "中证500股指期货",
+      "exchange": "中金所",
+      "pointValue": 200.0,
+      "tickSize": 0.2,
+      "tickValue": 40.0
+    },
+    "IM": {
+      "symbol": "IM",
+      "name": "中证1000股指期货",
+      "exchange": "中金所",
+      "pointValue": 200.0,
+      "tickSize": 0.2,
+      "tickValue": 40.0
+    },
+    "IH": {
+      "symbol": "IH",
+      "name": "上证50股指期货",
+      "exchange": "中金所",
+      "pointValue": 300.0,
+      "tickSize": 0.2,
+      "tickValue": 60.0
+    },
+    "IF": {
+      "symbol": "IF",
+      "name": "沪深300股指期货",
+      "exchange": "中金所",
+      "pointValue": 300.0,
+      "tickSize": 0.2,
+      "tickValue": 60.0
+    },
+    "TS": {
+      "symbol": "TS",
+      "name": "2年期国债",
+      "exchange": "中金所",
+      "pointValue": 20000.0,
+      "tickSize": 0.002,
+      "tickValue": 40.0
+    },
+    "TF": {
+      "symbol": "TF",
+      "name": "5年期国债",
+      "exchange": "中金所",
+      "pointValue": 10000.0,
+      "tickSize": 0.005,
+      "tickValue": 50.0
+    },
+    "TL": {
+      "symbol": "TL",
+      "name": "30年期国债",
+      "exchange": "中金所",
+      "pointValue": 10000.0,
+      "tickSize": 0.01,
+      "tickValue": 100.0
+    },
+    "T": {
+      "symbol": "T",
+      "name": "10年期国债",
+      "exchange": "中金所",
+      "pointValue": 10000.0,
+      "tickSize": 0.005,
+      "tickValue": 50.0
+    }
+  }
+}
