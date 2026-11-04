@@ -142,7 +142,7 @@ wujian card list|get|...
 wujian account list|summary
 wujian risk --file input.json
 wujian monitor status|events|rules|trend
-wujian knowledge status|search "..." 
+wujian knowledge status|search "..."
 wujian postmarket list|current|sources
 wujian news | rules | providers | external yfinance
 wujian connections
