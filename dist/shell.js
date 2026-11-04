@@ -1,7 +1,7 @@
 import {accountSummary} from './account-ui.js';
 const market=[['home','市场总览'],['overview','周期强弱'],['strength','品种强弱'],['monitor','全品种监控'],['rankings','资金排行'],['funds','资金动向'],['positions','持仓动向'],['fees','期货手续费'],['variety','品种跟踪'],['seat-flow','席位动向']];
 const trade=[['home','今日总览'],['fire','火 · 识别机会'],['water','水 · 分析机会'],['metal','金 · 冻结计划'],['earth','土 · 执行管理'],['wood','木 · 检查迭代']];
-const questions={home:['市场','今天国内期货整体涨跌与关注点在哪？'],overview:['板块','月、周、日、1小时、30分钟各周期，多空谁占优？'],strength:['品种','哪些品种月周日同向走强或走弱？'],monitor:['提醒','大周期MA10同向后，哪些小周期拐头与穿越已经发生？'],rankings:['资金','哪些品种的公开席位持仓规模变化较大？'],funds:['资金','同一品种的席位持仓名义规模近几个交易日怎样变化？'],positions:['资金','持仓增减与价格怎样配合？'],fees:['合约','选定品种后，各合约的交易成本与每跳盈亏怎样？'],variety:['品种','把一个品种的趋势、席位和火资格放在一页核对。'],'seat-flow':['资金','哪些观察组在增仓减仓，方向是否一致？']};
+const questions={home:['市场','今天国内期货整体涨跌与关注点在哪？'],overview:['板块','月、周、日、1小时、30分钟各周期，多空谁占优？'],strength:['品种','哪些品种月周日同向走强或走弱？'],monitor:['提醒','大周期EMA10同向后，哪些小周期拐头与穿越已经发生？'],rankings:['资金','哪些品种的公开席位持仓规模变化较大？'],funds:['资金','同一品种的席位持仓名义规模近几个交易日怎样变化？'],positions:['资金','持仓增减与价格怎样配合？'],fees:['合约','选定品种后，各合约的交易成本与每跳盈亏怎样？'],variety:['品种','把一个品种的趋势、席位和火资格放在一页核对。'],'seat-flow':['资金','哪些观察组在增仓减仓，方向是否一致？']};
 const stableQuestions={home:'账户、候选与五行流程，目前有哪些待我处理的事项？',monitor:'哪些已登记条件触发或失效，需要及时查看？',fire:'哪些品种符合既定周期规则，结构有哪些优势与瑕疵？',water:'最新供需、消息和证据发生了什么变化？',metal:'采用哪种入场手法，如何防守，各账户承担多少风险？',earth:'团队按已审定版本执行了什么，保护是否到位？',wood:'执行与判断哪里有效，哪里需要改进？',rules:'当前账户资料、完整资金记录与生效规则是什么？'};
 const group=text=>Object.assign(document.createElement('h2'),{className:'nav-group-title',textContent:text});
 const link=(href,label)=>{const a=document.createElement('a');a.href=href;a.className='shell-nav-link';a.textContent=label;return a};

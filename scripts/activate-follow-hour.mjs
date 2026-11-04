@@ -1,0 +1,24 @@
+import assert from 'node:assert/strict';
+import {readFile,writeFile,mkdir,copyFile} from 'node:fs/promises';
+import {existsSync} from 'node:fs';
+import {resolve,join} from 'node:path';
+import {createHash} from 'node:crypto';
+import {spawn} from 'node:child_process';
+import {databaseManifest} from './system-backup.mjs';
+import {DatabaseSync} from 'node:sqlite';
+const root=resolve('.'),out=join(root,'output/follow-hour-2026-11-04'),base='http://127.0.0.1:4318';
+assert.equal(root,'D:\\五简个人资料\\2026年10月文件\\小木工作台\\wujian-jarvis');
+const before=databaseManifest(join(root,'.runtime/five-workbench.sqlite'));const monitorDb=new DatabaseSync(join(root,'.runtime/monitor/monitor.sqlite'),{readOnly:true});const previous=JSON.parse(monitorDb.prepare("SELECT payload FROM monitor_meta WHERE key='trend-monitor:watchlist'").get()?.payload||'null');monitorDb.close();
+const active=join(root,'.runtime/desktop-im-chat-20261104/小木-win32-x64'),fresh=join(root,'.runtime/desktop-follow-hour-20261104/小木-win32-x64/resources/app.asar'),target=join(active,'resources/app.asar'),backup=join(root,'.runtime/ui-history/2026-11-04-follow-hour-before/active-desktop/app.asar');
+await mkdir(resolve(backup,'..'),{recursive:true});if(!existsSync(backup))await copyFile(target,backup);await copyFile(fresh,target);
+const digest=b=>createHash('sha256').update(b).digest('hex');assert.equal(digest(await readFile(fresh)),digest(await readFile(target)));
+const env={...process.env,WUJIAN_DESKTOP_INITIAL_ROUTE:'market/monitor'};for(const k of ['ELECTRON_RUN_AS_NODE','WUJIAN_DESKTOP_PORT','WUJIAN_DESKTOP_PROFILE'])delete env[k];
+const child=spawn(join(active,'小木.exe'),[],{cwd:root,env,windowsHide:true,detached:true,stdio:'ignore'});child.unref();
+let health;for(let i=0;i<80;i++){try{health=await fetch(base+'/api/health',{signal:AbortSignal.timeout(1000)}).then(r=>r.json());break}catch{}await new Promise(r=>setTimeout(r,400))}
+assert.ok(health,'正式服务未就绪');
+const source=await readFile('server.mjs','utf8'),head=source.slice(source.indexOf('const buildSources='),source.indexOf('const operationArchive=')),files=[...head.matchAll(/'([^']+\.(?:mjs|js|py|ps1))'/g)].map(m=>m[1]);
+const expected=digest(Buffer.concat(await Promise.all(files.map(p=>readFile(p)))));assert.equal(health.serverBuild,expected);
+const status=await fetch(base+'/api/trend-monitor/status').then(r=>r.json());assert.equal(status.alertIntervalMs,3600000);assert.equal(status.watchlist.mode,'codes');assert.deepEqual(status.watchlist.codes,previous?.mode==='codes'?previous.codes:[]);
+assert.deepEqual(databaseManifest('.runtime/five-workbench.sqlite'),before);
+const receipt={state:'active',at:new Date().toISOString(),pid:child.pid,executable:join(active,'小木.exe'),route:'market/monitor',build:health.serverBuild,watchlist:status.watchlist,previousWatchlist:previous,alertIntervalMs:status.alertIntervalMs,subscribed:status.coverage.subscribed,businessUnchanged:true,oldDesktopBackup:backup};
+await writeFile(join(out,'activation.json'),JSON.stringify(receipt,null,2));console.log(JSON.stringify({state:receipt.state,pid:child.pid,watchCount:receipt.watchlist.codes.length,alertIntervalMs:receipt.alertIntervalMs,route:receipt.route,businessUnchanged:true}));

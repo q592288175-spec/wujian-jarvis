@@ -40,7 +40,7 @@ export async function researchMarket({product,framework,card}, {getFire=latestFi
  const warnings=[];
  if(last.date<target)warnings.push(`目标行情日为${target}，${contract}最近可核验完成日K为${last.date}，本次按该历史截点研究，后续价格变化未覆盖。`);
  if(row?.main_contract&&rawSymbol(row.main_contract)!==contract)warnings.push(`交易卡绑定${contract}，当前扫描主力为${row.main_contract}；本次仍使用${contract}，未自动换月。`);
- if(bars.length<250)warnings.push(`具体合约仅取得${bars.length}根完成日K，250日区间不足；周/月历史不足时不补造MA10。`);
+ if(bars.length<250)warnings.push(`具体合约仅取得${bars.length}根完成日K，250日区间不足；周/月历史不足时不补造EMA10。`);
  const quote={symbol:`${fw.exchange}.${contract}`,actualContract:contract,productCode:code,name:fw.name,seriesType:'specific_contract',tradingDay:last.date,quoteTime:last.date,close:last.close,last:last.close,preClose:previous.close,volume:last.volume,openInterest:last.openInterest,changePct:(last.close/previous.close-1)*100,bars,quality:{timeStatus:'completed-eod',priceBasis:'completed_close',changeBasis:'previous_completed_close',validPrice:true,validPreviousClose:true,notice:'同一具体合约完成日K，非盘中实时行情'}};
  const context={contract,series:quote.symbol,dataDate:last.date,targetDate:target,source,priceBasis:'具体合约完成日K',bars:bars.length,previousDate:previous.date,warnings};
  return{quote,context,snapshot:{schemaVersion:1,status:'eod-ready',dataMode:'completed-eod',source,receivedAt:fire.refreshedAt||null,quotes:[quote],permission:false}};

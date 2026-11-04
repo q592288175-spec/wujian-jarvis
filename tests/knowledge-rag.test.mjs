@@ -43,11 +43,11 @@ test('local knowledge indexes incrementally, deduplicates and degrades without v
 test('现行规则工具只读取已核验清单，历史2万手不得冒充现行',async()=>{
  const result=await rules();
  assert.equal(result.error,undefined);
- assert.equal(result.documents.length,6);
+ assert.equal(result.documents.length,7);
  assert.ok(result.documents.some(d=>d.name==='金四法与本人审定'&&d.text.includes('gold-2026-10-19-v1')));
  assert.ok(result.documents.some(d=>d.name==='金独立分时第五法'&&d.text.includes('gold-2026-10-26-v2')&&d.text.includes('最新余额×0.5%')));
  assert.ok(result.documents.every(item=>item.lifecycle==='current'&&item.sha256&&item.text.length>100));
  assert.match(result.documents[0].text,/严格大于10,000/);
  assert.match(result.documents[0].text,/周K与日K高低点结构仅辅助显示/);
- assert.deepEqual(result.conflicts,[]);
+ assert.ok(result.documents.some(d=>d.name==='EMA10现行增量规则'&&d.text.includes('ema10-v1')));assert.deepEqual(result.conflicts,[]);
 });

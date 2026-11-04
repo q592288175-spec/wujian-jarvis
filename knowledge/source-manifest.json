@@ -1,12 +1,12 @@
 {
-  "version": "2026-10-26-gold-five-verified-1",
+  "version": "2026-11-04-ema10-verified-1",
   "files": [
     {
       "name": "工作台现行口径",
       "path": "docs/current-workbench-contract.md",
       "scope": "筛选、研究、余额、计划和归档",
       "lifecycle": "current",
-      "sha256": "284d3e5f73b15a17967a363d8ada3c9c508789a60a4875020e95cacaca994fac"
+      "sha256": "dd8c98e73f3363f4af1fbd33a780d6c803434c7ef4363838e2c6c7334f0e007c"
     },
     {
       "name": "极简测算说明",
@@ -42,12 +42,19 @@
       "scope": "独立分时参数、日内止损、最新余额0.5%及持有复入审定，不改原四法",
       "lifecycle": "current",
       "sha256": "bcb4761d713f0f033682d34c15147723c007848488f3b2389de509cd1d850ae4"
+    },
+    {
+      "name": "EMA10现行增量规则",
+      "path": "docs/ema10-2026-11-04.md",
+      "scope": "当前均线算法；旧锁定记录保留；不改分时均价或风险",
+      "lifecycle": "current",
+      "sha256": "391db90fd0c331e48efe7f16fe98d23cc63683d634b371647b8212d303f8fbe3"
     }
   ],
   "implementations": [
     {
       "path": "integrations/resonance-rule.mjs",
-      "sha256": "b6d65d2b898d26710316f097be37010a924afb5e64711f8f3b7d4d80e4999d6e"
+      "sha256": "0304b7ee6f5f590a83d4936c50c78619e5eee03e7f057c5eb12106b31749076e"
     },
     {
       "path": "integrations/approval-boundary.mjs",
@@ -71,11 +78,19 @@
     },
     {
       "path": "dist/gold-methods.js",
-      "sha256": "7c4ffd99a13a141fff16d3e278b6b850eb661d08a0c7eef1cf05eedf4873b0d1"
+      "sha256": "1ebece0a7a90ef1efc0a95fd4f0fae7b0375f331225e681ab1769d06b992f7b1"
     },
     {
       "path": "integrations/environment.mjs",
-      "sha256": "c6472ab1b5e92b8cdca8c3e7d27d6418eaeab22cbaab57b5670aceadca243efb"
+      "sha256": "1dba19ace4cf1ae17215fcf242095615c282eb7502acede7542a363bf79213fa"
+    },
+    {
+      "path": "dist/indicators.js",
+      "sha256": "60fe8b7e1bc07b414e2bb02b545c45d9066f6892982570a665e36e87c1a8c56d"
+    },
+    {
+      "path": "scripts/fire_scan.py",
+      "sha256": "d7faa1eaae3c5530e3bebfaf4348375423feb91ed23d9345b272cb102d93a2fd"
     }
   ],
   "references": [

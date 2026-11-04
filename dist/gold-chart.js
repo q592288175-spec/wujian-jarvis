@@ -1,6 +1,7 @@
 import {CANDLE_STYLE as palette} from './candle-style.js';
+import {emaSeries} from './indicators.js';
 export function goldChartSeries(bars) {
- return bars.map((bar,i)=>({...bar,ma10:i<9?null:bars.slice(i-9,i+1).reduce((sum,b)=>sum+b.close,0)/10}));
+ const values=emaSeries(bars.map(b=>b.close));return bars.map((bar,i)=>({...bar,ma10:bar.ema10??values[i]}));
 }
 
 export function drawGoldChart(canvas,analysis,{start,end}={}) {
@@ -21,7 +22,7 @@ export function drawGoldChart(canvas,analysis,{start,end}={}) {
  }
  ctx.strokeStyle=palette.ma;ctx.lineWidth=2.2;ctx.beginPath();let begun=false;
  for(const [i,b] of bars.entries())if(b.ma10!==null){if(!begun){ctx.moveTo(x(i),y(b.ma10));begun=true}else ctx.lineTo(x(i),y(b.ma10))}ctx.stroke();
- ctx.font='20px Microsoft YaHei';ctx.fillStyle=palette.ma;ctx.fillText('MA10（10日均线）',pad,29);
+ ctx.font='20px Microsoft YaHei';ctx.fillStyle=palette.ma;ctx.fillText('EMA10（10日均线）',pad,29);
  ctx.font='17px Microsoft YaHei';ctx.fillStyle=palette.text;ctx.textAlign='right';ctx.fillText(`${analysis.contract} · 完成日K · ${analysis.dataDate}`,w-pad,29);ctx.textAlign='left';
  const selected=bars.map((b,i)=>b.date>=start&&b.date<=end?i:-1).filter(i=>i>=0);
  if(selected.length){ctx.strokeStyle=palette.ma;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(x(selected[0])-step/2,bottom+12);ctx.lineTo(x(selected.at(-1))+step/2,bottom+12);ctx.stroke()}

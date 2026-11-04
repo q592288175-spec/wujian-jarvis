@@ -21,7 +21,7 @@ export function parseTrendKlines(raw,period){
   if(seen.has(stamp))throw Error('K线时间重复');seen.add(stamp);
   result.push({stamp,date:period==='1d'?day:undefined,open,high,low,close,...(period==='1d'?{}:{stampKind:'end',endStamp:stamp,durationSeconds:Number(period.slice(0,-1))*60})});
  }
- result.sort((a,b)=>Date.parse(a.stamp)-Date.parse(b.stamp));return result.slice(period==='1d'?-500:-32);
+ result.sort((a,b)=>Date.parse(a.stamp)-Date.parse(b.stamp));return result.slice(-2200);
 }
 
 export function publicTrendFrame(member,quote,series,calendar){
@@ -33,7 +33,7 @@ export function publicTrendFrame(member,quote,series,calendar){
  // Use only the verified contiguous tail; a gap years ago must not invalidate
  // recent weeks, and must never be silently bridged for monthly calculations.
  if(lastGap)daily=daily.filter(r=>r.date>lastGap);
- if(daily.length<10)return{error:'最近缺口后的连续日K不足10根，暂停MA10判断'};
+ if(daily.length<10)return{error:'最近缺口后的连续日K不足10根，暂停EMA10判断'};
  // Trading-day dates and natural night-session dates differ. Preserve the former
  // explicitly; the forming daily bar starts at the actual observed session.
  const start=quote.sessionKey?.includes(':night')?quote.sessionKey.slice(0,10)+'T21:00:00+08:00':day+'T00:00:00+08:00';
@@ -60,6 +60,7 @@ export class TrendMarketFeed{
  }
  async configure({symbols=[],periods:chosen=[],enabled=false}={}){
   const configVersion=++this.configVersion,catalog=await this.monitor.catalog();if(configVersion!==this.configVersion)return;
+  this.generation++;for(const controller of this.controllers)controller.abort();this.clearQueued();
   this.active=enabled;this.smallPeriods=[...new Set(enabled?['30m','120m',...chosen]:[])].filter(p=>periods.has(p)&&p!=='1d');
   this.members=new Map(catalog.filter(c=>symbols.includes(canonical(c.symbol))).map(c=>[canonical(c.symbol),c]));
   this.monitor.setTrendSubscriptions?.(enabled?[...this.members.keys()]:[],this.smallPeriods);

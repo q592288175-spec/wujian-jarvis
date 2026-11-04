@@ -1,0 +1,22 @@
+# DeepSeek Harness / DSH profile patch
+# 合并到：C:\Users\<你>\.dsh\profiles\<profile>\cordis.patch.yml 的顶层数组。
+# 新增行必须放在 insert: 下；直接写 - id: 会覆盖同 id 的已有行。
+# serverName 在同一作用域内必须唯一。
+- insert:
+    - id: mcp-wujian
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: wujian
+        transport: stdio
+        command: 'C:\Program Files\nodejs\node.exe'
+        args:
+          - 'D:\五简个人资料\2026年10月文件\小木工作台\wujian-jarvis\mcp\server.mjs'
+        cwd: 'D:\五简个人资料\2026年10月文件\小木工作台\wujian-jarvis'
+        env:
+          WUJIAN_API_BASE: 'http://127.0.0.1:4318'
+          WUJIAN_TIMEOUT_MS: '30000'
+          WUJIAN_ALLOW_WRITES: '0'
+          WUJIAN_ALLOW_TRADING: '0'
+          WUJIAN_ALLOW_EXPENSIVE: '0'
+        toolCallTimeoutMs: 60000
+        failOnStartupError: false

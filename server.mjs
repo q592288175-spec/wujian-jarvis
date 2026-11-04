@@ -1,3 +1,4 @@
+import {createAlertSpeech} from './integrations/alert-speech.mjs';
 import {akshareTools,akshareData} from './integrations/akshare.mjs';
 import {fundamentalsTools,fundamentalsQuery} from './integrations/fundamentals.mjs';
 import {attachVolc,volcStatus,voiceTicket} from './integrations/volc-voice.mjs';
@@ -46,18 +47,23 @@ import {resolve,extname,dirname,sep} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {randomUUID,createHash} from 'node:crypto';
 const ROOT=dirname(fileURLToPath(import.meta.url)),PUBLIC=resolve(ROOT,'dist'),PORT=Number(process.env.PORT||4318);
+const APP_VERSION=JSON.parse(await readFile(resolve(ROOT,'package.json'),'utf8')).version;
 const buildSources=['integrations/relative-strength.mjs','integrations/knowledge-policy.mjs','integrations/knowledge-base.mjs','integrations/research-application.mjs','integrations/maintenance.mjs','integrations/monitor-health.mjs','scripts/system-backup.mjs','server.mjs','integrations/five-workbench.mjs','integrations/fire-refresh.mjs','integrations/eod-refresh.mjs','scripts/fire_scan.py','integrations/eod_market.py','integrations/trade-ledger.mjs','integrations/account-balances.mjs','integrations/team-governance.mjs','integrations/approval-boundary.mjs','integrations/assistant.mjs','integrations/research-agent.mjs','integrations/research-market.mjs','integrations/research.mjs','integrations/research-evidence.mjs','integrations/team-context.mjs','integrations/postmarket-review.mjs','integrations/postmarket-evidence.mjs','integrations/postmarket-sources.mjs','scripts/postmarket_calendar.py','integrations/monitor-service.mjs','integrations/monitor-engine.mjs','integrations/monitor-store.mjs','integrations/monitor-announcements.mjs','integrations/monitor_market.py','integrations/monitor-sina.mjs','integrations/feishu-core.mjs','integrations/feishu.mjs','integrations/im-binding.mjs','integrations/local-secret.mjs','scripts/protect-local-secret.ps1','integrations/volc-voice.mjs','integrations/volc-duplex.mjs','integrations/voice-config.mjs'];
 buildSources.push('integrations/tq-login.mjs','integrations/tq-panorama.mjs');
-buildSources.push('integrations/market-panorama.mjs','integrations/market-overview.mjs','integrations/market-panorama-data.py','integrations/overview_closes.py');
-buildSources.push('integrations/trend-monitor-runtime.mjs','integrations/trend-monitor-engine.mjs','integrations/trend-monitor-service.mjs','integrations/trend-market.mjs','integrations/weixin-channel.mjs','integrations/trend-monitor-table.mjs');
-const serverBuild=createHash('sha256').update(Buffer.concat(await Promise.all(buildSources.concat('integrations/day-trend.mjs','integrations/gold-planning.mjs','dist/gold-methods.js').map(p=>readFile(resolve(ROOT,p)))))).digest('hex');
+buildSources.push('integrations/market-panorama.mjs','integrations/market-overview.mjs','integrations/market-panorama-data.py','integrations/overview_closes.py','integrations/fee-refresh.mjs','integrations/jiaoyixingqiu_fees.py');
+buildSources.push('integrations/trend-monitor-runtime.mjs','integrations/trend-monitor-engine.mjs','integrations/trend-monitor-service.mjs','integrations/trend-market.mjs','integrations/weixin-channel.mjs','integrations/trend-monitor-table.mjs','integrations/alert-speech.mjs','dist/alarm-voices.js','dist/liquidity.js');
+buildSources.push('integrations/workbench-chat.mjs','integrations/weixin-chat.mjs','mcp/local-client.mjs');
+const serverBuild=createHash('sha256').update(Buffer.concat(await Promise.all(buildSources.concat('dist/indicators.js','integrations/day-trend.mjs','integrations/gold-planning.mjs','dist/gold-methods.js').map(p=>readFile(resolve(ROOT,p)))))).digest('hex');
 const operationArchive=createOperationArchive(process.env.WUJIAN_OPERATION_DIR||resolve(ROOT,'操作记录'),operationArchiveData);
-const monitor=monitorService();
+const monitor=monitorService();monitor.enforceLiquidity=true;
 const tqLogin=new TqLogin({monitor,root:ROOT});
 const panorama=createPanorama({root:ROOT,getFire:async()=>applyDayTrendRule(await latestFire()),getLiveQuote:(product,day)=>tqQuoteFor(product,day,monitor),getLiveStatus:()=>tqLogin.status()});
 const trendMonitor=createTrendRuntime({root:ROOT,monitor,panorama});
+const alertSpeech=createAlertSpeech({root:process.env.WUJIAN_TREND_HOME||ROOT});
 const postmarketReview=createPostmarketReview({getScan:latestFire,refreshScan:startFireRefresh,getEvidence:loadPostmarketEvidence,explain:process.env.DEEPSEEK_API_KEY?explainPostmarketReport:null});
 const json=(res,status,obj)=>{res.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'});res.end(JSON.stringify(obj))};
+async function visibleCurrentCards(rows){const codes=new Set((await panorama.snapshot()).products.map(p=>p.code));return rows.filter(c=>codes.has(c.symbol)||c.archivedAt||c.status==='已结束'||listExecutions(c.id).length>0);}
+async function requireCurrentProduct(value){const key=String(value||'').trim().toUpperCase(),code=key.split('.').at(-1).replace(/\d+$/,'');const snap=await panorama.snapshot();if(!snap.products.some(p=>p.code===code||p.name.toUpperCase()===key||(Array.isArray(p.aliases)?p.aliases:String(p.aliases||'').split(/[,，]/)).some(a=>a.toUpperCase()===key)))throw Error('该品种成交量和持仓量未同时严格大于1万手，已从当前选品过滤');}
 async function body(req){let chunks=[],size=0;for await(const c of req){size+=c.length;if(size>2*1024*1024)throw Error('请求过大');chunks.push(c)}return JSON.parse(Buffer.concat(chunks).toString()||'{}')}
 const origins=new Set([`http://localhost:${PORT}`,`http://127.0.0.1:${PORT}`]);
 const server=http.createServer(async(req,res)=>{try{const host=req.headers.host;if(![`localhost:${PORT}`,`127.0.0.1:${PORT}`].includes(host))return json(res,403,{error:'仅允许本地访问'});const url=new URL(req.url,`http://${host}`);if(['POST','PATCH','DELETE'].includes(req.method)&&!origins.has(req.headers.origin))return json(res,403,{error:'来源校验失败'});
@@ -73,16 +79,19 @@ if(url.pathname.startsWith('/api/tq/')){
 if(url.pathname.startsWith('/api/trend-monitor/')){
  try{
   const path=url.pathname.slice('/api/trend-monitor/'.length);
+  if(req.method==='POST'&&path==='speech'){const input=await body(req);const event=input.preview===true?{name:'螺纹钢',period:'30m',direction:'down',isTest:true}:monitor.store.event(input.eventId);if(!event||event.kind&&event.kind!=='ma-turn')throw Error('语音警报不存在');return json(res,200,await alertSpeech.render(event,input.voiceId));}
   if(req.method==='GET'&&path==='status')return json(res,200,trendMonitor.status());
   if(req.method==='GET'&&path==='catalog')return json(res,200,{items:await trendMonitor.catalog()});
   if(req.method==='GET'&&path==='tasks')return json(res,200,{items:trendMonitor.service.tasks()});
+  if(req.method==='POST'&&path==='watchlist')return json(res,200,await trendMonitor.saveWatchlist(await body(req)));
   if(req.method==='GET'&&path==='events')return json(res,200,{items:trendMonitor.status().events});
   if(req.method==='POST'&&/^events\/[0-9a-f-]{36}\/read$/.test(path)){const id=path.split('/')[1],event=monitor.store.event(id);if(!event||event.kind!=='ma-turn')throw Error('该监控警报不存在');const result=monitor.store.read(id);return json(res,200,result);}
   if(req.method==='POST'&&path==='tasks')return json(res,201,await trendMonitor.save(await body(req)));
   if(req.method==='POST'&&/^tasks\/[0-9a-f-]{36}$/.test(path))return json(res,200,await trendMonitor.save(await body(req),path.split('/')[1]));
   if(req.method==='POST'&&/^tasks\/[0-9a-f-]{36}\/(activate|pause|archive)$/.test(path)){const [,id,action]=path.split('/');return json(res,200,trendMonitor.setStatus(id,{activate:'active',pause:'paused',archive:'archived'}[action]));}
   if(req.method==='GET'&&path==='weixin/status')return json(res,200,trendMonitor.weixin.status());
-  if(req.method==='POST'&&path==='weixin/login')return json(res,200,await trendMonitor.weixin.startLogin());
+  if(req.method==='POST'&&path==='weixin/login'){const input=await body(req);if(input.replace!==undefined&&typeof input.replace!=='boolean')throw Error('请明确是否更换接收微信');return json(res,200,await trendMonitor.weixin.startLogin({replace:input.replace===true}));}
+  if(req.method==='POST'&&path==='weixin/login/cancel'){const input=await body(req),current=trendMonitor.weixin.status().login;if(input.id&&current?.id!==input.id)throw Error('扫码会话已更新，请刷新后再操作');return json(res,200,trendMonitor.weixin.cancelLogin());}
   if(req.method==='POST'&&path==='weixin/verify'){const input=await body(req);return json(res,200,await trendMonitor.weixin.submitVerifyCode(input.id,input.code));}
   if(req.method==='POST'&&path==='weixin/disconnect')return json(res,200,await trendMonitor.weixin.disconnect());
   if(req.method==='POST'&&path==='weixin/test')return json(res,201,await trendMonitor.testWeixin());
@@ -165,7 +174,7 @@ if(req.method==='GET'&&url.pathname==='/api/eod-market/status')return json(res,2
 if(req.method==='POST'&&url.pathname==='/api/eod-market/refresh'){void refreshEod();return json(res,202,{status:'refreshing'})}
 if(req.method==='POST'&&url.pathname==='/api/feishu/schedule'){try{return json(res,200,await setFeishuSchedule(await body(req)))}catch(e){return json(res,400,{error:e.message})}}
 if(req.method==='POST'&&url.pathname==='/api/feishu/push'){try{return json(res,200,await pushFeishuReport())}catch(e){return json(res,400,{error:e.message})}}
-if(req.method==='GET'&&url.pathname==='/api/health')return json(res,200,{app:'wujian-jarvis',version:'0.5.0',mode:'local',projectRoot:ROOT,serverBuild});
+if(req.method==='GET'&&url.pathname==='/api/health')return json(res,200,{app:'wujian-jarvis',version:APP_VERSION,mode:'local',projectRoot:ROOT,serverBuild});
 if(url.pathname.startsWith('/api/codex/')||url.pathname==='/api/session')return json(res,410,{error:'旧模型通话入口已停用，请使用DeepSeek文字/语音对话'});
 if(req.method==='GET'&&url.pathname==='/api/live-voice/status')return json(res,200,liveStatus());
 if(req.method==='POST'&&url.pathname==='/api/live-voice/session'){try{return json(res,201,await createLive((await body(req)).sdp))}catch(e){return json(res,503,{error:e.message})}}
@@ -187,7 +196,7 @@ if(req.method==='POST'&&url.pathname==='/api/workbench/governance/issues'){try{r
 if(req.method==='POST'&&/^\/api\/workbench\/cards\/[^/]+\/reconcile-position$/.test(url.pathname)){try{const result=reconcileTradePosition(url.pathname.split('/')[4],await body(req));await operationArchive.sync();return json(res,200,result)}catch(e){return json(res,400,{error:e.message})}}
 if(req.method==='POST'&&/^\/api\/workbench\/cards\/[^/]+\/release$/.test(url.pathname)){try{return json(res,200,releasePlan(url.pathname.split('/')[4],(await body(req)).reason))}catch(e){return json(res,400,{error:e.message})}}
 if(req.method==='GET'&&url.pathname==='/api/workbench/contract-spec'){const spec=contractSpec(url.searchParams.get('symbol'));return json(res,spec?200:404,spec||{error:'该品种合约参数暂不可用'});}
-if(req.method==='GET'&&url.pathname==='/api/workbench/summary')return json(res,200,await summary(url.searchParams.get('accountId')));
+if(req.method==='GET'&&url.pathname==='/api/workbench/summary'){const value=await summary(url.searchParams.get('accountId'));value.cards=await visibleCurrentCards(value.cards);value.pending=await visibleCurrentCards(value.pending);return json(res,200,value);}
 if(req.method==='GET'&&url.pathname==='/api/workbench/accounts')return json(res,200,listAccounts());
 if(req.method==='GET'&&/^\/api\/workbench\/accounts\/[^/]+\/balance-changes$/.test(url.pathname)){try{return json(res,200,listBalanceChanges(url.pathname.split('/')[4]))}catch(e){return json(res,404,{error:e.message})}}
 if(req.method==='GET'&&url.pathname==='/api/workbench/operation-files')return json(res,200,operationArchive.status());
@@ -201,9 +210,9 @@ if(req.method==='POST'&&/^\/api\/workbench\/accounts\/[^/]+\/balance$/.test(url.
 if(req.method==='PATCH'&&/^\/api\/workbench\/accounts\/[^/]+\/balance-changes\/[^/]+$/.test(url.pathname)){try{const parts=url.pathname.split('/');const result=editBalanceChange(parts[4],parts[6],await body(req));await operationArchive.sync();return json(res,200,result)}catch(e){return json(res,400,{error:e.message})}}
 if(req.method==='POST'&&/^\/api\/workbench\/accounts\/[^/]+\/balance-changes\/[^/]+\/void$/.test(url.pathname)){try{const parts=url.pathname.split('/'),result=voidBalance(parts[4],parts[6],await body(req));await operationArchive.sync();return json(res,200,result)}catch(e){return json(res,400,{error:e.message})}}
 if(req.method==='DELETE'&&/^\/api\/workbench\/accounts\/[^/]+$/.test(url.pathname)){try{const result=deleteOrDisableAccount(url.pathname.split('/').pop(),await body(req));await operationArchive.sync();return json(res,200,result)}catch(e){return json(res,409,{error:e.message})}}
-if(req.method==='GET'&&url.pathname==='/api/workbench/cards')return json(res,200,listCards({accountId:url.searchParams.get('accountId'),status:url.searchParams.get('status')}));
+if(req.method==='GET'&&url.pathname==='/api/workbench/cards')return json(res,200,await visibleCurrentCards(listCards({accountId:url.searchParams.get('accountId'),status:url.searchParams.get('status')})));
 if(req.method==='GET'&&/^\/api\/workbench\/cards\/[^/]+\/environment$/.test(url.pathname)){try{return json(res,200,await cardEnvironment(url.pathname.split('/')[4],{cycle:url.searchParams.get('cycle')||'day',force:url.searchParams.get('refresh')==='1'}))}catch(e){return json(res,400,{error:e.message})}}
-if(req.method==='POST'&&url.pathname==='/api/workbench/cards'){try{return json(res,201,saveCard(await body(req)))}catch(e){return json(res,400,{error:e.message})}}
+if(req.method==='POST'&&url.pathname==='/api/workbench/cards'){try{const input=await body(req);if(!input.id)await requireCurrentProduct(input.symbol);return json(res,201,saveCard(input))}catch(e){return json(res,400,{error:e.message})}}
 if(req.method==='GET'&&/^\/api\/workbench\/cards\/[^/]+$/.test(url.pathname)){const item=fullCard(url.pathname.split('/').pop());return json(res,item?200:404,item||{error:'交易卡不存在'})}
 if(req.method==='POST'&&/^\/api\/workbench\/cards\/[^/]+$/.test(url.pathname)){try{return json(res,200,saveCard({...await body(req),id:url.pathname.split('/').pop()}))}catch(e){return json(res,400,{error:e.message})}}
 if(req.method==='DELETE'&&/^\/api\/workbench\/cards\/[^/]+$/.test(url.pathname)){try{const result=deleteCard(url.pathname.split('/').pop(),await body(req));await operationArchive.sync();return json(res,200,result)}catch(e){return json(res,409,{error:e.message})}}
@@ -234,7 +243,7 @@ if(req.method==='POST'&&url.pathname==='/api/workbench/import/commit'){try{const
 if(req.method==='GET'&&url.pathname==='/api/workbench/changes')return json(res,200,listChanges());
 if(req.method==='GET'&&url.pathname==='/api/workbench/backup'){res.writeHead(200,{'Content-Type':'application/json; charset=utf-8','Content-Disposition':`attachment; filename="wujian-workbench-${new Date().toISOString().slice(0,10)}.json"`,'Cache-Control':'no-store'});return res.end(JSON.stringify(await backup(),null,2))}
 if(url.pathname==='/api/status'){const live=await marketSnapshot();return json(res,200,{mode:'real-research',realtimeConfigured:false,chatConfigured:!!process.env.DEEPSEEK_API_KEY,llm:modelStatus(),marketConnected:['observing','eod-ready'].includes(live.status)&&live.quotes.length>0,marketStatus:live.status,brokerConnected:false,tasks:(await listReports()).map(({id,name,status,stage,created})=>({id,name,status,stage,created})),decisions:[]});}
-if(req.method==='POST'&&url.pathname==='/api/research/run'){try{const b=await body(req);return json(res,202,await startResearch(b.cardId?{product:b.product,cardId:b.cardId}:b.product))}catch(e){return json(res,400,{error:e.message})}}
+if(req.method==='POST'&&url.pathname==='/api/research/run'){try{const b=await body(req);if(!b.cardId)await requireCurrentProduct(b.product);return json(res,202,await startResearch(b.cardId?{product:b.product,cardId:b.cardId}:b.product))}catch(e){return json(res,400,{error:e.message})}}
 if(req.method==='GET'&&/^\/api\/research\/cards\/[^/]+$/.test(url.pathname)){const cardId=url.pathname.split('/').pop();return json(res,200,(await listReports(Infinity)).filter(r=>r.cardId===cardId).map(({report,sources,evidence,inputWater,...meta})=>meta));}
 if(req.method==='POST'&&/^\/api\/workbench\/cards\/[^/]+\/water-notes$/.test(url.pathname)){try{return json(res,200,saveWaterNotes(url.pathname.split('/')[4],await body(req)))}catch(e){return json(res,409,{error:e.message})}}
 if(req.method==='POST'&&/^\/api\/workbench\/cards\/[^/]+\/apply-research$/.test(url.pathname)){try{return json(res,200,await applyResearchDraft(url.pathname.split('/')[4],await body(req)))}catch(e){return json(res,409,{error:e.message})}}

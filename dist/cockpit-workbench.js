@@ -166,7 +166,7 @@ function renderDetail(){
  $('#detailBody').innerHTML=`
   <div class="focus-contract"><div><b>${esc(row.main_contract||row.code)}</b><small>${esc(row.exchange||'交易所未知')} · ${esc(sectorFor(row))}</small></div><time>刷新 ${esc(refreshMinute(state.fire?.refreshedAt))}</time></div>
   <div class="signal-grid">
-   ${['month','week','day'].map((period,i)=>{const signal=maSignal(row,period);return signalCell(['月 MA10','周 MA10','日 MA10'][i],signal.label,signal,`${fmt(row['previous_'+period+'_ma10'],3)} → ${fmt(row[period+'_ma10'],3)}`)}).join('')}
+   ${['month','week','day'].map((period,i)=>{const signal=maSignal(row,period);return signalCell(['月 EMA10','周 EMA10','日 EMA10'][i],signal.label,signal,`${fmt(row['previous_'+period+'_ma10'],3)} → ${fmt(row[period+'_ma10'],3)}`)}).join('')}
    ${['volume','open_interest'].map(key=>activityCell(row,key,{tone:'neutral',delta:null},'正在核对前一交易日…')).join('')}
   </div>
   <p class="signal-basis">量仓对比：${esc(row.previous_day_date||'未知')} → ${esc(row.data_date||'未知')} · 同一合约</p>

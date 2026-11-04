@@ -1,0 +1,17 @@
+# 小木 MCP（Codex CLI 版）
+# 合并到 C:\Users\<你>\.codex\config.toml，然后重启 Codex。
+# 字符串使用 TOML 单引号字面量，Windows 反斜杠无需转义。
+# 小木 MCP 为单文件零依赖实现；cwd 不影响取数，若你的 Codex 版本不接受该键可删除该行。
+
+[mcp_servers.wujian]
+command = "node"
+args = ['D:\五简个人资料\2026年10月文件\小木工作台\wujian-jarvis\mcp\server.mjs']
+cwd = 'D:\五简个人资料\2026年10月文件\小木工作台\wujian-jarvis'
+startup_timeout_sec = 30.0
+env = { WUJIAN_API_BASE = "http://127.0.0.1:4318", WUJIAN_TIMEOUT_MS = "30000", WUJIAN_ALLOW_WRITES = "0", WUJIAN_ALLOW_TRADING = "0", WUJIAN_ALLOW_EXPENSIVE = "0" }
+
+# 备选：HTTP 模式（需先另开终端运行 node mcp/server.mjs --http --port 4319）
+# 只写环境变量名，不写明文 Token；Codex 会从自身进程环境读取。
+[mcp_servers.wujian-http]
+url = "http://127.0.0.1:4319/mcp"
+bearer_token_env_var = "WUJIAN_MCP_TOKEN"

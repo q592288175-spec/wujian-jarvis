@@ -4,6 +4,7 @@ import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import {createHash} from 'node:crypto';
 import {sectorFor,sectorGroups} from '../dist/sectors.js';
+import {emaPair} from '../dist/indicators.js';
 const run=promisify(execFile),root=resolve('.');
 const cache=resolve('.runtime/environment/commodity-index.json');
 let indexJob=null,lastAttempt=0;
@@ -26,10 +27,9 @@ export function periodCloses(bars,cycle='day',cutoff='9999-12-31'){
 }
 export function movingAverageEvidence(bars,cycle,cutoff){
  const closes=periodCloses(bars,cycle,cutoff);
- if(closes.length<11)return{direction:'unknown',ma10:null,previousMa10:null,dataDate:closes.at(-1)?.date||null,reason:`不足11根${periodLabel(cycle)}K，不能比较相邻MA10`};
- const avg=values=>values.reduce((sum,bar)=>sum+bar.close,0)/10;
- const ma10=avg(closes.slice(-10)),previousMa10=avg(closes.slice(-11,-1));
- return{direction:maDirection(ma10,previousMa10),ma10,previousMa10,dataDate:closes.at(-1).date,reason:''};
+ if(closes.length<11)return{direction:'unknown',ma10:null,previousMa10:null,dataDate:closes.at(-1)?.date||null,reason:`不足11根${periodLabel(cycle)}K，不能比较相邻EMA10`};
+ const {ma:ma10,previousMa:previousMa10,indicator}=emaPair(closes.map(b=>b.close));
+ return{indicator,direction:maDirection(ma10,previousMa10),ma10,previousMa10,dataDate:closes.at(-1).date,reason:''};
 }
 // Normalize constituent prices before averaging so expensive contracts do not dominate.
 export function equalWeightIndex(series,cutoff){
@@ -52,7 +52,7 @@ async function commodityIndex(force=false){
 const numberLabel=value=>finite(value)?Number(value).toLocaleString('zh-CN',{maximumFractionDigits:3}):'未知';
 function evidence(values,{target,cycle,asOf,cutoff,source,extra=''}){
  const stale=values.dataDate!==cutoff;
- return{...values,direction:stale?'unknown':values.direction,target,cycle,asOf:asOf||'',source:`${target} · ${periodLabel(cycle)}MA10 ${numberLabel(values.previousMa10)} → ${numberLabel(values.ma10)}；行情 ${values.dataDate||'缺失'}；${source}${extra?`；${extra}`:''}${values.reason?`；${values.reason}`:''}${stale?'；未覆盖本次行情截止':''}`,automatic:true};
+ return{...values,direction:stale?'unknown':values.direction,target,cycle,asOf:asOf||'',source:`${target} · ${periodLabel(cycle)}EMA10 ${numberLabel(values.previousMa10)} → ${numberLabel(values.ma10)}；行情 ${values.dataDate||'缺失'}；${source}${extra?`；${extra}`:''}${values.reason?`；${values.reason}`:''}${stale?'；未覆盖本次行情截止':''}`,automatic:true};
 }
 export async function buildEnvironment(card,fire,{cycle='day',gold=false,force=false,indexData}={}){
  const selectedCycle=gold?'day':environmentCycle(cycle),cutoff=fire.target_date||fire.data_date;

@@ -1,3 +1,5 @@
+import {feeRefreshDue,preferredFeeRows} from './fee-refresh.mjs';
+import {hasLiquidity,liquidityRule} from '../dist/liquidity.js';
 import {DatabaseSync} from 'node:sqlite';
 import {readFile,writeFile,mkdir,stat} from 'node:fs/promises';
 import {existsSync} from 'node:fs';
@@ -6,9 +8,11 @@ import {spawn} from 'node:child_process';
 import {randomUUID} from 'node:crypto';
 import {sectorFor} from '../dist/sectors.js';
 import {completedSeries,barDate} from '../dist/structure.js';
+import {emaPair} from '../dist/indicators.js';
 import {panoramaPeriods,panoramaMaLength,cycleResonance} from '../dist/market-panorama-periods.js';
 import {atomicWrite} from './research-storage.mjs';
 import {intradayComparison} from './intraday-comparison.mjs';
+import {loadPublicCalendar} from './monitor-sina.mjs';
 import {readCloseOverview} from './market-overview.mjs';
 
 const finite=v=>typeof v==='number'&&Number.isFinite(v);
@@ -37,9 +41,8 @@ export function memberGroups(name){
 export function maSignal(bars,pointValue=null){
  const done=bars.filter(b=>b.complete!==false&&b.complete!==0&&finite(b.close)&&b.close>0),last=done.at(-1);
  if(done.length<panoramaMaLength)return {side:'missing',ma:null,close:last?.close??null,samples:done.length,distance:null};
- const ma=done.slice(-panoramaMaLength).reduce((s,b)=>s+b.close,0)/panoramaMaLength,delta=last.close-ma;
- const previousMa=done.length>panoramaMaLength?done.slice(-panoramaMaLength-1,-1).reduce((s,b)=>s+b.close,0)/panoramaMaLength:null;
- return {side:Math.abs(delta)<1e-9?'flat':delta>0?'long':'short',ma,previousMa,maChange:previousMa===null?null:ma-previousMa,close:last.close,samples:done.length,distance:finite(pointValue)?delta*pointValue:null,stamp:last.stamp,source:last.source||null,contract:last.contract||null};
+ const {ma,previousMa,indicator}=emaPair(done.map(b=>b.close),panoramaMaLength),delta=last.close-ma;
+ return {indicator,side:Math.abs(delta)<1e-9?'flat':delta>0?'long':'short',ma,previousMa,maChange:previousMa===null?null:ma-previousMa,close:last.close,samples:done.length,distance:finite(pointValue)?delta*pointValue:null,stamp:last.stamp,source:last.source||null,contract:last.contract||null};
 }
 export function calendarBars(daily,period){
  const bars=daily.map(b=>({...b,timeNs:String(BigInt(Date.parse(b.day+'T00:00:00+08:00'))*1000000n),complete:b.complete!==false&&b.complete!==0}));
@@ -77,7 +80,9 @@ export function commodityExposure(rows,pointValue){
  return {marketInterestChange:samples?interest:null,marketNominalChange:samples?amount:null,marketSamples:samples};
 }
 
-export function createPanorama({root=resolve('.'),folder=process.env.WUJIAN_PANORAMA_DIR||resolve(root,'.runtime/market-panorama'),getFire=async()=>({rows:[]}),getLiveQuote=()=>null,getLiveStatus=()=>null}={}){
+export function createPanorama({root=resolve('.'),folder=process.env.WUJIAN_PANORAMA_DIR||resolve(root,'.runtime/market-panorama'),getFire=async()=>({rows:[]}),getLiveQuote=()=>null,getLiveStatus=()=>null,getTradingCalendar=()=>loadPublicCalendar(root)}={}){
+ let comparisonCalendar=null,comparisonCalendarAt=0,comparisonCalendarPending=null;
+ async function intradayCalendar(){if(comparisonCalendar&&Date.now()-comparisonCalendarAt<86400000)return comparisonCalendar;if(!comparisonCalendarPending)comparisonCalendarPending=getTradingCalendar().then(value=>{comparisonCalendar=value;comparisonCalendarAt=Date.now();return value}).finally(()=>comparisonCalendarPending=null);return comparisonCalendarPending}
  if(relative(root,folder).startsWith('..'))throw Error('市场缓存必须位于项目内');
  let db=null,catalog=[],specs={},initialized=null,job=null,child=null,liveChild=null,starting=false,revision=0,lastSnapshot=null,snapshotAt=0,stopped=false;
  const listeners=new Set(),pendingSnapshots=new Map();
@@ -149,9 +154,9 @@ export function createPanorama({root=resolve('.'),folder=process.env.WUJIAN_PANO
   const dates=db.prepare("SELECT DISTINCT day FROM bars WHERE period='1d' AND day<=? ORDER BY day DESC LIMIT 260").all(day).map(r=>r.day);
   const seatDate=db.prepare('SELECT MAX(day) AS day FROM seats WHERE day<=?').get(day).day||null;
   const allSeats=seatDate?db.prepare('SELECT * FROM seats WHERE day=?').all(seatDate):[];
-  const rawFees=db.prepare("SELECT r.* FROM records r WHERE kind='fee' AND day=(SELECT MAX(day) FROM records x WHERE x.kind=r.kind AND x.key=r.key AND x.day<=?)").all(day).map(r=>({...parse(r.body),source:r.source,recordDay:r.day}));
+  const rawFees=preferredFeeRows(db.prepare("SELECT r.* FROM records r WHERE kind IN ('fee','fee-jiaoyixingqiu') AND day=(SELECT MAX(day) FROM records x WHERE x.kind=r.kind AND x.key=r.key AND x.day<=?)").all(day)).map(r=>({...parse(r.body),source:r.source,recordDay:r.day}));
   const prices=new Map(db.prepare("SELECT key,body FROM records WHERE kind='settle' AND day=?").all(seatDate||'').map(r=>[r.key,parse(r.body)?.price]));
-  const products=catalog.map(c=>{
+  const discoveredProducts=catalog.map(c=>{
    const daily=bars(c.code,'1d',day),last=daily.at(-1),prev=daily.at(-2),validDaily=Boolean(last&&last.day===dates[0]),live=getLiveQuote(c,day)||record('quote',c.code,day),signals={};
    for(const {key,period} of panoramaPeriods){const signal=maSignal(period==='1d'?daily:period==='1mo'||period==='1w'?calendarBars(daily,period):bars(c.code,period,day,160,c.contract),c.pointValue);const stale=['1mo','1w'].includes(period)?last?.day<dates[0]:signal.stamp&&dates[0]&&signal.stamp.slice(0,10)<dates[0];if(stale)Object.assign(signal,{side:'missing',ma:null,distance:null,reason:'序列陈旧'});signals[key]=signal;}
    const recent=live&&live.contract===c.contract&&(live.quoteAt.slice(0,10)===day||live.source==='TqSdk'&&live.tradingDay===day||day===bj()&&live.quoteAt.slice(0,10)>=(dates[0]||day));const close=recent?live.last:validDaily?last.close:null;
@@ -163,14 +168,17 @@ export function createPanorama({root=resolve('.'),folder=process.env.WUJIAN_PANO
    const comparable=pairs.filter(p=>p.complete),amounts=pairs.filter(p=>p.amount!==null),deltas=pairs.filter(p=>p.delta!==null);
    return {...c,warrantStatus:record('supplement-status','warrant:'+c.code,day),rollYield:record('roll-yield',c.code,day),rollStatus:record('supplement-status','roll-product:'+c.code,day)||record('supplement-status','roll:'+c.exchange,day),contractInfo:c.contract?record('contract-info',c.contract,day):null,basis:record('basis',c.code,day),fireModes:c.fireDate&&c.fireDate<=day?c.fireModes:{},fireDate:c.fireDate&&c.fireDate<=day?c.fireDate:null,close,closeDate:recent?live.quoteAt.slice(0,10):last?.day||null,priceSource:recent?live.source:last?.source||null,priceTime:recent?live.quoteAt:last?.stamp||null,priceType:recent?'具体合约最新价':'完成日K主连',changeBasis:recent?'昨结':'昨收',volume:recent?live.volume:validDaily?last.volume??null:null,interest:recent?live.interest:validDaily?last.interest??null:null,changePct:pct,quoteChangePct:recent?live.changePct??null:null,previousSettlement:recent?live.previousSettlement??null:null,return3:validDaily&&daily.length>3?(last.close/daily.at(-4).close-1)*100:null,return5:validDaily&&daily.length>5?(last.close/daily.at(-6).close-1)*100:null,volumeChange:validDaily&&prev&&finite(last.volume)&&finite(prev.volume)?last.volume-prev.volume:null,interestChange:validDaily&&prev&&finite(last.interest)&&finite(prev.interest)?last.interest-prev.interest:null,signals,resonance:cycleResonance(signals),movement30:continuous&&before.close>0?(end.close/before.close-1)*100:null,movementAt:end?.stamp||null,pairs,fees:feeRows,net:comparable.length?comparable.reduce((s,p)=>s+p.net,0):null,delta:deltas.length?deltas.reduce((s,p)=>s+p.delta,0):null,amount:amounts.length?amounts.reduce((s,p)=>s+p.amount,0):null,amountChange:pairs.some(p=>p.amountChange!==null)?pairs.reduce((s,p)=>s+(p.amountChange??0),0):null,seatCoverage:{pairs:pairs.length,complete:comparable.length,priced:amounts.length},seatDate};
   });
+  const products=discoveredProducts.filter(hasLiquidity);
+  for(const p of products)p.fees=p.fees.filter(f=>f.contract===p.contract||hasLiquidity({volume:f['成交量']??f.volume,interest:f['持仓量']??f.interest}));
   const settlements=db.prepare("SELECT key,day,body FROM records WHERE kind='settle' AND day<=?").all(day).map(r=>({contract:r.key,day:r.day,...parse(r.body)}));
   for(const p of products)Object.assign(p,commodityExposure(settlements.filter(r=>r.contract.replace(/\d+$/,'')===p.code),p.pointValue));
   const coverage=db.prepare("SELECT body FROM records WHERE kind='coverage' AND day=?").all(seatDate||dates[0]||day).map(r=>parse(r.body));
   const watchlist=parse(db.prepare("SELECT value FROM preferences WHERE key='watchlist'").get()?.value)||[];
   const supplementConfig=parse(await readFile(resolve(root,'data/panorama-sources.json'),'utf8').catch(()=>'null'));const supplementSources=(supplementConfig?.sources||[]).map(s=>({...s,...record('supplement-status',s.key,day)}));
-  const value={tqConnection:getLiveStatus(),supplementSources,selectedDate:day,generatedAt:new Date().toISOString(),revision:buildRevision,dates,seatDate,products,coverage,job,watchlist,periods:Object.fromEntries(panoramaPeriods.map(p=>[p.key,p.label])),maLength:panoramaMaLength,method:'月K、周K、日K、2小时、30分钟统一MA10；完成K线收盘高于均线为多、低于均线为空。月周沿用小木完成日K聚合，保守排除首尾周期；分钟为具体合约。此为市场观察，不改变火筛选资格。席位为公开排名样本，未上榜不作零。',seriesNotice:'使用小木主连及具体合约，未冒充原站加权序列；收益排名不等于原站分数。',source:'AKShare、交易所公开排名与新浪公开行情',counts:{total:products.length,priced:products.filter(p=>p.close!==null).length,seated:products.filter(p=>p.pairs.length).length,fees:rawFees.length}};
+  const value={feeSourceStatus:record('fee-source','jiaoyixingqiu',day),tqConnection:getLiveStatus(),supplementSources,selectedDate:day,generatedAt:new Date().toISOString(),revision:buildRevision,dates,seatDate,products,coverage,job,watchlist:watchlist.filter(c=>products.some(p=>p.code===c)),periods:Object.fromEntries(panoramaPeriods.map(p=>[p.key,p.label])),liquidity:liquidityRule,maLength:panoramaMaLength,method:'月K、周K、日K、2小时、30分钟统一EMA10；完成K线收盘高于均线为多、低于均线为空。月周沿用小木完成日K聚合，保守排除首尾周期；分钟为具体合约。此为市场观察，不改变火筛选资格。席位为公开排名样本，未上榜不作零。',seriesNotice:'使用小木主连及具体合约，未冒充原站加权序列；收益排名不等于原站分数。',source:'AKShare、交易所公开排名与新浪公开行情',counts:{total:products.length,priced:products.filter(p=>p.close!==null).length,seated:products.filter(p=>p.pairs.length).length,fees:products.reduce((n,p)=>n+p.fees.length,0)}};
   const closeDates=db.prepare("SELECT DISTINCT day FROM bars WHERE period='1d' AND complete=1 AND day<=? ORDER BY day DESC LIMIT 2").all(day).map(r=>r.day);
-  value.closeOverview=readCloseOverview(db,products,closeDates);
+  value.closeOverview=readCloseOverview(db,products,closeDates);value.closeOverview.products=value.closeOverview.products.filter(hasLiquidity);
+  Object.defineProperty(value,'monitorDiscovery',{value:discoveredProducts,enumerable:false});
   if(revision===buildRevision){lastSnapshot=value;snapshotAt=Date.now()}return value;
  }
  async function detail(code,day=bj()){
@@ -184,14 +192,18 @@ export function createPanorama({root=resolve('.'),folder=process.env.WUJIAN_PANO
   return {...product,warrantHistory:record('warrant-history',code,day),bars:Object.fromEntries(panoramaPeriods.map(({period})=>[period,['120m','30m'].includes(period)?bars(code,period,day,2200,product.contract):bars(code,period,day,2200)])),seatHistory,selectedDate:day};
  }
  async function intraday(code,day=bj()){
-  const snap=await snapshot(day),product=snap.products.find(p=>p.code===code);
-  if(!product)throw Error('品种不存在');return intradayComparison(product,day);
+  // All minute lines in one 30-second refresh share the verified main-contract
+  // universe. Rebuilding the full seat/fee snapshot per curve starves polling.
+  const snap=lastSnapshot?.selectedDate===day&&lastSnapshot.revision===revision&&Date.now()-snapshotAt<30000?lastSnapshot:await snapshot(day),product=snap.products.find(p=>p.code===code);
+  if(!product)throw Error('品种不存在');return intradayComparison(product,day,{basis:'session-open',calendar:await intradayCalendar()});
  }
  async function watchlist(values){await init();if(!Array.isArray(values)||values.length>200||values.some(v=>!catalog.some(c=>c.code===v)))throw Error('自选品种无效');const list=[...new Set(values)];db.prepare("INSERT OR REPLACE INTO preferences VALUES('watchlist',?)").run(JSON.stringify(list));emit('watchlist',{values:list});return list}
  async function status(){await init();return {job,catalog:catalog.length,revision,folder,counts:{bars:db.prepare('SELECT COUNT(*) AS n FROM bars').get().n,seats:db.prepare('SELECT COUNT(*) AS n FROM seats').get().n},updatedAt:new Date().toISOString()}}
  let timer=null,lastMinutes=Date.now(),marketMtime=0;
  function schedule(){if(timer||process.env.WUJIAN_PANORAMA_AUTOSYNC==='0')return;timer=setInterval(async()=>{
-  if(!listeners.size||stopped)return;
+  if(stopped)return;
+  if(!child&&!starting&&feeRefreshDue(record('fee-source','jiaoyixingqiu',bj()))){void start({mode:'fees'}).catch(()=>{});return}
+  if(!listeners.size)return;
   try{const path=resolve(root,'.runtime/market.json'),mtime=(await stat(path)).mtimeMs;if(mtime!==marketMtime){marketMtime=mtime;const s=JSON.parse(await readFile(path,'utf8'));const latest=s.quotes?.map(q=>q.tradingDay).filter(Boolean).sort().at(-1),stored=db.prepare("SELECT MAX(day) AS day FROM bars WHERE period='1d'").get().day;if(s.status==='eod-ready'&&latest&&!child&&!starting){const perProduct=new Map(db.prepare("SELECT product,MAX(day) AS day FROM bars WHERE period='1d' GROUP BY product").all().map(r=>[r.product,r.day]));if(!stored||latest>stored||needsDailySeed(s.quotes||[],perProduct)){await start({mode:!stored||latest>stored?'full':'seed'});return}}}}catch{}
   if(!liveChild&&!(child&&job?.mode==='quotes')){
    const python=resolve(root,process.platform==='win32'?'.venv-akshare/Scripts/python.exe':'.venv-akshare/bin/python');

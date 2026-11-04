@@ -29,12 +29,12 @@ test('周日结构无论成立、破坏或缺失均只作辅助',()=>{
  assert.equal(applyResonanceRule({rows:[short]}).rows[0].modes['week-day'],'空头观察');
 });
 
-test('周日多空方向与周MA10价格位置严格镜像，相等不纳入',()=>{
+test('周日多空方向与周EMA10价格位置严格镜像，相等不纳入',()=>{
  for(const side of ['上升','下降']){
   const rows=[14,15,16].map(close=>({...weekDay,week_direction:side,day_direction:side,latest_bar:{close}}));
   const result=applyResonanceRule({rows}).rows;
   assert.deepEqual(result.map(r=>r.modes['week-day']),side==='上升'?['未纳入','未纳入','多头观察']:['空头观察','未纳入','未纳入']);
-  assert.deepEqual(result.map(r=>r.week_day_price_position),['周MA10下方','与周MA10相等','周MA10上方']);
+  assert.deepEqual(result.map(r=>r.week_day_price_position),['周EMA10下方','与周EMA10相等','周EMA10上方']);
  }
  for(const [week,day]of [['上升','下降'],['下降','上升'],['上升','走平'],['走平','上升'],['下降','走平']]){
   assert.equal(applyResonanceRule({rows:[{...weekDay,week_direction:week,day_direction:day}]}).rows[0].modes['week-day'],'未纳入');
@@ -71,7 +71,7 @@ test('三周期同向且量仓严格超过一万手才进入共振',()=>{
  assert.equal(row.modes[RESONANCE_MODE],'多头观察');
  assert.equal(row.resonance_liquidity_ok,true);
  assert.equal(payload.counts[RESONANCE_MODE].long,1);
- assert.equal(payload.rule_version,'v2.6.1-resonance-strict-liquidity');
+ assert.equal(payload.rule_version,'v3-ema10-resonance-strict-liquidity');
 });
 
 test('三个模式统一严格双1万手，等于或不足一万全部剔除',()=>{

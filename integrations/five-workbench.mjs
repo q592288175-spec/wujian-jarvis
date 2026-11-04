@@ -1,4 +1,6 @@
+import {hasLiquidity,liquidityRule} from '../dist/liquidity.js';
 import {DatabaseSync} from 'node:sqlite';
+import {emaSeries,INDICATOR} from '../dist/indicators.js';
 import {createHash,randomUUID} from 'node:crypto';
 import {readFile,readdir,stat,mkdir} from 'node:fs/promises';
 import {resolve,join} from 'node:path';
@@ -38,6 +40,8 @@ const RULE_FILES=[
  ['本轮协作约定',resolve(ROOT,'docs/system-run.md')],
  ['火计算程序',FIRE_SOURCE],
  ['动态月行情适配',FIRE_RUNNER],
+ ['EMA10现行增量规则',resolve(ROOT,'docs/ema10-2026-11-04.md')],
+ ['EMA10统一计算',resolve(ROOT,'dist/indicators.js')],
  ['工作台业务计算',resolve(ROOT,'integrations/five-workbench.mjs')],
  ['运行边界程序',resolve(ROOT,'integrations/team-governance.mjs')],
  ['累计风险复核程序',resolve(ROOT,'integrations/approval-boundary.mjs')],
@@ -108,7 +112,7 @@ async function sourceRegistry(){
  const files=[];
  for(const [name,path] of RULE_FILES){try{const content=await readFile(path);files.push({name,path,sha256:createHash('sha256').update(content).digest('hex'),available:true})}catch{files.push({name,path,sha256:null,available:false})}}
  const combined=createHash('sha256').update(files.map(item=>item.sha256||'missing').join('|')).digest('hex');
- return {version:'三模式量仓严格＞1万 · 共振 v2.6.1 · 周日方向＋周线价格位置',combinedHash:combined,files,readOnly:true,boundary:'整轮运行锁定框架；职责内正常推进不增加木审批。'};
+ return {version:'EMA10 · 2026-11-04 · 量仓严格＞1万 · 原各模式条件保留',combinedHash:combined,files,readOnly:true,boundary:'整轮运行锁定框架；职责内正常推进不增加木审批。'};
 }
 
 export async function ruleRegistry(){
@@ -390,7 +394,7 @@ export function commitCsv(cardId,rows=[]){const results=[];db().exec('BEGIN');tr
 
 async function jsonFiles(path){try{return(await readdir(path,{withFileTypes:true})).filter(entry=>entry.isFile()&&entry.name.endsWith('.json')).map(entry=>join(path,entry.name))}catch{return[]}}
 async function newest(paths){const candidates=[];for(const path of paths)try{candidates.push({path,time:(await stat(path)).mtimeMs})}catch{}return candidates.sort((a,b)=>b.time-a.time)[0]?.path||null}
-export async function latestFire(){const refresh=await fireRefresh.status(),meta={refresh,refreshing:refresh.status==='running',refreshError:refresh.error||null};const runtime=await jsonFiles(resolve(FIRE_RUNTIME,'.wujian-futures-multi-cycle-scan'));const path=await newest([...runtime,INITIAL_FIRE]);if(!path)return{status:'missing',rows:[],...meta,error:'尚无火扫描结果'};try{const payload=applyResonanceRule(JSON.parse(await readFile(path,'utf8')));const rows=payload.rows.map(row=>({...row,source_sector:row.sector,sector:sectorFor(row)}));return{...payload,rows,status:'ready',sourcePath:path,...meta,refreshedAt:(await stat(path)).mtime.toISOString(),configured_scan_source:FIRE_SOURCE}}catch{return{status:'failed',rows:[],...meta,error:'火扫描结果无法读取'}}}
+export async function latestFire(){const refresh=await fireRefresh.status(),meta={refresh,refreshing:refresh.status==='running',refreshError:refresh.error||null};const runtime=await jsonFiles(resolve(FIRE_RUNTIME,'.wujian-futures-multi-cycle-scan'));const path=await newest([...runtime,INITIAL_FIRE]);if(!path)return{status:'missing',rows:[],...meta,error:'尚无火扫描结果'};try{const raw=JSON.parse(await readFile(path,'utf8'));if(raw.indicator?.version!==INDICATOR.version)throw Error('当前扫描尚未按EMA10重算，请刷新盘后数据；历史MA10结果保留');const payload=applyResonanceRule(raw);const rows=payload.rows.filter(hasLiquidity).map(row=>({...row,source_sector:row.sector,sector:sectorFor(row)}));return{...payload,rows,liquidity:liquidityRule,visibleUniverseSize:rows.length,status:'ready',sourcePath:path,...meta,refreshedAt:(await stat(path)).mtime.toISOString(),configured_scan_source:FIRE_SOURCE}}catch(error){return{status:'failed',rows:[],...meta,error:error.message||'火扫描结果无法读取'}}}
 export async function cardEnvironment(cardId,options={}){const card=getCard(cardId);if(!card)throw Error('交易卡不存在');return buildEnvironment(card,await latestFire(),{cycle:card.plan?.payload?.mainCycle||'day',...options})}
 export const goldPlanning=createGoldPlanning({database:db,getCard,listCards,listAccounts,saveCard,environment:cardEnvironment,bars:specificBars,spec:contractSpec,registry:ruleRegistry,
  runSnapshot:async()=>{const registry=await sourceRegistry(),contents=[];for(const f of registry.files)if(f.available)contents.push({...f,content:await readFile(f.path,'utf8')});return{...registry,contents}}});
@@ -399,13 +403,13 @@ export async function specificBars(contract){
  try{
   const saved=JSON.parse(await readFile(resolve(FIRE_RUNTIME,'contract-bars',symbol+'.json'),'utf8'));
   const fire=await latestFire(),cutoff=fire.target_date||fire.scan_date;
-  const bars=saved.filter(row=>String(row.date).slice(0,10)<=cutoff).slice(-180).map(row=>({date:String(row.date).slice(0,10),open:row.open,high:row.high,low:row.low,close:row.close,volume:row.volume,openInterest:row.open_interest,source:row.source,provisional:row.provisional}));
-  if(bars.length)return{contract:symbol,source:'扫描使用的具体合约日线',bars};
+  const all=saved.filter(row=>String(row.date).slice(0,10)<=cutoff),averages=emaSeries(all.map(b=>b.close));const bars=all.map((row,i)=>({...row,ema10:averages[i]})).slice(-180).map(row=>({date:String(row.date).slice(0,10),open:row.open,high:row.high,low:row.low,close:row.close,volume:row.volume,openInterest:row.open_interest,ema10:row.ema10,source:row.source,provisional:row.provisional}));
+  if(bars.length)return{contract:symbol,indicator:INDICATOR,source:'扫描使用的具体合约日线',bars};
  }catch(error){if(error.code!=='ENOENT')throw Error('已保存的具体合约日线无法读取')}
  const endpoint=`https://stock2.finance.sina.com.cn/futures/api/jsonp.php/var%20_${symbol}=/InnerFuturesNewService.getDailyKline?symbol=${symbol}`;
  const response=await fetch(endpoint,{signal:AbortSignal.timeout(12000),headers:{Referer:'https://finance.sina.com.cn/'}});if(!response.ok)throw Error('具体合约日线读取失败');
  const source=await response.text(),start=source.indexOf('(['),end=source.lastIndexOf('])');if(start<0||end<start)throw Error('具体合约日线格式异常');
- const rows=JSON.parse(source.slice(start+1,end+1));return{contract:symbol,source:'新浪财经期货日线',bars:rows.slice(-180).map(row=>({date:row.d,open:Number(row.o),high:Number(row.h),low:Number(row.l),close:Number(row.c),volume:Number(row.v),openInterest:Number(row.p)})).filter(row=>row.date&&[row.open,row.high,row.low,row.close].every(Number.isFinite))};
+ const rows=JSON.parse(source.slice(start+1,end+1)).filter(r=>Number.isFinite(+r.c)&&+r.c>0),averages=emaSeries(rows.map(r=>+r.c));return{contract:symbol,indicator:INDICATOR,source:'新浪财经期货日线',bars:rows.map((row,i)=>({...row,ema10:averages[i]})).slice(-180).map(row=>({date:row.d,open:Number(row.o),high:Number(row.h),low:Number(row.l),close:Number(row.c),volume:Number(row.v),openInterest:Number(row.p),ema10:row.ema10})).filter(row=>row.date&&[row.open,row.high,row.low,row.close].every(Number.isFinite))};
 }
 const fireRefresh=createFireRefresh({
  path:resolve('.runtime/fire-refresh.json'),

@@ -11,6 +11,9 @@ window.addEventListener('keydown',event=>{
 },{capture:true});
 contextBridge.exposeInMainWorld('xiaomuMonitor',{
  configure:input=>ipcRenderer.invoke('xiaomu:monitor-configure',{user:input?.user,password:input?.password}),
+ testAlarm:id=>ipcRenderer.invoke('xiaomu:trend-alarm-test',typeof id==='string'?id:undefined),
+ alarmSettings:id=>ipcRenderer.invoke('xiaomu:trend-alarm-settings',typeof id==='string'?id:undefined),
+ alarmActivity:active=>ipcRenderer.invoke('xiaomu:trend-alarm-active',active),
  testNotification:()=>ipcRenderer.invoke('xiaomu:monitor-notification-test')
 });
 if(process.platform==='darwin')window.addEventListener('DOMContentLoaded',()=>document.documentElement.classList.add('wj-desktop-macos'),{once:true});

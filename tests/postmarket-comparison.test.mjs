@@ -19,7 +19,7 @@ test('三个模式独立多空统计、去重、两两交集与未入选差异',
  assert.equal(r.rows.length,3);assert.deepEqual(r.modeStats.map(s=>[s.long,s.short]),[[2,0],[2,0],[1,1]]);
  assert.equal(r.overlap.three,1);assert.equal(r.overlap.two,1);assert.equal(r.overlap.one,1);assert.deepEqual(r.overlap.pairs.map(p=>p.count),[2,1,1]);
  assert.equal(r.markets[0].sample,4);assert.deepEqual([r.markets[0].up,r.markets[0].down,r.markets[0].flat],[2,1,1]);assert.equal(r.rows[1].membership['week-day'].status,'未纳入');
- assert.match(r.rows[1].membership['week-day'].reason,/日MA10/);assert.deepEqual(input,original);
+ assert.match(r.rows[1].membership['week-day'].reason,/日EMA10/);assert.deepEqual(input,original);
 });
 test('缺失不计持平，方向冲突不混入多空重点',()=>{
  const input=fixture();input.barSets.CU.bars.pop();input.scan.rows[1].modes['week-day']='空头观察';const r=buildThreeModeReview(input);
@@ -56,5 +56,5 @@ test('AI称三周期同向与冻结方向冲突时重写，仍冲突则拒绝解
  const r=buildThreeModeReview(fixture());r.rows[0].trend.day='下降';const wrong='CU月周日均线向上。';assert.equal(explanationProblems(wrong,r).length,1);
  let calls=0;const fixed=await explainPostmarketReport(r,async()=>({text:++calls===1?wrong:'CU顺势推进，下一日观察今日高低点。',totalTokens:10}));assert.equal(calls,2);assert.equal(fixed.totalTokens,20);
  await assert.rejects(()=>explainPostmarketReport(r,async()=>({text:wrong})),/冲突/);assert.ok(explanationProblems('参考[S999]。',r).length);
- assert.ok(explanationProblems('CU站稳100则验证。',r).length);assert.ok(explanationProblems('CU日MA10 90。',r).length);
+ assert.ok(explanationProblems('CU站稳100则验证。',r).length);assert.ok(explanationProblems('CU日EMA10 90。',r).length);assert.ok(explanationProblems('CU日MA10 90。',r).length);
 });

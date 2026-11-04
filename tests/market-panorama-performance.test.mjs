@@ -8,13 +8,13 @@ import {createPanorama,seatPairs} from '../integrations/market-panorama.mjs';
 async function fixture(options={}){
  const parent=resolve('output/market-panorama-tests');await mkdir(parent,{recursive:true});const root=await mkdtemp(join(parent,'performance-'));
  await mkdir(join(root,'data'));await writeFile(join(root,'data/contract-specs.json'),JSON.stringify({products:{FU:{pointValue:10,tickSize:1}}}));
- const app=createPanorama({root,folder:join(root,'.runtime/panorama'),getFire:async()=>({rows:[{code:'FU',name:'燃料油',exchange:'SHFE',main_contract:'FU2701',data_date:'2026-10-22',modes:{}}]}),...options});
- await app.init();const db=new DatabaseSync(join(root,'.runtime/panorama/market.sqlite'));return{app,db};
+ const app=createPanorama({root,folder:join(root,'.runtime/panorama'),getTradingCalendar:async()=>({days:['2026-10-05','2026-10-21','2026-10-22','2026-10-23'],source:'测试日历'}),getFire:async()=>({rows:[{code:'FU',name:'燃料油',exchange:'SHFE',main_contract:'FU2701',data_date:'2026-10-22',modes:{}}]}),...options});
+ await app.init();const db=new DatabaseSync(join(root,'.runtime/panorama/market.sqlite'));for(const day of ['2026-10-05','2026-10-22'])db.prepare('INSERT INTO bars VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)').run('FU','FU0','1d',day,day,100,101,99,100,20000,20000,'fixture',1);return{app,db};
 }
 
 test('parallel live requests calculate one snapshot; subsequent quotes and revisions stay fresh',async()=>{
  let quoteReads=0,price=100;
- const {app,db}=await fixture({getLiveStatus:()=>({selected:true}),getLiveQuote:()=>{quoteReads++;return{contract:'FU2701',quoteAt:'2026-10-22T15:00:00',last:price,changePct:1,source:'fixture'}}});
+ const {app,db}=await fixture({getLiveStatus:()=>({selected:true}),getLiveQuote:()=>{quoteReads++;return{contract:'FU2701',quoteAt:'2026-10-22T15:00:00',last:price,volume:20000,interest:20000,changePct:1,source:'fixture'}}});
  try{
   const snapshots=await Promise.all(Array.from({length:8},()=>app.snapshot('2026-10-22')));
   assert.equal(quoteReads,1);for(const s of snapshots)assert.strictEqual(s,snapshots[0]);
@@ -44,5 +44,19 @@ test('batch seat history equals daily queries including missing prices, one-side
   assert.equal(queries.filter(sql=>sql.startsWith('SELECT key,day,body FROM records')).length,1);
   assert.ok(actual.seatHistory.every(row=>row.day<=day));
   assert.ok(actual.seatHistory.some(row=>row.pairs.some(p=>p.amount===null)));
+ }finally{db.close();app.stop()}
+});
+
+test('minute curves share a 30-second verified universe; expiry and revisions force a fresh universe',async t=>{
+ let reads=0,clock=Date.now();
+ t.mock.method(Date,'now',()=>clock);
+ t.mock.method(globalThis,'fetch',async()=>({ok:true,text:async()=>'=([{"d":"2026-10-21 21:01:00","o":"100","c":"100"},{"d":"2026-10-22 15:00:00","o":"100","c":"101"}]);'}));
+ const {app,db}=await fixture({getLiveStatus:()=>({selected:true}),getLiveQuote:()=>{reads++;return {contract:'FU2701',quoteAt:'2026-10-22 15:00:00',last:101,previousSettlement:100,volume:20000,interest:20000,changePct:1,source:'fixture'}}});
+ try{
+  await app.snapshot('2026-10-22');assert.equal(reads,1);
+  await Promise.all(Array.from({length:12},()=>app.intraday('FU','2026-10-22')));assert.equal(reads,1);
+  clock+=31000;await app.intraday('FU','2026-10-22');assert.equal(reads,2);
+  await app.watchlist(['FU']);await app.intraday('FU','2026-10-22');assert.equal(reads,3);
+  await assert.rejects(()=>app.intraday('FU','2026-10-05'),/该日期缺少同合约报价或昨结/);assert.equal(reads,4);
  }finally{db.close();app.stop()}
 });

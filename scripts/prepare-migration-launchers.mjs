@@ -1,0 +1,13 @@
+import {writeFile,copyFile,readFile} from 'node:fs/promises';
+import {resolve,join} from 'node:path';
+const stage=resolve('.runtime/private-distribution/小木完整迁移包_20261104'),project=join(stage,'小木工作台/wujian-jarvis');
+const header='@echo off\r\nchcp 65001 >nul\r\ncd /d "%~dp0小木工作台\\wujian-jarvis"\r\n';
+await writeFile(join(stage,'1_启动小木.cmd'),header+'".runtime\\node\\node.exe" scripts\\import-private-config.mjs\r\nif errorlevel 1 (\r\n echo 配置导入失败，请保留错误信息。\r\n pause\r\n exit /b 1\r\n)\r\nstart "" ".runtime\\desktop-build\\小木-win32-x64\\小木.exe"\r\n');
+await writeFile(join(stage,'2_启动局域网访问.cmd'),header+'".runtime\\node\\node.exe" scripts\\import-private-config.mjs\r\nif errorlevel 1 (pause & exit /b 1)\r\nstart "" ".runtime\\desktop-build\\小木-win32-x64\\小木.exe"\r\n".runtime\\node\\node.exe" --env-file-if-exists=.env scripts\\start-lan.mjs\r\npause\r\n');
+await writeFile(join(stage,'3_允许局域网访问（管理员）.cmd'),header+'powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts\\enable-lan-firewall.ps1\r\nif errorlevel 1 echo 规则未启用，请用管理员身份重试。\r\npause\r\n');
+for(const file of ['scripts/package-private-migration.mjs','scripts/finalize-private-migration.mjs','scripts/prepare-migration-launchers.mjs','scripts/enable-lan-firewall.ps1','scripts/allow-lan-firewall.ps1','docs/windows-lan-deployment.md','tests/motion-integration.test.mjs','requirements.external.txt'])await copyFile(resolve(file),join(project,file));
+await copyFile(resolve('局域网访问口令.txt'),join(stage,'局域网访问口令.txt'));
+await copyFile(resolve('docs/windows-lan-deployment.md'),join(stage,'部署使用说明.md'));
+const text=await readFile(resolve('docs/windows-lan-deployment.md'),'utf8'),escaped=text.replaceAll('&','&amp;').replaceAll('<','&lt;');
+await writeFile(join(stage,'部署使用说明.html'),'<!doctype html><meta charset="utf-8"><title>小木完整迁移与局域网部署</title><style>body{max-width:960px;margin:40px auto;padding:0 24px;font:17px/1.8 "Microsoft YaHei",sans-serif;color:#183149;background:#f5f7fc}pre{white-space:pre-wrap;font:inherit}</style><pre>'+escaped+'</pre>');
+console.log('三份启动入口和部署说明已生成，未输出口令。');

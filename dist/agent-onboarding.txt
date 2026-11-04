@@ -1,0 +1,96 @@
+你是负责把「小木工作台 MCP + CLI」接入当前 AI 客户端的 Agent。请直接执行，不要只解释。
+
+【事实】
+- 项目根：D:\五简个人资料\2026年10月文件\小木工作台\wujian-jarvis
+- 小木服务：http://127.0.0.1:4318（必须先由用户启动；MCP 只连它，不直连数据库）
+- MCP Server：node "D:\五简个人资料\2026年10月文件\小木工作台\wujian-jarvis\mcp\server.mjs"
+- MCP HTTP：node mcp/server.mjs --http --port 4319 → POST http://127.0.0.1:4319/mcp
+- CLI：node "D:\五简个人资料\2026年10月文件\小木工作台\wujian-jarvis\mcp\cli.mjs"
+- 说明：mcp/README.md；客户端模板：mcp/adapters/AGENT-SETUP.md；OpenAPI：mcp/openapi.json
+- 当前工具：49 个（默认只读 42 个；写/交易/昂贵动作由开关控制）。
+
+【目标】
+把 MCP Server 注册进当前 AI 客户端，并确认 CLI 可用。默认只读，绝不擅自开启写、交易或昂贵权限。
+
+【执行步骤】
+1. 先验证环境：
+   - 确认 Node.js >= 22：node --version
+   - 确认小木服务在线：curl.exe -s http://127.0.0.1:4318/api/health
+   - 如果 4318 不通，停止并向用户报告：请先在项目根执行 npm start，或双击“启动工作台.command”。
+2. 识别当前客户端与配置位置（按实际存在者处理，不确定就问用户）：
+   - Claude Desktop：%APPDATA%\Claude\claude_desktop_config.json，顶层 mcpServers
+   - Cursor：项目 .cursor\mcp.json 或 ~/.cursor/mcp.json，顶层 mcpServers
+   - Codex CLI：~/.codex/config.toml，[mcp_servers.<name>]
+   - VS Code / Copilot：项目 .vscode\mcp.json，顶层 servers，type=stdio
+   - Cline：~/.cline/data/settings/cline_mcp_settings.json，顶层 mcpServers
+   - Continue：~/.continue/config.yaml，mcpServers 列表
+   - DeepSeek Harness / DSH：~/.dsh/profiles/<profile>/cordis.patch.yml，使用 @deepseek-ai/dsh-mcp-client，新增条目必须放在 insert: 下
+   - 其他客户端：使用通用 JSON mcpServers
+3. 修改前先备份原配置（同目录 .bak.YYYYMMDD-HHMMSS），保留用户已有条目，只新增或合并“wujian”条目，不要整份覆盖。
+4. 写入以下最小配置（按客户端格式转换）：
+   JSON：
+   {
+     "mcpServers": {
+       "wujian": {
+         "command": "node",
+         "args": ["D:\\五简个人资料\\2026年10月文件\\小木工作台\\wujian-jarvis\\mcp\\server.mjs"],
+         "cwd": "D:\\五简个人资料\\2026年10月文件\\小木工作台\\wujian-jarvis",
+         "env": {
+           "WUJIAN_API_BASE": "http://127.0.0.1:4318",
+           "WUJIAN_TIMEOUT_MS": "30000",
+           "WUJIAN_ALLOW_WRITES": "0",
+           "WUJIAN_ALLOW_TRADING": "0",
+           "WUJIAN_ALLOW_EXPENSIVE": "0"
+         }
+       }
+     }
+   }
+   Codex TOML：
+   [mcp_servers.wujian]
+   command = "node"
+   args = ['D:\五简个人资料\2026年10月文件\小木工作台\wujian-jarvis\mcp\server.mjs']
+   cwd = 'D:\五简个人资料\2026年10月文件\小木工作台\wujian-jarvis'
+   startup_timeout_sec = 30.0
+   env = { WUJIAN_API_BASE = "http://127.0.0.1:4318", WUJIAN_TIMEOUT_MS = "30000", WUJIAN_ALLOW_WRITES = "0", WUJIAN_ALLOW_TRADING = "0", WUJIAN_ALLOW_EXPENSIVE = "0" }
+   DSH YAML：
+   - insert:
+       - id: mcp-wujian
+         name: '@deepseek-ai/dsh-mcp-client'
+         config:
+           serverName: wujian
+           transport: stdio
+           command: 'C:\Program Files\nodejs\node.exe'
+           args:
+             - 'D:\五简个人资料\2026年10月文件\小木工作台\wujian-jarvis\mcp\server.mjs'
+           cwd: 'D:\五简个人资料\2026年10月文件\小木工作台\wujian-jarvis'
+           env:
+             WUJIAN_API_BASE: 'http://127.0.0.1:4318'
+             WUJIAN_TIMEOUT_MS: '30000'
+             WUJIAN_ALLOW_WRITES: '0'
+             WUJIAN_ALLOW_TRADING: '0'
+             WUJIAN_ALLOW_EXPENSIVE: '0'
+           toolCallTimeoutMs: 60000
+           failOnStartupError: false
+5. 如果当前客户端不支持文件/命令权限：不要假装已接入。直接输出“配置路径 + 完整配置 + 需要用户粘贴/重启的步骤”，并请用户把结果发回来。
+6. 验证（按顺序执行，记录真实输出）：
+   - node "D:\五简个人资料\2026年10月文件\小木工作台\wujian-jarvis\mcp\server.mjs" --selftest
+   - node "D:\五简个人资料\2026年10月文件\小木工作台\wujian-jarvis\mcp\cli.mjs" health
+   - node "D:\五简个人资料\2026年10月文件\小木工作台\wujian-jarvis\mcp\cli.mjs" brief
+   - 在客户端重启后调用 MCP 工具 wujian_health 和 wujian_brief；若工具未出现，检查客户端 MCP 日志与 node 路径。
+7. 报告格式：
+   - 客户端与配置文件绝对路径
+   - 备份文件路径
+   - 实际写入的条目（隐去任何密钥）
+   - 自检、CLI、MCP 工具调用结果
+   - 仍需用户手动完成的步骤（重启、确认权限、启动 4318）
+   - 未做/失败项
+
+【权限纪律】
+- 默认 WUJIAN_ALLOW_WRITES=0、WUJIAN_ALLOW_TRADING=0、WUJIAN_ALLOW_EXPENSIVE=0。
+- 只有用户明确要求时才逐级改为 1，并说明风险；不得擅自批准交易、写入业务数据、启动研究/对话/备份。
+- 不读取、不打印、不复制 .env、App Secret、Token、密码；不要把密钥写进任何配置文件或聊天。
+- 不修改小木业务代码、不直接写 .runtime 数据库、不重启用户正在运行的小木服务；如必须重启，先征得同意。
+- 信号/候选不是交易许可；不要用记忆价格替代工具返回。
+
+【给用户的最终一句话】
+“已接入小木 MCP：先启动小木工作台（4318），重启客户端后即可使用 wujian_health、wujian_brief、wujian_signals、wujian_fire_scan 等 49 个工具；默认只读。”

@@ -1,10 +1,11 @@
 import Decimal from './vendor/decimal/decimal.js';
+import {emaPair,INDICATOR} from './indicators.js';
 
-export const GOLD_RULE = 'gold-2026-10-26-v2';
+export const GOLD_RULE = 'gold-2026-11-04-ema10-v3';
 export const METHODS = [
  {id:'anti-break',name:'反K突破',pair:'反K突破入场 / 反K最低点止损',defense:'指定反K组另一侧极值'},
  {id:'anti-close',name:'反K收线',pair:'反K入场 / 前一根反K止损',defense:'同一回调内前一根有效反K极值'},
- {id:'ma10',name:'穿日MA10',pair:'穿10均线入场 / 平台止损',defense:'整段回调区间另一侧，包含所有K线和影线'},
+ {id:'ma10',name:'穿日EMA10',pair:'穿10均线入场 / 平台止损',defense:'整段回调区间另一侧，包含所有K线和影线'},
  {id:'trend',name:'清晰单边',pair:'清晰单边入场 / 前一根最低点止损',defense:'穿分时均价线守前一完成日K；静K突破守最后完成静K'},
  {id:'intraday',name:'穿分时均线入场',pair:'独立分时均线入场 / 当日有效高低点外侧止损',defense:'事先标定的当日有效低点或高点外侧；不套用日K止损',maxRiskPercent:.5}
 ];
@@ -37,18 +38,18 @@ export function analyzeMethods({bars:raw=[],direction,cutoff,tickSize,contract,s
  const group=[];
  for(let i=bars.length-1;i>=0&&opposite(bars[i],direction);i--)group.unshift(bars[i]);
  const trend=bars.slice(-3),ordered=trend.length===3&&trend.every((b,i)=>i===0||(direction==='long'?b.low>=trend[i-1].low:b.high<=trend[i-1].high));
- const point=last?.close,ma10=bars.length>=10?bars.slice(-10).reduce((n,b)=>n+b.close,0)/10:null;
+ const calculated=emaPair(bars.map(b=>b.close)),point=last?.close,ma10=last?.ema10??calculated.ma;
  const start=recent.length?recent.reduce((a,b)=>direction==='long'?(b.high>a.high?b:a):(b.low<a.low?b:a)):null;
  const range=(values)=>({start:values[0]?.date||last?.date||'',end:values.at(-1)?.date||last?.date||''});
  const previous=anti.at(-2),closeValid=!!(last&&opposite(last,direction)&&previous&&(direction==='long'?last.low>=previous.low:last.high<=previous.high));
  const candidates=[
   {...METHODS[0],range:range(group.length?group:[last].filter(Boolean)),available:group.length>0,reason:group.length?`最近${group.length}根连续反K提供可核对边界，等待价格恢复推进。`:'末端没有连续反K；需本人圈定同一回调，不能任意向历史合组。'},
   {...METHODS[1],range:{start:previous?.date||last?.date||'',end:last?.date||''},available:closeValid,reason:closeValid?'最新反K已完成，且未破前一有效反K防守；先确认是否同一轮回调。':'当前未满足“已收线且前一反K防守仍有效”，不推荐套用。'},
-  {...METHODS[2],range:{start:start?.date||'',end:last?.date||''},available:bars.length>=11&&start?.date!==last?.date,reason:ma10===null?'日MA10数据不足。':`完成日MA10 ${Number(ma10.toFixed(3))}，收盘 ${point}；回调范围须确认，盘后不能证明盘中穿线。`},
+  {...METHODS[2],range:{start:start?.date||'',end:last?.date||''},available:bars.length>=11&&start?.date!==last?.date,reason:ma10===null?'日EMA10数据不足。':`完成日EMA10 ${Number(ma10.toFixed(3))}，收盘 ${point}；回调范围须确认，盘后不能证明盘中穿线。`},
   {...METHODS[3],range:range(last?[last]:[]),branch:'average',available:ordered,reason:ordered?'近期防守端有序推进（允许持平），优先研究穿当日均价线；静K需另核相对振幅与强势背景。':'近期防守端未呈连续有序推进；先核对结构，不把杂乱图形认作单边。'},
   {...METHODS[4],range:range(last?[last]:[]),available:false,reason:'独立分时小周期：需主线许可、易涨难跌或易跌难涨；填写已确认的分时算法、二次确认口径、当日高低点及截止时刻。日K数据不能证明盘中穿线。'}
  ];
- const previousMA=bars.length>=11?bars.slice(-11,-1).reduce((n,b)=>n+b.close,0)/10:null,prior=bars.at(-2);
+ const prior=bars.at(-2),previousMA=prior?.ema10??calculated.previousMa;
  const crossed=previousMA!==null&&ma10!==null&&prior&&(direction==='long'?prior.close<=previousMA&&point>ma10:prior.close>=previousMA&&point<ma10);
  const settling=closeValid&&previous&&(direction==='long'?last.low>previous.low&&last.close>=previous.close:last.high<previous.high&&last.close<=previous.close);
  // Descriptive tie-breaks are suggestions, never extra eligibility thresholds.
@@ -59,7 +60,7 @@ export function analyzeMethods({bars:raw=[],direction,cutoff,tickSize,contract,s
  if(last?.date!==cutoff)missing.push('具体合约日K未覆盖扫描数据日');
  if(!finite(tickSize)||tickSize<=0)missing.push('最小变动价位待核验');
  if(missing.length||permission.missing.length)recommended=null;
- return {ruleVersion:GOLD_RULE,analyzedAt:new Date().toISOString(),contract,source,dataDate:last?.date||null,bars:bars.slice(-60),ma10,candidates,recommended,permission,missing,
+ return {ruleVersion:GOLD_RULE,analyzedAt:new Date().toISOString(),contract,source,indicator:INDICATOR,dataDate:last?.date||null,bars:bars.map((b,i)=>({...b,ema10:b.ema10??(i===bars.length-1?ma10:emaPair(bars.slice(0,i+1).map(b=>b.close)).ma)})).slice(-60),ma10,candidates,recommended,permission,missing,
   research:water.headline||water.change||'尚无本品种研究结论',counterEvidence:water.disproof||'基本面反证待核验',
   notice:'规则辅助分析，不是自动图形识别结论；先确认结构与手法，再审价格和账户。',tickSize};
 }
@@ -87,15 +88,15 @@ export function deriveMethod(analysis,choice={}) {
   entry=last.close;trigger=`${last.date} 反K已完成；仅在本人审定的首次适用交易日和价格范围参与，不补记收盘成交`;
   stopReference=`前一有效反K ${previous.date} ${direction==='long'?'最低':'最高'}点`;
  }else if(method==='ma10'){
-  if(analysis.bars.length<11||selected.length<2)throw Error('日MA10或清楚回调区间不足');
-  stop=extreme(selected,direction);trigger=`盘中顺势${side}动态日MA10；仅在线${direction==='long'?'上':'下'}不算穿线`;
+  if(analysis.bars.length<11||selected.length<2)throw Error('日EMA10或清楚回调区间不足');
+  stop=extreme(selected,direction);trigger=`盘中顺势${side}动态日EMA10；仅在线${direction==='long'?'上':'下'}不算穿线`;
   entry=analysis.ma10;stopReference=`${start} 至 ${end} 整段回调${direction==='long'?'最低':'最高'}点（含全部影线）`;
  }else if(branch==='static'){
   boundary=extreme(selected,direction,true);stop=extreme([last],direction);
   trigger=`强势单边中实际${direction==='long'?'超过':'跌破'}静K组${edge}点 ${boundary}（相等不触发）`;
   stopReference=`最后完成静K ${last.date} ${direction==='long'?'最低':'最高'}点，不取组极值`;
  }else if(branch==='average'){
-  stop=extreme([last],direction);entry=last.close;trigger=`盘中顺势${side}分时当日均价线（非分钟MA10）；未成交回穿时提醒失效`;
+  stop=extreme([last],direction);entry=last.close;trigger=`盘中顺势${side}分时当日均价线（非分钟EMA10）；未成交回穿时提醒失效`;
   stopReference=`前一完成日K ${last.date} ${direction==='long'?'最低':'最高'}点`;
  }else throw Error('清晰单边分支无效');
  if(boundary!==null){
@@ -142,7 +143,7 @@ function validDay(value){return /^\d{4}-\d{2}-\d{2}$/.test(value||'')&&Number.is
 function deriveIntraday(analysis,choice){
  const q=choice.intraday||{},direction=choice.direction,long=direction==='long';
  const algorithm=String(q.algorithm||'').trim(),confirmation=q.confirmation,confirmationRule=String(q.confirmationRule||'').trim();
- if(!algorithm)throw Error('请填写已确认的分时均线算法，不默认采用分钟MA10或当日均价线');
+ if(!algorithm)throw Error('请填写已确认的分时均线算法，不默认采用分钟EMA10或当日均价线');
  if(!['cross','second'].includes(confirmation)||confirmation==='second'&&!confirmationRule)throw Error('请明确是否二次确认及具体条件');
  if(!validDay(q.tradingDay))throw Error('请填写分时结构所属交易日，夜盘按交易日核对');
  const referenceAt=String(q.referenceAt||'');

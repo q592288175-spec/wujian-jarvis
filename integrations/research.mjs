@@ -1,3 +1,4 @@
+import {emaPair,INDICATOR} from '../dist/indicators.js';
 import {decisionProtocol} from './decision-support.mjs';
 import {marketSnapshot} from './market.mjs';
 export const researchMethod={version:'2.0',status:'验证中',scope:'国内商品期货与股指分开研究',steps:[
@@ -6,7 +7,7 @@ export const researchMethod={version:'2.0',status:'验证中',scope:'国内商�
  {name:'传导到国内品种',detail:'事件→利率/汇率/供需/成本→产业链→国内合约；分别说明短期情绪、中期兑现与反向作用。'},
  {name:'行情交叉验证',detail:'实际合约、昨收盘涨跌、成交与持仓、期限结构；统计覆盖率和板块广度，剔除单品种后的均值用于检查集中度。'},
  {name:'情景与反证',detail:'基准、上行、下行情景分别列确认变量、失效条件、有效期和下一检查点；无校准样本不报胜率。'},
- {name:'人工决策与迭代',detail:'国内期货统一回到三板斧：只沿允许方向做裸K、MA10、条件入场、结构止损与以损定量，待五简拍板；缺依据保留未知。记录规律假设与反例，不用一次成败改核心规则。'}],templates:{
+ {name:'人工决策与迭代',detail:'国内期货统一回到三板斧：只沿允许方向做裸K、EMA10、条件入场、结构止损与以损定量，待五简拍板；缺依据保留未知。记录规律假设与反例，不用一次成败改核心规则。'}],templates:{
  close:['数据截止与覆盖范围','盘面广度与板块分化','量价仓与换月解释','重要事件及传导','支持与反证','下一交易日检查点','缺口与失效条件'],
  event:['事件原文与时间线','预期差和事件性质','历史类比及差异','传导路径与时滞','受益/承压及相反情景','价格是否已反映','证伪指标与有效期'],
  im:['上一版计划审计','隔夜环境','中证1000相对沪深300风格','成分行业与广度','IM实际合约、基差、期限结构和交割','波动与流动性','情景、失效与缺口']},
@@ -20,7 +21,7 @@ export function buildResearchBrief(snapshot,kind='close'){
  const eod=snapshot.dataMode==='completed-eod';
  const specific=quotes.length>0&&quotes.every(q=>q.seriesType==='specific_contract');
  const valid=quotes.filter(q=>finite(eod?q.close:q.last)&&finite(q.preClose)&&q.preClose>0&&(eod?q.close:q.last)>0);
- const rows=valid.map(q=>{const bars=(q.bars||[]).filter(b=>b.complete===true&&finite(b.close));const last10=bars.slice(-10);const close=finite(q.close)&&q.close>0?q.close:null;const price=eod?close:q.last;return {symbol:q.symbol,actualContract:q.actualContract||null,name:q.name,quality:q.quality,quoteTime:q.quoteTime,tradingDay:q.tradingDay,last:eod?undefined:q.last,close,preClose:q.preClose,closeChangePct:close===null?null:(close/q.preClose-1)*100,priceNotice:eod?(q.seriesType==='specific_contract'?'close与preClose均来自同一具体合约完成日K，不与其他月份拼接。':'close与preClose均来自主力连续完成日K；当前具体主力仅作换月核验。'):'last为最新成交价；close为供应商收盘字段，缺失不可代填。',changePct:(price/q.preClose-1)*100,openInterest:finite(q.openInterest)?q.openInterest:null,completedDailyBars:bars.length,ma10:last10.length===10?last10.reduce((a,b)=>a+b.close,0)/10:null,maAsOf:bars.at(-1)?.timeNs||null};});
+ const rows=valid.map(q=>{const bars=(q.bars||[]).filter(b=>b.complete===true&&finite(b.close));const close=finite(q.close)&&q.close>0?q.close:null;const price=eod?close:q.last;return {symbol:q.symbol,actualContract:q.actualContract||null,name:q.name,quality:q.quality,quoteTime:q.quoteTime,tradingDay:q.tradingDay,last:eod?undefined:q.last,close,preClose:q.preClose,closeChangePct:close===null?null:(close/q.preClose-1)*100,priceNotice:eod?(q.seriesType==='specific_contract'?'close与preClose均来自同一具体合约完成日K，不与其他月份拼接。':'close与preClose均来自主力连续完成日K；当前具体主力仅作换月核验。'):'last为最新成交价；close为供应商收盘字段，缺失不可代填。',changePct:(price/q.preClose-1)*100,openInterest:finite(q.openInterest)?q.openInterest:null,completedDailyBars:bars.length,indicator:INDICATOR,ma10:emaPair(bars.map(b=>b.close)).ma,maAsOf:bars.at(-1)?.timeNs||null};});
  const closeRows=rows.filter(q=>q.closeChangePct!==null);
  return {kind,version:researchMethod.version,generatedAt:new Date().toISOString(),source:snapshot.source||(eod?'AKShare免费盘后数据':'未知行情源'),status:snapshot.status,dataAsOf:snapshot.receivedAt,scope:eod?(specific?'指定具体合约完成日K；非盘中实时报告':'已采集主力连续完成日K；当前具体主力单独核验；非盘中实时报告'):'仅已订阅实际合约；非全市场、非正式收盘报告',coverage:{subscribed:Number.isInteger(snapshot.liquidity?.total)?snapshot.liquidity.total:quotes.length,retained:quotes.length,valid:rows.length,totalMarket:null},breadth:{priceBasis:eod?'completed close / previous completed close - 1':'last / preClose - 1',up:rows.filter(q=>q.changePct>0).length,down:rows.filter(q=>q.changePct<0).length,flat:rows.filter(q=>q.changePct===0).length,equalWeightChangePct:rows.length?rows.reduce((s,q)=>s+q.changePct,0)/rows.length:null},closeBreadth:{priceBasis:'close / preClose - 1',valid:closeRows.length,up:closeRows.filter(q=>q.closeChangePct>0).length,down:closeRows.filter(q=>q.closeChangePct<0).length,flat:closeRows.filter(q=>q.closeChangePct===0).length,equalWeightChangePct:closeRows.length?closeRows.reduce((s,q)=>s+q.closeChangePct,0)/closeRows.length:null},rows,outline:researchMethod.templates[kind],missing:[eod?'统一交易日截点复核':'完整市场覆盖及统一截点快照','全球事件原文与已核验传导证据','历史持仓基准、基本面、基差与期限结构','账户风险和完整交易许可',...(kind==='im'?['IM与现货指数同步报价、成分股广度及风格数据']:[])],conclusion:eod?'盘后结构只提供研究事实；缺证据不生成多空推荐。':'行情事实准备中；缺证据不生成多空推荐。',permission:false};
 }

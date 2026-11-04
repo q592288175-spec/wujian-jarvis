@@ -6,10 +6,10 @@ import {DatabaseSync} from 'node:sqlite';
 import {maSignal,calendarBars,needsDailySeed,seatPairs,feeAmount,feeType,memberGroups,createPanorama,commodityExposure} from '../integrations/market-panorama.mjs';
 import {panoramaPeriods,cycleResonance,signalAppearance} from '../dist/market-panorama-periods.js';
 
-test('MA10 needs ten completed bars; equal prices and zero point value stay explicit',()=>{
+test('EMA10 needs ten completed bars; equal prices and zero point value stay explicit',()=>{
  const bars=Array.from({length:9},()=>({close:100,complete:true}));assert.equal(maSignal(bars).side,'missing');
  bars.push({close:100,complete:false});assert.equal(maSignal(bars).side,'missing');bars.at(-1).complete=true;
- assert.equal(maSignal(bars,10).side,'flat');bars.push({close:110,complete:true});assert.equal(maSignal(bars,10).side,'long');assert.equal(maSignal(bars,10).ma,101);assert.equal(maSignal(bars,10).distance,90);
+ assert.equal(maSignal(bars,10).side,'flat');bars.push({close:110,complete:true});assert.equal(maSignal(bars,10).side,'long');assert.ok(Math.abs(maSignal(bars,10).ma-(100+20/11))<1e-10);assert.ok(Math.abs(maSignal(bars,10).distance-(110-100-20/11)*10)<1e-10);
  assert.equal(maSignal(bars).distance,null);assert.equal(maSignal([...bars,{close:0,complete:true}],10).close,110);
 });
 test('calendar periods reuse completed daily aggregation without future or partial endpoints',()=>{
@@ -19,14 +19,14 @@ test('calendar periods reuse completed daily aggregation without future or parti
  const monthly=calendarBars(rows,'1mo'),badDay=monthly.at(-1).day;assert.ok(calendarBars(rows.map(b=>b.day===badDay?{...b,complete:0}:b),'1mo').length<monthly.length);
 });
 
-test('four shades use actual MA10 slope; missing and stale samples are never painted strong',()=>{
+test('four shades use actual EMA10 slope; missing and stale samples are never painted strong',()=>{
  const make=values=>values.map((close,i)=>({close,complete:true,stamp:String(i),source:'fixture',contract:'TEST'}));
  const rising=maSignal(make(Array.from({length:11},(_,i)=>100+i)));
- assert.equal(rising.previousMa,104.5);assert.equal(rising.ma,105.5);assert.equal(rising.maChange,1);
+ assert.ok(Math.abs(rising.previousMa-105.2393684801212)<1e-10);assert.ok(Math.abs(rising.ma-106.1049378473719)<1e-10);assert.ok(rising.maChange>0);
  assert.deepEqual(signalAppearance(rising),{label:'强',tone:'strong-long'});
  assert.deepEqual(signalAppearance(maSignal(make(Array.from({length:11},(_,i)=>110-i)))),{label:'弱',tone:'strong-short'});
- assert.equal(signalAppearance(maSignal(make([200,...Array(9).fill(100),110]))).label,'偏强');
- assert.equal(signalAppearance(maSignal(make([1,...Array(9).fill(100),90]))).label,'偏弱');
+ assert.equal(signalAppearance(maSignal(make([200,...Array(9).fill(100),110]))).label,'弱');
+ assert.equal(signalAppearance(maSignal(make([1,...Array(9).fill(100),90]))).label,'强');
  assert.equal(signalAppearance(maSignal(make(Array(11).fill(100)))).label,'平衡');
  assert.equal(signalAppearance(maSignal(make(Array(9).fill(100)))).label,'不足');
  assert.equal(signalAppearance(maSignal(make([...Array(9).fill(100),110]))).label,'待核');
@@ -78,7 +78,7 @@ test('historical observations exclude future data, invalid preferences fail, exp
  await mkdir(join(root,'data'));await writeFile(join(root,'data/contract-specs.json'),JSON.stringify({products:{FU:{pointValue:10,tickSize:1}}}));
  const p=createPanorama({root,folder:join(root,'.runtime/panorama'),getFire:async()=>({rows:[{code:'FU',name:'燃油',exchange:'SHFE',main_contract:'FU2701',data_date:'2026-10-22',modes:{'day-trend':'多头观察'}}]})});
  try{await p.init();const db=new DatabaseSync(join(root,'.runtime/panorama/market.sqlite'));const insert=db.prepare('INSERT INTO bars VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)');
-  for(let i=0;i<61;i++){const day=new Date(Date.UTC(2026,7,20+i)).toISOString().slice(0,10);insert.run('FU','FU0','1d',day,day,100,101,99,100,10000,20000,'fixture',1)}
+  for(let i=0;i<61;i++){const day=new Date(Date.UTC(2026,7,20+i)).toISOString().slice(0,10);insert.run('FU','FU0','1d',day,day,100,101,99,100,10001,20000,'fixture',1)}
   insert.run('FU','FU0','1d','2026-10-22','2026-10-22',200,201,199,200,20000,30000,'fixture',1);
   const historical=await p.snapshot('2026-10-20');assert.equal(historical.products[0].signals.day.side,'flat');assert.equal(historical.products[0].close,100);assert.deepEqual(historical.products[0].fireModes,{});
   const current=await p.snapshot('2026-10-22');assert.equal(current.products[0].close,200);assert.equal(current.products[0].signals.day.side,'long');
@@ -91,11 +91,11 @@ test('historical observations exclude future data, invalid preferences fail, exp
  }finally{p.stop()}
 });
 
-test('2小时 MA10 reads actual 120-minute bars rather than old 60-minute bars',async()=>{
+test('2小时 EMA10 reads actual 120-minute bars rather than old 60-minute bars',async()=>{
  const parent=resolve('output/market-panorama-tests');await mkdir(parent,{recursive:true});const root=await mkdtemp(join(parent,'two-hour-'));
  const p=createPanorama({root,folder:join(root,'.runtime/panorama'),getFire:async()=>({rows:[{code:'FU',name:'燃油',exchange:'SHFE',main_contract:'FU2701',data_date:'2026-10-22'}]})});
  try{await p.init();const db=new DatabaseSync(join(root,'.runtime/panorama/market.sqlite'));const insert=db.prepare('INSERT INTO bars VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)');
-  insert.run('FU','FU0','1d','2026-10-22','2026-10-22',100,101,99,100,100,100,'fixture',1);
+  insert.run('FU','FU0','1d','2026-10-22','2026-10-22',100,101,99,100,20000,20000,'fixture',1);
   for(let i=0;i<11;i++){const stamp='2026-10-22 '+String(i).padStart(2,'0')+':00:00';for(const [period,close] of [['120m',100+i],['60m',120-i]])insert.run('FU','FU2701',period,stamp,'2026-10-22',close,close,close,close,100,100,'fixture',1)}
   insert.run('FU','FU2705','120m','2026-10-22 23:00:00','2026-10-22',50,50,50,50,100,100,'other contract',1);
   const snap=await p.snapshot('2026-10-22'),row=snap.products[0];assert.equal(snap.periods.hour,'2小时');assert.equal(row.signals.hour.side,'long');assert.equal(row.signals.hour.close,110);
@@ -105,13 +105,13 @@ test('2小时 MA10 reads actual 120-minute bars rather than old 60-minute bars',
 
 test('stale daily returns and zero fee quotes cannot become current observations',async()=>{
  const parent=resolve('output/market-panorama-tests');await mkdir(parent,{recursive:true});const root=await mkdtemp(join(parent,'stale-'));
- const p=createPanorama({root,folder:join(root,'.runtime/panorama'),getFire:async()=>({rows:['FU','WH'].map(code=>({code,name:code,exchange:'SHFE'}))})});
+ const p=createPanorama({root,folder:join(root,'.runtime/panorama'),getFire:async()=>({rows:['FU','WH'].map(code=>({code,name:code,exchange:'SHFE',main_contract:code==='FU'?'FU2701':null}))})});
  try{await p.init();const db=new DatabaseSync(join(root,'.runtime/panorama/market.sqlite'));const insert=db.prepare('INSERT INTO bars VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)');
-  for(const [code,day]of [['FU','2026-10-22'],...['01','02','03','06','07','08'].map(d=>['WH','2023-03-'+d])])insert.run(code,code+'0','1d',day,day,100,101,99,100,10000,20000,'fixture',1);
+  for(const [code,day]of [['FU','2026-10-22'],...['01','02','03','06','07','08'].map(d=>['WH','2023-03-'+d])])insert.run(code,code+'0','1d',day,day,100,101,99,100,10001,20000,'fixture',1);
   const row={'合约代码':'FU2701','现价':0,'费用来源类型':'OpenCTP账户参考','1手开仓费用':2.05,'开仓费率':.000001,'开仓费用/手':2.01};
   db.prepare('INSERT INTO records VALUES(?,?,?,?,?,?)').run('fee','FU2701','2026-10-22',JSON.stringify(row),'fixture','2026-10-22');
   const s=await p.snapshot('2026-10-22'),stale=s.products.find(p=>p.code==='WH'),f=s.products.find(p=>p.code==='FU').fees[0];
-  assert.equal(stale.close,null);assert.equal(stale.volume,null);assert.equal(stale.return3,null);assert.equal(stale.return5,null);
+  assert.equal(stale,undefined,'陈旧或缺量仓品种应完全隐藏');
   assert.equal(f.price,null);assert.equal(f.open,2.05);assert.equal(f.feeType,'mixed');db.close();
  }finally{p.stop()}
 });

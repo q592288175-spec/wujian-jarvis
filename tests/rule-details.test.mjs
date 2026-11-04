@@ -8,27 +8,27 @@ import {createRuleDetails,ruleDetailsHtml} from '../dist/rule-details.js';
 
 const method=await readFile('../资料包/技能包/wujian-futures-multi-cycle-scan/references/method.md','utf8');
 const registry={version:'当前三模式规则',combinedHash:'test-hash',files:[]};
-const fire=applyResonanceRule({baseline_rule_version:'v2.5',data_date:'2026-09-30',rows:[]});
+const fire=applyResonanceRule({indicator:{type:'EMA',version:'ema10-v1'},baseline_rule_version:'v2.5',data_date:'2026-09-30',rows:[]});
 const details=buildScanRuleDetails(registry,fire,method);
 
 test('详情使用工作台生效元数据，旧技能包共振突破与2万门槛不混入',()=>{
  assert.deepEqual(details.modes.map(mode=>mode.id),['month-week-day','month-week','week-day']);
  assert.equal(details.common.liquidity,fire.resonance_rule.liquidity);
  assert.ok(details.modes[0].direction.startsWith(fire.resonance_rule.direction));
- assert.match(details.modes[0].direction,/空头：月、周、日MA10均下降/);
+ assert.match(details.modes[0].direction,/空头：月、周、日EMA10均下降/);
  assert.match(details.common.directionBoundary,/走平或方向不一致不进入观察候选/);
  assert.equal(details.modes[0].breakout,fire.resonance_rule.breakout);
  assert.equal(details.modes[0].version,fire.resonance_rule.version);
  assert.match(details.modes[0].structure,/不参与筛选/);
  assert.match(details.modes[2].structure,/周K、日K高低点结构仅作辅助展示，不参与筛选/);
- assert.match(details.modes[2].direction,/最新完成日K收盘价 > 动态周MA10/);
- assert.match(details.modes[2].direction,/最新完成日K收盘价 < 动态周MA10/);
+ assert.match(details.modes[2].direction,/最新完成日K收盘价 > 动态周EMA10/);
+ assert.match(details.modes[2].direction,/最新完成日K收盘价 < 动态周EMA10/);
  assert.match(details.modes[2].direction,/相等不纳入/);
  assert.equal(details.modes[2].breakout,'不要求周线突破');
  assert.match(details.modes[1].direction,/本周低点高于上周低点/);
  assert.match(details.modes[1].breakout,/最近3个月 对比 再向前12个月/);
  assert.doesNotMatch(JSON.stringify([details.modes[0],details.modes[2]]),/前12月|20,000|20000/);
- assert.match(details.common.direction,/走平 = 当前MA10 = 上一MA10/);
+ assert.match(details.common.direction,/首个有效收盘价初始化/);assert.match(details.common.direction,/EMA10/);
 });
 
 test('没有方法和扫描元数据时明确未知，不猜测筛选规则',()=>{

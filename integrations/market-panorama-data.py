@@ -319,6 +319,13 @@ def dce_fallback(db, catalog, days):
 
 
 def fees(db):
+    try:
+        from jiaoyixingqiu_fees import collect_fees
+        return collect_fees(db, save, now)
+    except Exception:
+        # The primary source failure is recorded separately; retain its cache.
+        # Existing providers remain explicit fallback references, never relabelled.
+        pass
     source = "AKShare/九期网费用参考"
     try:
         rows = ak_call("futures_comm_info", {"symbol": "所有"}, timeout=38)

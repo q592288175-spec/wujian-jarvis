@@ -19,7 +19,7 @@ export function cycleResonance(signals){
 
 export const resonanceLabels=['全红共振','全绿共振','逆市诱多','逆市诱空','混沌分歧','数据不足'];
 
-// Display-only strength: keep the existing price/MA10 side and all trading filters intact.
+// Display-only strength: keep the existing price/EMA10 side and all trading filters intact.
 export function signalAppearance(signal){
  if(!signal||signal.side==='missing')return {label:'不足',tone:'missing'};
  if(signal.side==='flat')return {label:'平衡',tone:'flat'};

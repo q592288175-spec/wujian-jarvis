@@ -6,7 +6,7 @@ import {sectorFor} from '../dist/sectors.js';
 import {applyDayTrendRule,DAY_TREND_MODE,DAY_TREND_VERSION} from './day-trend.mjs';
 
 const ROOT=resolve(dirname(fileURLToPath(import.meta.url)),'..');
-export const COMPARISON_VERSION='relative-strength-day-leaders-v2.0';
+export const COMPARISON_VERSION='relative-strength-day-leaders-v3.0-ema10';
 const TARGET=3;
 const CORRELATION_LIMIT=0.8;
 const families=[{name:'国债利率',codes:'TS TF T TL'},{name:'原油及燃料链',codes:'SC FU LU PG BU'},{name:'股指',codes:'IH IF IC IM'},{name:'橡胶',codes:'RU NR BR'},{name:'铜',codes:'CU BC'}];
@@ -97,9 +97,9 @@ export function compareStrength(scan,rawByContract,{generatedAt=new Date().toISO
   if(!aligned)counterevidence.push('近3日或5日收益方向与观察方向分歧');
   if(row.provisional||window.some(d=>map.get(d).provisional))counterevidence.push('窗口含盘后快照，待交易所正式数据复核');
   if(!weekStructure.every(Boolean))counterevidence.push('周K高低点未同时沿观察方向推进');
-  if(distance!==null)counterevidence.push(`收盘相对日MA10偏离 ${(distance*100).toFixed(2)}%，回撤风险需结合结构核验`);
+  if(distance!==null)counterevidence.push(`收盘相对日EMA10偏离 ${(distance*100).toFixed(2)}%，回撤风险需结合结构核验`);
   if(!trendConfirmed)counterevidence.push('近5日与20日缺少持续同向证据，仅列观察备选');
-  metrics.push({code:row.code,name:row.name,contract:row.main_contract,sector:sectorFor(row),riskFamily:familyFor(row.code),sourceSector:row.sector,exchange:row.exchange,side,close:last.close,return3,return5,...trend,trendConfirmed,weekMA10:row.week_ma10,dayMA10:row.day_ma10,distance,volume:row.volume,openInterest:row.open_interest,source:row.data_source,provisional:!!row.provisional,windowDates:window,barHash:hash(bars),evidence:trendConfirmed?(aligned?'持续同向':'持续同向 / 近3日回调'):'持续性待确认',prior:row.day_trend_rule_reason,counterevidence,reviseWhen:'退出日K顺势观察池、近期持续性反转、同向相关性升高或行情缺口扩大时重新评估'});
+  metrics.push({code:row.code,name:row.name,contract:row.main_contract,sector:sectorFor(row),riskFamily:familyFor(row.code),sourceSector:row.sector,exchange:row.exchange,side,close:last.close,return3,return5,...trend,trendConfirmed,weekEMA10:row.week_ma10,dayEMA10:row.day_ma10,distance,volume:row.volume,openInterest:row.open_interest,source:row.data_source,provisional:!!row.provisional,windowDates:window,barHash:hash(bars),evidence:trendConfirmed?(aligned?'持续同向':'持续同向 / 近3日回调'):'持续性待确认',prior:row.day_trend_rule_reason,counterevidence,reviseWhen:'退出日K顺势观察池、近期持续性反转、同向相关性升高或行情缺口扩大时重新评估'});
  }
  const longs=rank(metrics.filter(m=>m.side==='long')),shorts=rank(metrics.filter(m=>m.side==='short'));
  const barsByCode=new Map(loaded.map(x=>[x.row.code,x.bars]));
@@ -118,7 +118,7 @@ export function compareStrength(scan,rawByContract,{generatedAt=new Date().toISO
  }
  const missing={long:TARGET-selectedLongs.length,short:TARGET-selectedShorts.length},selectionSkipped=[...longSelection.skipped,...shortSelection.skipped];
  const selectionPolicy={targetPerSide:TARGET,scope:'日K顺势',sourceMode:DAY_TREND_MODE,correlationLimit:CORRELATION_LIMIT,correlationWindows:[20,60],minimumSamples:[15,40],families,rankingWeights:{strength5:.25,strength20:.25,efficiency20:.25,resilience20:.25}};
- return {version:COMPARISON_VERSION,cutoff,generatedAt,scanRuleVersion:scan.rule_version,dayTrendRuleVersion:DAY_TREND_VERSION,inputHash:hash({version:COMPARISON_VERSION,cutoff,rule:scan.rule_version,dayTrend:DAY_TREND_VERSION,metrics,excluded,selectionPolicy}),status:!missing.long&&!missing.short?'ready':'partial',pool:{long:eligible.filter(r=>r.modes[DAY_TREND_MODE]==='多头观察').length,short:eligible.filter(r=>r.modes[DAY_TREND_MODE]==='空头观察').length,usableLong:longs.length,usableShort:shorts.length,selectedLong:selectedLongs.length,selectedShort:selectedShorts.length},windowDates:window,pairs,slots,longs,shorts,selectedLongs,selectedShorts,selectionSkipped,selectionPolicy,relationships,excluded,missing,missingPairs:TARGET-pairs.length,method:'来源为现有日K顺势池（日MA10方向、今日高低点、双严格1万手），不改火原规则。近5日与20日均同向才列持续龙头；按5日/20日波动调整收益、20日顺向效率、20日抗逆向回撤四项方向内百分位等权排序。允许同板块；同方向同风险族只留排名最前者，20或60个共同日收益相关系数达到0.80则避开，20日样本不足不认定分散。各取3个，不足留空。配对优先价格正相关，不强求跨板块。20/60日、0.80和等权评分是本版可复核的观察参数，未经收益回测，不是作者原规则或统计胜率。',boundary:'观察候选，不自动形成交易计划。未校准胜率；三多三空不等于风险中性，也不代表各开1手。相关性只用收盘日收益，回撤只用收盘路径，不含盘中跳空与费用；历史关系不保证未来对冲。手数、波动、止损、利率敏感度与已有持仓仍按原金规则核验。'};
+ return {version:COMPARISON_VERSION,cutoff,generatedAt,scanRuleVersion:scan.rule_version,dayTrendRuleVersion:DAY_TREND_VERSION,inputHash:hash({version:COMPARISON_VERSION,cutoff,rule:scan.rule_version,dayTrend:DAY_TREND_VERSION,metrics,excluded,selectionPolicy}),status:!missing.long&&!missing.short?'ready':'partial',pool:{long:eligible.filter(r=>r.modes[DAY_TREND_MODE]==='多头观察').length,short:eligible.filter(r=>r.modes[DAY_TREND_MODE]==='空头观察').length,usableLong:longs.length,usableShort:shorts.length,selectedLong:selectedLongs.length,selectedShort:selectedShorts.length},windowDates:window,pairs,slots,longs,shorts,selectedLongs,selectedShorts,selectionSkipped,selectionPolicy,relationships,excluded,missing,missingPairs:TARGET-pairs.length,method:'来源为现有日K顺势池（日EMA10方向、今日高低点、双严格1万手），不改火原规则。近5日与20日均同向才列持续龙头；按5日/20日波动调整收益、20日顺向效率、20日抗逆向回撤四项方向内百分位等权排序。允许同板块；同方向同风险族只留排名最前者，20或60个共同日收益相关系数达到0.80则避开，20日样本不足不认定分散。各取3个，不足留空。配对优先价格正相关，不强求跨板块。20/60日、0.80和等权评分是本版可复核的观察参数，未经收益回测，不是作者原规则或统计胜率。',boundary:'观察候选，不自动形成交易计划。未校准胜率；三多三空不等于风险中性，也不代表各开1手。相关性只用收盘日收益，回撤只用收盘路径，不含盘中跳空与费用；历史关系不保证未来对冲。手数、波动、止损、利率敏感度与已有持仓仍按原金规则核验。'};
 }
 
 export async function latestStrength(scan,{root=ROOT}={}){

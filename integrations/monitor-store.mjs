@@ -29,9 +29,16 @@ export class MonitorStore{
  setStatus(id,status){if(!['active','paused','archived','completed','expired'].includes(status))throw Error('提醒状态无效');if(!this.getRule(id))throw Error('提醒规则不存在');this.db.prepare('UPDATE monitor_rules SET status=?,updated_at=? WHERE id=?').run(status,new Date().toISOString(),id);return this.getRule(id);}
  ruleState(id,symbol){const row=this.db.prepare('SELECT payload FROM monitor_state WHERE rule_id=? AND symbol=?').get(id,symbol);return row?parse(row.payload):{met:false,lastTriggered:0};}
  saveState(id,symbol,state){this.db.prepare('INSERT INTO monitor_state VALUES(?,?,?) ON CONFLICT(rule_id,symbol) DO UPDATE SET payload=excluded.payload').run(id,symbol,JSON.stringify(state));}
- recordEvent(event,{symbol,lastTriggered,met,complete=false,uniqueKey=null,state=null}={}){return this.transaction(()=>{
+ recordEvent(event,{symbol,lastTriggered,met,complete=false,uniqueKey=null,state=null,cooldownKey=null,cooldownMs=0}={}){return this.transaction(()=>{
+  const at=Date.parse(event.triggeredAt);
+  if(cooldownKey&&cooldownMs>0){
+   let previous=this.meta(cooldownKey,null);
+   if(previous===null&&event.code&&event.period){const row=this.db.prepare("SELECT created_at FROM monitor_events WHERE kind='ma-turn' AND json_extract(payload,'$.code')=? AND json_extract(payload,'$.period')=? ORDER BY julianday(created_at) DESC LIMIT 1").get(event.code,event.period);previous=row?Date.parse(row.created_at):null;}
+   if(!Number.isFinite(at)||Number.isFinite(previous)&&at-previous<cooldownMs)return false;
+  }
   const inserted=this.db.prepare('INSERT OR IGNORE INTO monitor_events VALUES(?,?,?,?,?,NULL,?)').run(event.id,event.ruleId||null,event.kind,JSON.stringify(event),event.triggeredAt,uniqueKey);
   if(!inserted.changes)return false;
+  if(cooldownKey&&cooldownMs>0)this.setMeta(cooldownKey,at);
   for(const channel of event.channels||[])this.db.prepare('INSERT INTO monitor_deliveries(event_id,channel,status) VALUES(?,?,?)').run(event.id,channel,'pending');
   if(symbol)this.saveState(event.ruleId,symbol,{...this.ruleState(event.ruleId,symbol),met,armed:false,lastTriggered,lastObserved:event.quoteAt,...(state||{})});
   if(complete)this.setStatus(event.ruleId,'completed');return true;
@@ -47,7 +54,12 @@ export class MonitorStore{
  });}
  read(id){this.db.prepare('UPDATE monitor_events SET read_at=? WHERE id=?').run(new Date().toISOString(),id);return this.event(id);}
  unread(){return this.db.prepare('SELECT COUNT(*) AS n FROM monitor_events WHERE read_at IS NULL').get().n;}
- pending(channel,now=Date.now()){return this.db.prepare("SELECT d.*,e.payload FROM monitor_deliveries d JOIN monitor_events e ON e.id=d.event_id WHERE d.channel=? AND d.status IN ('pending','failed') AND d.attempts<3 AND d.next_at<=? ORDER BY e.created_at LIMIT 25").all(channel,now).map(row=>({...row,event:parse(row.payload)}));}
+ pending(channel,now=Date.now()){return this.db.prepare("SELECT d.*,e.payload FROM monitor_deliveries d JOIN monitor_events e ON e.id=d.event_id WHERE d.channel=? AND d.status IN ('pending','failed') AND d.attempts<3 AND d.next_at<=? ORDER BY e.created_at LIMIT 25").all(channel,now).map(row=>({...row,event:parse(row.payload)})).filter(row=>{
+  if(row.event.kind!=='ma-turn')return true;
+  const watched=this.meta('trend-monitor:watchlist',{mode:'codes',codes:[]});
+  if(watched.mode==='codes'&&watched.codes.includes(row.event.code))return true;
+  this.delivery(row.event_id,channel,'skipped','未关注该品种，停止提醒');return false;
+ });}
  delivery(id,channel,status,note='',nextAt=0){this.db.prepare('UPDATE monitor_deliveries SET status=?,note=?,attempts=attempts+?,next_at=? WHERE event_id=? AND channel=?').run(status,String(note).slice(0,160),status==='sending'?1:0,nextAt,id,channel);}
  recover(){this.db.prepare("UPDATE monitor_deliveries SET status='unknown',note='服务中断时发送结果未确认，请核对通道' WHERE status='sending'").run();}
  meta(key,fallback=null){const row=this.db.prepare('SELECT payload FROM monitor_meta WHERE key=?').get(key);return row?parse(row.payload):fallback;}

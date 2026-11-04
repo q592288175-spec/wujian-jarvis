@@ -2,12 +2,12 @@ import {displaySectors,displaySectorFor,displaySectorIndex} from './display-sect
 
 export function fireColumns(mode){
  return mode==='day-trend'
-  ?{title:'日 MA10',keys:['day'],structures:[{period:'day',title:'日K结构（今日对昨日）'}]}
+  ?{title:'日 EMA10',keys:['day'],structures:[{period:'day',title:'日K结构（今日对昨日）'}]}
   :mode==='month-week'
-  ?{title:'月 / 周 MA10',keys:['month','week'],structures:[{period:'week',title:'周K结构'}]}
+  ?{title:'月 / 周 EMA10',keys:['month','week'],structures:[{period:'week',title:'周K结构'}]}
   :mode==='week-day'
-   ?{title:'周 / 日 MA10',keys:['week','day'],structures:[{period:'week',title:'周K结构（辅助）'},{period:'day',title:'日K结构（辅助）'}]}
-   :{title:'月 / 周 / 日 MA10',keys:['month','week','day'],structures:[{period:'week',title:'周K结构（辅助）'},{period:'day',title:'日K结构（辅助）'}]};
+   ?{title:'周 / 日 EMA10',keys:['week','day'],structures:[{period:'week',title:'周K结构（辅助）'},{period:'day',title:'日K结构（辅助）'}]}
+   :{title:'月 / 周 / 日 EMA10',keys:['month','week','day'],structures:[{period:'week',title:'周K结构（辅助）'},{period:'day',title:'日K结构（辅助）'}]};
 }
 export function refreshMinute(value){
  if(!value||!Number.isFinite(Date.parse(value)))return '时间未知';

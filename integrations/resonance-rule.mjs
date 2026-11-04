@@ -1,8 +1,8 @@
 export const RESONANCE_MODE='month-week-day';
-export const RESONANCE_RULE_VERSION='v2.6.1-resonance-strict-liquidity';
+export const RESONANCE_RULE_VERSION='v3-ema10-resonance-strict-liquidity';
 export const RESONANCE_LIQUIDITY_MIN=10000;
 export const WEEK_DAY_MODE='week-day';
-export const WEEK_DAY_RULE_VERSION='v2-week-day-direction-week-price';
+export const WEEK_DAY_RULE_VERSION='v3-ema10-week-day-direction-week-price';
 
 const LONG='多头观察';
 const SHORT='空头观察';
@@ -59,17 +59,17 @@ function weekDayResult(row,targetDate){
  const volume=finite(row.volume),interest=finite(row.open_interest);
  const price=finite(row.latest_bar?.close),weekMa10=finite(row.week_ma10);
  const priceKnown=price!==null&&price>0&&weekMa10!==null&&weekMa10>0;
- const position=!priceKnown?'数据不足':price>weekMa10?'周MA10上方':price<weekMa10?'周MA10下方':'与周MA10相等';
+ const position=!priceKnown?'数据不足':price>weekMa10?'周EMA10上方':price<weekMa10?'周EMA10下方':'与周EMA10相等';
  const context={price,position};
  const knownDirection=value=>['上升','下降','走平'].includes(value);
  if(!row.ok||row.market_current===false||targetDate&&row.data_date!==targetDate||!datesMatch(row)||volume===null||interest===null||!priceKnown||!knownDirection(row.week_direction)||!knownDirection(row.day_direction)){
-  return{...context,result:INSUFFICIENT,technical:INSUFFICIENT,liquidity:false,reason:'合约行情、日期、量仓、收盘价或周日MA10数据不足',ruleReason:'关键数据不足，不能判定'};
+  return{...context,result:INSUFFICIENT,technical:INSUFFICIENT,liquidity:false,reason:'合约行情、日期、量仓、收盘价或周日EMA10数据不足',ruleReason:'关键数据不足，不能判定'};
  }
  const up=row.week_direction==='上升'&&row.day_direction==='上升';
  const down=row.week_direction==='下降'&&row.day_direction==='下降';
  const technical=up&&price>weekMa10?LONG:down&&price<weekMa10?SHORT:EXCLUDED;
- const ruleReason=technical===LONG?'周日MA10均上升，收盘价在周MA10上方':technical===SHORT?'周日MA10均下降，收盘价在周MA10下方':
-  !up&&!down?'周日MA10未同向或存在走平':up?'收盘价未严格高于周MA10':'收盘价未严格低于周MA10';
+ const ruleReason=technical===LONG?'周日EMA10均上升，收盘价在周EMA10上方':technical===SHORT?'周日EMA10均下降，收盘价在周EMA10下方':
+  !up&&!down?'周日EMA10未同向或存在走平':up?'收盘价未严格高于周EMA10':'收盘价未严格低于周EMA10';
  const liquidity=volume>10000&&interest>10000;
  return{...context,result:liquidity?technical:ILLIQUID,technical,liquidity,ruleReason,reason:liquidity?'成交量与持仓量均严格大于1万手':'成交量或持仓量未严格大于1万手'};
 }
@@ -134,12 +134,12 @@ export function applyResonanceRule(payload={}){
    excluded:rows.filter(r=>r.modes[WEEK_DAY_MODE]===EXCLUDED).length,
    missing:rows.filter(r=>r.modes[WEEK_DAY_MODE]===INSUFFICIENT).length
   }},
-  week_day_rule:{version:WEEK_DAY_RULE_VERSION,direction:'动态周MA10与日MA10同向',liquidity:'具体主力成交量与持仓量均严格 > 10,000 手',
-   price:'多头：最新完成日K收盘价 > 动态周MA10；空头：最新完成日K收盘价 < 动态周MA10。该收盘价也是动态本周K的最新收盘价，相等不纳入。',
+  week_day_rule:{version:WEEK_DAY_RULE_VERSION,direction:'动态周EMA10与日EMA10同向',liquidity:'具体主力成交量与持仓量均严格 > 10,000 手',
+   price:'多头：最新完成日K收盘价 > 动态周EMA10；空头：最新完成日K收盘价 < 动态周EMA10。该收盘价也是动态本周K的最新收盘价，相等不纳入。',
    structure:'周K、日K高低点结构仅作辅助展示，不参与筛选',breakout:'不要求周线突破'},
   resonance_rule:{
    version:RESONANCE_RULE_VERSION,
-   direction:'月、周、日 MA10 三周期同向',
+   direction:'月、周、日 EMA10 三周期同向',
    liquidity:`成交量与持仓量均严格 > ${RESONANCE_LIQUIDITY_MIN} 手`,
    structures:'周K、日K低点抬高/高点抬低仅作辅助展示，不参与筛选',
    breakout:'不作为月周日共振筛选条件'

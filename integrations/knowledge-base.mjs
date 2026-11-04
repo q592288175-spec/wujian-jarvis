@@ -37,7 +37,7 @@ export async function searchKnowledge({query,limit=6}={}){
  const result=await run(['search',query.trim(),'--limit',String(Math.max(1,Math.min(Number(limit)||6,12)))],{timeout:120000});
  const p=await knowledgePolicy();const approved=new Map(p.sources.filter(s=>s.verified).map(s=>[s.path.toLowerCase(),s]));
  result.hits=(result.hits||[]).map(hit=>({...hit,lifecycle:approved.has(hit.path.toLowerCase())?approved.get(hit.path.toLowerCase()).lifecycle:hit.lifecycle==='current'?'historical':hit.lifecycle}));
- result.currentRules=/共振|突破|下单|交土|规则|筛选|门槛|均线|MA10|结构|量仓|成交量|持仓量|余额|归档|删除|计划|批准|以损|风险|主力|回填/.test(query)?await currentKnowledgeRules():null;
+ result.currentRules=/共振|突破|下单|交土|规则|筛选|门槛|均线|MA10|EMA10|结构|量仓|成交量|持仓量|余额|归档|删除|计划|批准|以损|风险|主力|回填/.test(query)?await currentKnowledgeRules():null;
  result.policyConflicts=p.changed;return result;
 }
 export async function knowledgeSource(chunkId){

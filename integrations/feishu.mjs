@@ -4,7 +4,7 @@ import {readFile,mkdir} from 'node:fs/promises';
 import {resolve} from 'node:path';
 import {marketSnapshot} from './market.mjs';
 import {buildAxesReport} from './three-axes.mjs';
-import {assistantReply} from './assistant.mjs';
+import {workbenchChatReply,IM_CHAT_HELP} from './workbench-chat.mjs';
 import {getReport} from './research-agent.mjs';
 import {atomicWrite} from './research-storage.mjs';
 import {Ledger,deliveryId,scheduleTimes,dueSlots,acceptedMessage,sendMonitorNotification,monitorNotificationConfig,monitorConversation} from './feishu-core.mjs';
@@ -29,17 +29,19 @@ export async function pushMonitorMessage(text,key){
 }
 export async function pushFeishuReport(){if(!ready||!targetAllowed())throw Error('飞书推送目标尚未配置');const report=await previewFeishuReport();if(report.status!=='observing'||!report.rows.length)throw Error('真实行情未就绪，不发送正式日报');const c=config();return send(c.target,report.text,'manual:'+new Date().toISOString().slice(0,16),c.type);}
 async function processMessage(message){const scope=message.chatId+':'+message.user;let acquired=false;try{
- if(active.has(scope)){await send(message.chatId,'上一条问题仍在处理；已启动的深度研究在后台继续。','busy:'+message.id);return}active.add(scope);acquired=true;
+ if(active.has(scope)){await send(message.chatId,'上一条问题仍在处理，请等回复后继续。','busy:'+message.id);return}active.add(scope);acquired=true;
  const old=conversations.get(scope)||{chatId:message.chatId,chatType:message.chatType,user:message.user,history:[]};conversations.set(scope,old);
  if(message.text==='绑定提醒'){
   const c=config(),peer=monitorConversation(c,message);if(!bindingOverride())throw Error('请先通过小木扫码绑定本人');await persistBinding({...c,notificationChat:peer});await send(message.chatId,'本人盯盘通知单聊已绑定。请回小木“连接与通知”点“测试手机通知”核对送达。','monitor-binding:'+message.id);lastError=null;return;
  }
- await send(message.chatId,'收到，正在查询。你可以继续使用工作台；深度研究会在后台运行。','ack:'+message.id);
- if(/^(日报|复盘日报|三板斧|帮助)$/.test(message.text)){const text=message.text==='帮助'?'可以说：日报、研究沪铜、查询原油行情、查看研究任务。仅只读研究，不下单。':(await previewFeishuReport()).text;await send(message.chatId,text,'answer:'+message.id);return}
- const messages=[...old.history.slice(-18),{role:'user',content:message.text}];const result=await assistantReply(messages);old.history=[...messages,{role:'assistant',content:result.text.slice(0,5500)}].slice(-20);
+ if(message.chatType!=='p2p'){await send(message.chatId,'工作台查询可能包含个人账户和交易记录，请在本人小木单聊中提问。','answer:'+message.id);return;}
+ if(['新对话','清空对话'].includes(message.text)){old.history=[];await send(message.chatId,'已清空本次飞书对话，可以开始新话题。','answer:'+message.id);return;}
+ await send(message.chatId,'收到，我来看看。','ack:'+message.id);
+ if(/^(三板斧|帮助)$/.test(message.text)){const text=message.text==='帮助'?IM_CHAT_HELP:(await previewFeishuReport()).text;await send(message.chatId,text,'answer:'+message.id);return}
+ const messages=[...old.history.slice(-18),{role:'user',content:message.text}];const result=await workbenchChatReply(messages,{channel:'飞书'});old.history=[...messages,{role:'assistant',content:result.text.slice(0,5500)}].slice(-20);
  for(const job of result.jobs||[])await ledger.claim('job:'+job.id,{jobId:job.id,chatId:message.chatId,chatType:message.chatType,user:message.user});
  await send(message.chatId,result.text,'answer:'+message.id);
- }catch{lastError='飞书请求处理失败，请在工作台核对模型、行情和授权状态'}finally{if(acquired)active.delete(scope);await ledger.finish('event:'+message.id,'processed').catch(()=>{})}}
+ }catch{lastError='飞书请求处理失败，请在工作台核对模型、行情和授权状态';if(!ledger.entries['send:answer:'+message.id])try{await send(message.chatId,'这次查询或回复未完成，请稍后重试，或在工作台检查模型和数据状态。','error:'+message.id)}catch{}}finally{if(acquired)active.delete(scope);await ledger.finish('event:'+message.id,'processed').catch(()=>{})}}
 async function receive(data){const c=config(),m=acceptedMessage(data,c);if(!m||!await ledger.claim('event:'+m.id))return {};const scope=m.chatId+':'+m.user;if(!conversations.has(scope))conversations.set(scope,{chatId:m.chatId,chatType:m.chatType,user:m.user,history:[]});void processMessage(m);return {};}
 async function tick(){if(busy||!ready)return;busy=true;try{
  // Completion notice survives service restarts and is restricted to original requester.

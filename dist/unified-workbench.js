@@ -12,6 +12,32 @@ const item=(group,[page,title,icon])=>`<a href="#${group}/${page}" data-route="$
 nav.innerHTML=`<h2 class="nav-group-title">看市场</h2>${marketPages.map(p=>item('market',p)).join('')}<h2 class="nav-group-title">做交易</h2>${tradePages.map(p=>item('trade',p)).join('')}<h2 class="nav-group-title">系统</h2>${systemPages.map(p=>item('trade',p)).join('')}`;
 window.lucide?.createIcons();
 const message=error=>{$('#toast').textContent=error.message||String(error);$('#toast').className='show error';setTimeout(()=>$('#toast').className='',5000)};
+function notify(text,error=false){const node=$('#toast');if(!node)return;node.textContent=text;node.className=error?'show error':'show';clearTimeout(notify.timer);notify.timer=setTimeout(()=>node.className='',4500)}
+async function copyPlainText(text){
+ try{if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(text);return true}}catch{}
+ const area=document.createElement('textarea');area.value=text;area.setAttribute('readonly','');area.style.position='fixed';area.style.left='-9999px';document.body.append(area);area.select();area.setSelectionRange(0,text.length);let ok=false;try{ok=document.execCommand('copy')}finally{area.remove()}if(!ok)throw Error('浏览器未允许写入剪贴板');return true;
+}
+function showAgentPrompt(text){
+ $('#modalTitle').textContent='AI 接入提示词';
+ $('#modalBody').replaceChildren();
+ const tip=document.createElement('p');tip.className='hint';tip.textContent='复制下面的完整提示词，直接粘贴给 Claude、Cursor、Codex、DSH 或其他 AI。它包含路径、配置、自检和权限边界。';
+ const area=document.createElement('textarea');area.value=text;area.readOnly=true;area.style.width='100%';area.style.minHeight='320px';area.style.fontFamily='ui-monospace,Consolas,monospace';area.style.fontSize='12px';
+ const actions=document.createElement('div');actions.className='actions';
+ const copy=document.createElement('button');copy.className='primary';copy.type='button';copy.textContent='再次复制';copy.onclick=()=>copyPlainText(text).then(()=>notify('已复制 AI 接入提示词')).catch(error=>notify(error.message,true));
+ const close=document.createElement('button');close.className='quiet';close.type='button';close.textContent='关闭';close.onclick=()=>$('#modal').close();
+ actions.append(copy,close);$('#modalBody').append(tip,area,actions);if(!$('#modal').open)$('#modal').showModal();area.focus();area.select();
+}
+async function copyAgentOnboarding(){
+ const button=$('#agentSetupButton');if(!button)return;const old=button.textContent;button.disabled=true;button.textContent='正在读取…';
+ try{
+  const response=await fetch('/agent-onboarding.txt',{cache:'no-store'});if(!response.ok)throw Error('提示词文件读取失败（HTTP '+response.status+'）');
+  const text=await response.text();if(!text.trim())throw Error('提示词为空');
+  try{await copyPlainText(text);notify('已复制 AI 接入提示词，直接粘贴给任意 AI 即可')}
+  catch{copyAgentOnboarding.text=text;showAgentPrompt(text);notify('自动复制被浏览器拦截，已打开提示词，请手动复制',true)}
+ }catch(error){notify('读取接入提示词失败：'+error.message,true)}
+ finally{button.disabled=false;button.textContent=old}
+}
+document.querySelector('#agentSetupButton')?.addEventListener('click',copyAgentOnboarding);
 function draftKey(route){return route+'|'+(localStorage.getItem('wj-account')||'')+'|'+(trade?.getTradeContext().card||'')}
 function rememberDraft(){if(!current?.startsWith('trade/'))return;const key=draftKey(current),values=[...$('#content').querySelectorAll('form')].map(form=>({id:form.id,values:[...form.elements].map((e,index)=>({e,index})).filter(({e})=>e.name&&!e.disabled&&!['password','file','submit','button','hidden'].includes(e.type)).map(({e,index})=>({name:e.name,index,value:e.value,checked:e.checked,type:e.type}))}));drafts.set(key,values);detailsState.set(key,[...$('#content').querySelectorAll('details')].map(e=>({summary:e.querySelector('summary')?.textContent,open:e.open})));}
 function restoreDraft(route){const key=draftKey(route),saved=drafts.get(key);if(!saved)return;for(const record of saved){let changed=false;const form=record.id?document.getElementById(record.id):null;if(!form||!$('#content').contains(form))continue;for(const value of record.values){const field=form.elements[value.index];if(!field||field.name!==value.name||field.type!==value.type)continue;if(['checkbox','radio'].includes(value.type)){if(field.checked!==value.checked){field.checked=value.checked;changed=true}}else if(field.value!==value.value){field.value=value.value;changed=true;field.dispatchEvent(new Event('input',{bubbles:true}))}}if(changed)form.dirty=true}const entries=detailsState.get(key)||[];for(const e of $('#content').querySelectorAll('details')){const saved=entries.find(x=>x.summary===e.querySelector('summary')?.textContent);if(saved)e.open=saved.open}}

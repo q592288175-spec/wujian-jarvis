@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "wujian": {
+      "command": "node",
+      "args": [
+        "D:\\五简个人资料\\2026年10月文件\\小木工作台\\wujian-jarvis\\mcp\\server.mjs"
+      ],
+      "cwd": "D:\\五简个人资料\\2026年10月文件\\小木工作台\\wujian-jarvis",
+      "env": {
+        "WUJIAN_API_BASE": "http://127.0.0.1:4318",
+        "WUJIAN_TIMEOUT_MS": "30000",
+        "WUJIAN_ALLOW_WRITES": "0",
+        "WUJIAN_ALLOW_TRADING": "0",
+        "WUJIAN_ALLOW_EXPENSIVE": "0"
+      }
+    }
+  }
+}

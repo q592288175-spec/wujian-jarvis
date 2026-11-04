@@ -1,5 +1,6 @@
 import {randomUUID} from 'node:crypto';
 import {canonical,productCode} from './monitor-engine.mjs';
+import {emaPair,INDICATOR} from '../dist/indicators.js';
 
 export const TREND_BIG_PERIODS=['1mo','1w','1d'];
 export const TREND_SMALL_PERIODS=['30m','60m','120m'];
@@ -14,7 +15,7 @@ export const defaultTrendTask=()=>({title:'周日同向 · 30分钟拐头穿线'
 export function validateTrendTask(input){
  if(!input||typeof input!=='object'||Array.isArray(input))throw Error('监控任务格式无效');
  const choose=(value,allowed,label)=>{
-  if(!Array.isArray(value)||!value.length||value.some(p=>!allowed.includes(p)))throw Error('请选择有效的'+label);
+  if(!Array.isArray(value)||(!value.length&&!['paused','archived'].includes(input.status))||value.some(p=>!allowed.includes(p)))throw Error('请选择有效的'+label);
   return allowed.filter(p=>value.includes(p));
  };
  const bigPeriods=choose(input.bigPeriods,TREND_BIG_PERIODS,'方向周期（月、周、日）');
@@ -29,7 +30,7 @@ export function validateTrendTask(input){
  if(input.channels!==undefined&&!Array.isArray(input.channels))throw Error('提醒通道格式无效');
  const channels=[...new Set(input.channels||['desktop','weixin'])];
  if(!channels.length||channels.some(v=>!['desktop','weixin'].includes(v)))throw Error('请选择桌面或微信提醒');
- return {title:String(input.title||input.name||'周期拐点监控').trim().slice(0,80)||'周期拐点监控',bigPeriods,smallPeriods,direction,scope,codes,channels,status,mode:'intrabar',maLength:10};
+ return {title:String(input.title||input.name||'周期拐点监控').trim().slice(0,80)||'周期拐点监控',bigPeriods,smallPeriods,direction,scope,codes,channels,status,mode:'intrabar',maLength:10,indicator:INDICATOR};
 }
 
 function stampDate(bar){
@@ -84,9 +85,10 @@ export function intrabarMaSignal(rows,last,quoteAt){
   if(current.endStamp&&(!Number.isFinite(Date.parse(current.endStamp))||quoteTime>=Date.parse(current.endStamp)))return{status:'missing',reason:'分钟K线已结束但新K线未取得，等待更新'};
  }
  const completed=parsed.rows.slice(0,-1),tail=completed.slice(-10);
- const previousMa=mean(tail.map(b=>b.close)),ma=mean([...tail.slice(-9).map(b=>b.close),last]);
+ if(!finite(last)||last<=0)return{status:'missing',reason:'当前价格无效'};
+ const {previousMa,ma}=emaPair([...completed.map(b=>b.close),last]);
  const slope=ma-previousMa;
- return{status:'ok',ma,previousMa,slope,direction:side(slope,previousMa),relation:side(last-ma,ma),stamp:current.stamp,stampKind:current.stampKind||'start',endStamp:current.endStamp||null,completedAt:completed.at(-1).stamp,unclosed:true,closes:tail.map(b=>({stamp:b.stamp,close:b.close}))};
+ return{status:'ok',indicator:INDICATOR,samples:parsed.rows.length,ma,previousMa,slope,direction:side(slope,previousMa),relation:side(last-ma,ma),stamp:current.stamp,stampKind:current.stampKind||'start',endStamp:current.endStamp||null,completedAt:completed.at(-1).stamp,unclosed:true,closes:tail.map(b=>({stamp:b.stamp,close:b.close}))};
 }
 
 export function trendEnvironment(task,frame){
@@ -107,9 +109,9 @@ export function trendEnvironment(task,frame){
   if(signal.status!=='ok')return{status:'missing',reason:TREND_PERIOD_LABELS[period]+'：'+signal.reason,signals};
  }
  const directions=Object.values(signals).map(s=>s.direction),direction=directions.every(v=>v===1)?1:directions.every(v=>v===-1)?-1:0;
- if(!direction)return{status:'opposed',direction:0,reason:'所选大周期MA10未全部同向',signals};
+ if(!direction)return{status:'opposed',direction:0,reason:'所选大周期EMA10未全部同向',signals};
  if(task.direction==='long'&&direction!==1||task.direction==='short'&&direction!==-1)return{status:'opposed',direction,reason:'大周期方向与任务要求不一致',signals};
- return{status:'ok',direction,signals,reason:'所选大周期MA10'+(direction===1?'同向向上':'同向向下')};
+ return{status:'ok',direction,signals,reason:'所选大周期EMA10'+(direction===1?'同向向上':'同向向下')};
 }
 
 /** Evaluate observed transitions only. Reconnecting at a fulfilled state never creates a crossing. */
@@ -124,9 +126,9 @@ export function evaluateTrend({task,frame,period,state={},now=Date.now(),generat
  const environment=trendEnvironment(task,frame),small=intrabarMaSignal(frame.bars?.[period],q.last,q.quoteAt);
  if(small.status!=='ok')return reject(TREND_PERIOD_LABELS[period]+'：'+small.reason);
  observation.smallSignal=small;observation.bigSignals=environment.signals;observation.direction=environment.direction===1?'long':environment.direction===-1?'short':null;
- const base={...state,version:task.version,generation,symbol,source:frame.source||q.source||'来源未核验',sessionKey:q.sessionKey,at,receivedAt:now,sequence:q.sequence,smallDirection:small.direction,relation:small.relation,ma:small.ma,quoteAt:q.quoteAt,lastPrice:q.last,needsBaseline:false};
+ const base={...state,indicatorVersion:INDICATOR.version,version:task.version,generation,symbol,source:frame.source||q.source||'来源未核验',sessionKey:q.sessionKey,at,receivedAt:now,sequence:q.sequence,smallDirection:small.direction,relation:small.relation,ma:small.ma,quoteAt:q.quoteAt,lastPrice:q.last,needsBaseline:false};
  if(environment.status!=='ok')return{observation:{...observation,status:environment.status==='missing'?'waiting-data':'waiting-direction',reason:environment.reason},state:{...base,needsBaseline:true,armed:false,turnId:null},event:null};
- const continuous=!state.needsBaseline&&state.version===task.version&&state.generation===generation&&state.symbol===symbol&&state.source===base.source&&state.sessionKey===q.sessionKey&&at>=(state.at||0)&&at-(state.at||0)<=30000&&now-(state.receivedAt||0)<=30000;
+ const continuous=state.indicatorVersion===INDICATOR.version&&!state.needsBaseline&&state.version===task.version&&state.generation===generation&&state.symbol===symbol&&state.source===base.source&&state.sessionKey===q.sessionKey&&at>=(state.at||0)&&at-(state.at||0)<=30000&&now-(state.receivedAt||0)<=30000;
  if(!continuous)return{observation:{...observation,status:'baseline',reason:'已建立盘中基线，等待新拐头与穿越；不补报既有信号'},state:{...base,armed:false,turnId:null,triggered:false},event:null};
  const dir=environment.direction,turned=small.direction===dir&&state.smallDirection!==dir;
  let armed=state.armed===true,turnId=state.turnId||null,triggered=state.triggered===true;
@@ -134,10 +136,10 @@ export function evaluateTrend({task,frame,period,state={},now=Date.now(),generat
  if(turned){armed=true;turnId=small.stamp+':'+q.quoteAt+':'+q.sequence;triggered=false;}
  const next={...base,armed,turnId,triggered};
  const crossed=dir===1?state.relation<=0&&small.relation>0:state.relation>=0&&small.relation<0;
- if(!armed||small.direction!==dir)return{observation:{...observation,status:'waiting-turn',reason:'大周期同向，等待'+TREND_PERIOD_LABELS[period]+'MA10新拐头'},state:next,event:null};
- if(!crossed)return{observation:{...observation,status:triggered?'triggered':'waiting-cross',reason:triggered?'本轮已提醒，等待新的反向后再拐头':'MA10已顺大周期拐头，等待价格'+(dir===1?'上穿':'下穿')+'MA10'},state:next,event:null};
+ if(!armed||small.direction!==dir)return{observation:{...observation,status:'waiting-turn',reason:'大周期同向，等待'+TREND_PERIOD_LABELS[period]+'EMA10新拐头'},state:next,event:null};
+ if(!crossed)return{observation:{...observation,status:triggered?'triggered':'waiting-cross',reason:triggered?'本轮已提醒，等待新的反向后再拐头':'EMA10已顺大周期拐头，等待价格'+(dir===1?'上穿':'下穿')+'EMA10'},state:next,event:null};
  if(triggered)return{observation:{...observation,status:'triggered',reason:'本轮已提醒，同一拐点不重复推送'},state:next,event:null};
  const bigText=task.bigPeriods.map(p=>TREND_PERIOD_LABELS[p]).join('、'),verb=dir===1?'上穿':'下穿';
- const event={id:randomUUID(),ruleId:'trend:'+task.id,ruleVersion:task.version,kind:'ma-turn',taskId:task.id,symbol,name:observation.name,code:observation.code,direction:dir===1?'up':'down',period,condition:bigText+'MA10'+(dir===1?'向上':'向下')+'；'+TREND_PERIOD_LABELS[period]+'MA10拐头且价格'+verb+'MA10',price:q.last,value:q.last,ma:small.ma,quoteAt:q.quoteAt,source:base.source,receivedAt:q.receivedAt||new Date(now).toISOString(),triggeredAt:new Date(now).toISOString(),label:TREND_PERIOD_LABELS[period]+'拐头'+verb+' · 盘中未收线',channels:[...task.channels],evidence:{mode:'intrabar',unclosed:true,maLength:10,tradingDay:q.tradingDay,sessionKey:q.sessionKey,turnId,period,bigSignals:environment.signals,smallSignal:small,previous:{quoteAt:state.quoteAt,price:state.lastPrice,ma:state.ma,direction:state.smallDirection,relation:state.relation},notice:'盘中即时观察，当前K线未收线；行情变化可能使信号失效。仅供人工判断。'}};
+ const event={id:randomUUID(),ruleId:'trend:'+task.id,ruleVersion:task.version,kind:'ma-turn',taskId:task.id,symbol,name:observation.name,code:observation.code,direction:dir===1?'up':'down',period,condition:bigText+'EMA10'+(dir===1?'向上':'向下')+'；'+TREND_PERIOD_LABELS[period]+'EMA10'+(dir===1?'向上':'向下')+'拐头且价格'+verb+'EMA10',price:q.last,value:q.last,ma:small.ma,quoteAt:q.quoteAt,source:base.source,receivedAt:q.receivedAt||new Date(now).toISOString(),triggeredAt:new Date(now).toISOString(),label:TREND_PERIOD_LABELS[period]+'EMA10'+(dir===1?'向上':'向下')+'拐头，价格'+verb+'EMA10'+' · 盘中未收线',channels:[...task.channels],evidence:{mode:'intrabar',unclosed:true,maLength:10,indicator:INDICATOR,tradingDay:q.tradingDay,sessionKey:q.sessionKey,turnId,period,bigSignals:environment.signals,smallSignal:small,previous:{quoteAt:state.quoteAt,price:state.lastPrice,ma:state.ma,direction:state.smallDirection,relation:state.relation},notice:'盘中即时观察，当前K线未收线；行情变化可能使信号失效。仅供人工判断。'}};
  return{observation:{...observation,status:'triggered',reason:'已观测新拐头与价格'+verb+'，本轮提醒一次'},state:{...next,armed:true,triggered:true,lastTriggered:now},event,uniqueKey:['trend',task.id,task.version,symbol,period,turnId].join('|')};
 }

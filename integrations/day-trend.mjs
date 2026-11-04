@@ -1,11 +1,11 @@
 export const DAY_TREND_MODE = 'day-trend';
-export const DAY_TREND_VERSION = 'v1-day-ma10-strict-extremes';
+export const DAY_TREND_VERSION = 'v2-day-ema10-strict-extremes';
 export const DAY_TREND_RULE = {
  version: DAY_TREND_VERSION,
- direction: '多头：今日与昨日的日MA10相比严格上升；空头：严格下降。走平不纳入。',
+ direction: '多头：今日与昨日的日EMA10相比严格上升；空头：严格下降。走平不纳入。',
  structure: '多头：今日最低价严格高于昨日最低价；空头：今日最高价严格低于昨日最高价。今日、昨日均指同一具体合约最近两个已完成交易日，相等不纳入。',
  liquidity: '具体主力成交量与持仓量均严格大于1万手',
- breakout: '不要求突破、周月方向或收盘价位于日MA10的某一侧',
+ breakout: '不要求突破、周月方向或收盘价位于日EMA10的某一侧',
  scope: '本人2026-10-18新增的独立观察模式；不替换原三个模式或锁定轮次的开仓与风险规则',
 };
 const finite = value => typeof value === 'number' && Number.isFinite(value);
@@ -25,14 +25,14 @@ export function dayTrendResult(row, targetDate) {
   && [ma, previousMa, low, previousLow, high, previousHigh].every(positive)
   && high >= low && previousHigh >= previousLow
   && finite(row.volume) && finite(row.open_interest) && row.volume >= 0 && row.open_interest >= 0;
- if (!known) return {result:'数据不足', technical:'数据不足', liquidity:false, reason:'同一具体合约的最新完成日K、前一交易日、日MA10或量仓数据不足/日期不一致'};
+ if (!known) return {result:'数据不足', technical:'数据不足', liquidity:false, reason:'同一具体合约的最新完成日K、前一交易日、日EMA10或量仓数据不足/日期不一致'};
  const technical = ma > previousMa && low > previousLow ? '多头观察'
   : ma < previousMa && high < previousHigh ? '空头观察' : '未纳入';
  const liquidity = row.volume > 10000 && row.open_interest > 10000;
  const reason = !liquidity ? '成交量与持仓量均须严格大于1万手'
-  : candidate(technical) ? technical === '多头观察' ? '日MA10向上，今日低点严格高于昨日低点' : '日MA10向下，今日高点严格低于昨日高点'
-  : ma === previousMa ? '日MA10走平'
-  : ma > previousMa ? '日MA10向上，但今日低点未严格高于昨日低点' : '日MA10向下，但今日高点未严格低于昨日高点';
+  : candidate(technical) ? technical === '多头观察' ? '日EMA10向上，今日低点严格高于昨日低点' : '日EMA10向下，今日高点严格低于昨日高点'
+  : ma === previousMa ? '日EMA10走平'
+  : ma > previousMa ? '日EMA10向上，但今日低点未严格高于昨日低点' : '日EMA10向下，但今日高点未严格低于昨日高点';
  return {result:liquidity ? technical : '流动性不合格', technical, liquidity, reason};
 }
 

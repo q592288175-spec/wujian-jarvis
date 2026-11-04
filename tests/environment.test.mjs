@@ -2,9 +2,9 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {maDirection,periodCloses,movingAverageEvidence,equalWeightIndex,buildEnvironment,environmentCycle} from '../integrations/environment.mjs';
 const bars=Array.from({length:15},(_,i)=>({date:`2026-09-${String(i+1).padStart(2,'0')}`,close:100+i}));
-test('MA10严格比较相邻十根，缺值不冒充中性',()=>{
+test('EMA10逐根递推比较相邻值，缺值不冒充中性',()=>{
  assert.equal(maDirection(11,10),'long');assert.equal(maDirection(9,10),'short');assert.equal(maDirection(10,10),'neutral');assert.equal(maDirection(null,10),'unknown');
- const actual=movingAverageEvidence(bars,'day','2026-09-15');assert.equal(actual.ma10,109.5);assert.equal(actual.previousMa10,108.5);
+ const actual=movingAverageEvidence(bars,'day','2026-09-15');assert.ok(Math.abs(actual.ma10-109.7710878503249)<1e-10);assert.ok(Math.abs(actual.previousMa10-108.83132959484155)<1e-10);
  assert.equal(movingAverageEvidence(bars.slice(0,10),'day','2026-09-10').direction,'unknown');
 });
 test('动态周月纳入最新收盘，未来K不进入当前证据',()=>{

@@ -72,16 +72,16 @@ function interpretation(item){
   else if(aligned>0&&finite(item.closePosition)&&(sign===1?item.closePosition>=.5:item.closePosition<=.5))judgment='顺势推进';
   else if(aligned<0)judgment='正常回撤';
   else judgment='整理';
- }else if(item.dayMa10===null)gaps.push('缺少日MA10背景，不能判断趋势质量');
+ }else if(item.dayMa10===null)gaps.push('缺少日EMA10背景，不能判断趋势质量');
  const contrary=[];
- if(maBroken)contrary.push('收盘已经处于日MA10的逆势侧');
+ if(maBroken)contrary.push('收盘已经处于日EMA10的逆势侧');
  if(structureBroken)contrary.push(item.direction==='long'?'当日低点跌破上一交易日低点':'当日高点超过上一交易日高点');
  if(finite(item.fiveReturn)&&item.fiveReturn*sign<0)contrary.push('近5日累计表现与观察方向相反');
  if(finite(item.relativeReturn)&&item.relativeReturn*sign<0)contrary.push('当日表现没有相对同板块顺势走强');
  if(finite(item.oiChange)&&item.oiChange<0)contrary.push('持仓减少，不能将表现归因为新增风险参与');
  if(!contrary.length)contrary.push('已取得的上述指标未见明确反证，不代表风险消失');
  const quantity=`成交量/前5日均量 ${finite(item.volumeRatio)?item.volumeRatio.toFixed(2)+'倍':'不足'}；持仓 ${signed(item.oiChange,'手',0)}；收盘区间位置 ${finite(item.closePosition)?(item.closePosition*100).toFixed(0)+'%':'不足'}`;
- const next=item.valid?item.direction==='long'?`强化：收盘超过今日高点${item.high}且不破今日低点${item.low}；削弱：跌破${item.low}${item.dayMa10!==null?'或收盘低于日MA10'+item.dayMa10:''}。`:`强化：收盘低于今日低点${item.low}且不越今日高点${item.high}；削弱：超过${item.high}${item.dayMa10!==null?'或收盘高于日MA10'+item.dayMa10:''}。`:'先补齐同合约正式日K，再判断延续或转弱。';
+ const next=item.valid?item.direction==='long'?`强化：收盘超过今日高点${item.high}且不破今日低点${item.low}；削弱：跌破${item.low}${item.dayMa10!==null?'或收盘低于日EMA10'+item.dayMa10:''}。`:`强化：收盘低于今日低点${item.low}且不越今日高点${item.high}；削弱：超过${item.high}${item.dayMa10!==null?'或收盘高于日EMA10'+item.dayMa10:''}。`:'先补齐同合约正式日K，再判断延续或转弱。';
  return {...item,gaps:[...new Set(gaps)],judgment,contrary,quantity,next:next+' 同时复核量仓与板块相对表现。',cause:'原因待核验；持仓增加不等于资金净流入，也不证明主力方向。'};
 }
 
@@ -105,7 +105,7 @@ export function buildPostmarketReview(input,mode,previous=null){
  const changes=compatible?{available:true,previousDate:previous.date,new:rows.filter(r=>!previous.rows.some(p=>p.code===r.code&&p.direction===r.direction)).map(r=>r.code),exit:previous.rows.filter(p=>!rows.some(r=>r.code===p.code&&r.direction===p.direction)).map(r=>r.code),improved:rows.filter(r=>r.valid&&r.judgment==='顺势推进'&&previous.rows.some(p=>p.code===r.code&&p.direction===r.direction&&p.valid&&p.judgment!=='数据待核验'&&p.judgment!=='顺势推进')).map(r=>r.code),weakened:rows.filter(r=>r.valid&&r.judgment==='出现转弱迹象'&&previous.rows.some(p=>p.code===r.code&&p.direction===r.direction&&p.valid&&p.judgment!=='数据待核验'&&p.judgment!=='出现转弱迹象')).map(r=>r.code)}:{available:false,reason:'缺少上一交易日同周期、同扫描版本的复盘底稿，无法比较新增、退出、改善和转弱'};
  const focus=side=>rows.filter(r=>r.direction===side&&r.judgment==='顺势推进'&&finite(r.fiveReturn)&&r.fiveReturn*(side==='long'?1:-1)>0&&finite(r.relativeReturn)&&r.relativeReturn*(side==='long'?1:-1)>0).sort((a,b)=>(side==='long'?1:-1)*(b.relativeReturn-a.relativeReturn)).slice(0,3).map(r=>r.name+' '+r.contract);
  const long=rows.filter(r=>r.direction==='long'),short=rows.filter(r=>r.direction==='short'),pending=rows.filter(r=>r.gaps.length),longFocus=focus('long'),shortFocus=focus('short');
- const overview=`${calendar.targetDate} ${REVIEW_MODES[mode]}共${rows.length}个候选，多头${long.length}、空头${short.length}。已取得商品样本${market.sample}/${market.total}，上涨${market.up}、下跌${market.down}、持平${market.flat}，昨收口径等权表现${percentage(market.meanReturn)}；该样本不是全市场指数。候选中顺势推进${rows.filter(r=>r.judgment==='顺势推进').length}个，转弱迹象${rows.filter(r=>r.judgment==='出现转弱迹象').length}个，有数据缺口${pending.length}个。多头延续观察：${longFocus.join('、')||'暂未发现数据充分且同时相对走强的品种'}；空头延续观察：${shortFocus.join('、')||'暂未发现数据充分且同时相对走弱的品种'}。下一日先看今日高低点是否被突破、日MA10能否守住，再核验量仓和板块相对表现。${calendar.weekState}，${calendar.monthState}；事件原因待核验。本报告仅供观察，不产生计划或交易许可。`;
+ const overview=`${calendar.targetDate} ${REVIEW_MODES[mode]}共${rows.length}个候选，多头${long.length}、空头${short.length}。已取得商品样本${market.sample}/${market.total}，上涨${market.up}、下跌${market.down}、持平${market.flat}，昨收口径等权表现${percentage(market.meanReturn)}；该样本不是全市场指数。候选中顺势推进${rows.filter(r=>r.judgment==='顺势推进').length}个，转弱迹象${rows.filter(r=>r.judgment==='出现转弱迹象').length}个，有数据缺口${pending.length}个。多头延续观察：${longFocus.join('、')||'暂未发现数据充分且同时相对走强的品种'}；空头延续观察：${shortFocus.join('、')||'暂未发现数据充分且同时相对走弱的品种'}。下一日先看今日高低点是否被突破、日EMA10能否守住，再核验量仓和板块相对表现。${calendar.weekState}，${calendar.monthState}；事件原因待核验。本报告仅供观察，不产生计划或交易许可。`;
  return {reviewVersion:REVIEW_VERSION,date:calendar.targetDate,mode,modeLabel:REVIEW_MODES[mode],ruleVersion:scan.rule_version,scanAt:scan.refreshedAt,capturedAt:input.capturedAt,scanHash:hash(scan),inputHash:hash(input),sourcePath:scan.sourcePath,calendar,market,sectors,rows,changes,focus:{long:longFocus,short:shortFocus},overview,ai:{status:'not-configured',text:null},priceBasis:'收盘/同合约上一交易日收盘-1；不使用结算或昨结算',boundary:'研究与人工判断；不改变候选、原排序，不创建交易计划、仓位或账户许可'};
 }
 
@@ -116,7 +116,7 @@ function distribution(rows){
 function modeEvidence(row,mode){
  const status=row.modes?.[mode]||'数据不足',periods=mode==='month-week'?['month','week']:mode==='week-day'?['week','day']:['month','week','day'];
  const names={month:'月',week:'周',day:'日'},number=v=>finite(v)?String(Number(v.toFixed(4))):'未知';
- const lines=periods.map(p=>`${names[p]}MA10 ${row[p+'_direction']||'未知'}（${number(row['previous_'+p+'_ma10'])}→${number(row[p+'_ma10'])}）`);
+ const lines=periods.map(p=>`${names[p]}EMA10 ${row[p+'_direction']||'未知'}（${number(row['previous_'+p+'_ma10'])}→${number(row[p+'_ma10'])}）`);
  if(mode==='month-week')lines.push(...fireStructure(row,mode,'week').map(s=>s.label+'：'+s.values),`月突破：向上${row.month_break_up===true?'满足':row.month_break_up===false?'未满足':'未知'} / 向下${row.month_break_down===true?'满足':row.month_break_down===false?'未满足':'未知'}`);
  if(mode==='week-day')lines.push(...fireStructure(row,mode,'day').map(s=>s.label+'：'+s.values));
  lines.push(`成交${number(row.volume)}手 / 持仓${number(row.open_interest)}手；均须严格>10,000手`);
@@ -153,7 +153,7 @@ export function buildThreeModeReview(input,previous=null){
  const focus=Object.fromEntries(['long','short'].map(side=>[side,rows.filter(r=>r.direction===side&&r.judgment==='顺势推进').sort((a,b)=>(side==='long'?1:-1)*(b.relativeReturn-a.relativeReturn)).slice(0,5).map(r=>r.code)]));
  const leading=[...sectors].filter(s=>s.sample>=2&&!['股指','国债'].includes(s.sector)).sort((a,b)=>b.meanReturn-a.meanReturn),market=markets[0];
  const overview=`${base.date}商品有效样本${market.sample}/${market.total}，涨${market.up}、跌${market.down}、平${market.flat}，等权${percentage(market.meanReturn)}，中位数${percentage(market.medianReturn)}。${leading.length?`相对强侧${leading[0].sector}（${percentage(leading[0].meanReturn)}），弱侧${leading.at(-1).sector}（${percentage(leading.at(-1).meanReturn)}）。`:''}${modeStats.map(s=>`${s.label}${s.total}个（多${s.long}/空${s.short}）`).join('；')}。去重${rows.length}个，三模式同向${overlap.three}、两模式同向${overlap.two}、单模式${overlap.one}、方向冲突${overlap.conflict}。候选顺势推进${rows.filter(r=>r.judgment==='顺势推进').length}、转弱${rows.filter(r=>r.judgment==='出现转弱迹象').length}。先核对模式差异，再结合消息与供需验证主线。`;
- return {...base,reviewVersion:COMPARISON_VERSION,mode:'all',modeLabel:'三模式对比',rows,modeStats,markets,sectors,market:{...base.market,...market},overlap,changes,focus,overview,qualityMethod:'日MA10逆势或逆向日结构破坏标为转弱；顺势推进须当日与近5日同向、相对板块不弱、收盘位于顺势半区；其余标回调/反弹、整理或待核验。量仓与事件为补充证据，不推断资金方向。'};
+ return {...base,reviewVersion:COMPARISON_VERSION,mode:'all',modeLabel:'三模式对比',rows,modeStats,markets,sectors,market:{...base.market,...market},overlap,changes,focus,overview,qualityMethod:'日EMA10逆势或逆向日结构破坏标为转弱；顺势推进须当日与近5日同向、相对板块不弱、收盘位于顺势半区；其余标回调/反弹、整理或待核验。量仓与事件为补充证据，不推断资金方向。'};
 }
 
 export function reviewMarkdown(r){

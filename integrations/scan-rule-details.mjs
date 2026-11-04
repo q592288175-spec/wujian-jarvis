@@ -22,17 +22,17 @@ export function buildScanRuleDetails(registry,fire,method=''){
  return{
   version:registry.version,combinedHash:registry.combinedHash,readOnly:true,
   runId:registry.runId||null,sourceChanged:Boolean(registry.sourceChanged),
-  dataDate:fire.data_date||null,scanVersion:fire.rule_version||null,
-  common:{liquidity:resonance.liquidity||unknown,direction:sectionCode(tokens,'二、方向')||unknown,
+  dataDate:fire.data_date||null,scanVersion:fire.rule_version||null,indicator:fire.indicator||null,
+  common:{liquidity:resonance.liquidity||unknown,direction:fire.indicator?.type==='EMA'?'2026-11-04本人确认：当前小木统一使用EMA10。首个有效收盘价初始化，α=2/11，逐根递推；至少10根显示数值，11根比较方向。'+(registry.runId?'锁定轮次的历史规则与批准保持原样。':''):(sectionCode(tokens,'二、方向')||unknown),
    directionBoundary:resonance.version===RESONANCE_RULE_VERSION?'所需周期均上升为多头方向，均下降为空头方向；走平或方向不一致不进入观察候选。':unknown},
   modes:[
    {id:'month-week-day',label:'月周日共振',version:resonance.version||null,
-    direction:resonance.version===RESONANCE_RULE_VERSION?`${resonance.direction}\n多头：月、周、日MA10均上升；空头：月、周、日MA10均下降。`:resonance.direction||unknown,
+    direction:resonance.version===RESONANCE_RULE_VERSION?`${resonance.direction}\n多头：月、周、日EMA10均上升；空头：月、周、日EMA10均下降。`:resonance.direction||unknown,
     structure:resonance.structures||unknown,breakout:resonance.breakout||unknown},
    {id:'month-week',label:'月周大周期',version:fire.baseline_rule_version||null,
-    direction:monthlyLines.join('\n')||unknown,structure:weekStructure.join('\n')||unknown,breakout:monthWindow.join('\n')||unknown},
+    direction:(monthlyLines.join('\n')||unknown).replaceAll('MA10',fire.indicator?.type==='EMA'?'EMA10':'MA10'),structure:weekStructure.join('\n')||unknown,breakout:monthWindow.join('\n')||unknown},
    {id:'week-day',label:'周日小周期',version:weekDay.version||null,
-    direction:weekDay.version===WEEK_DAY_RULE_VERSION?`${weekDay.direction}\n多头：周、日MA10均上升；空头：周、日MA10均下降。\n${weekDay.price}`:weekDay.direction||unknown,
+    direction:weekDay.version===WEEK_DAY_RULE_VERSION?`${weekDay.direction}\n多头：周、日EMA10均上升；空头：周、日EMA10均下降。\n${weekDay.price}`:weekDay.direction||unknown,
     structure:weekDay.structure||unknown,
     breakout:weekDay.breakout||unknown},
    ...(fire.day_trend_rule?[{id:'day-trend',label:'日K顺势',version:fire.day_trend_rule.version,
@@ -40,7 +40,7 @@ export function buildScanRuleDetails(registry,fire,method=''){
     breakout:fire.day_trend_rule.breakout+'\n'+fire.day_trend_rule.scope}]:[])
   ],
   sampleRequirements:sectionCode(tokens,'六、样本要求')||unknown,
-  sources:(registry.files||[]).filter(file=>['火扫描技能包方法','火计算程序','动态月行情适配','共振计算程序'].includes(file.name)).map(({name,sha256,available})=>({name,sha256,available})),
+  sources:(registry.files||[]).filter(file=>['EMA10现行增量规则','EMA10统一计算','火扫描技能包方法','火计算程序','动态月行情适配','共振计算程序'].includes(file.name)).map(({name,sha256,available})=>({name,sha256,available})),
   boundary:'观察候选不等于交易批准；此处只读，不修改技能包、筛选条件或账户记录。'
  };
 }

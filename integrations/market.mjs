@@ -1,3 +1,4 @@
+import {hasLiquidity} from '../dist/liquidity.js';
 import {readFile} from 'node:fs/promises';
 import {resolve} from 'node:path';
 export function assess(snapshot,now=Date.now()){
@@ -22,14 +23,14 @@ export function normalizeQuotes(snapshot){
 }
 export function filterLiquidity(snapshot){
  const normalized=normalizeQuotes(snapshot);
- const quotes=normalized.quotes.filter(q=>Number.isFinite(q.volume)&&q.volume>10000&&Number.isFinite(q.openInterest)&&q.openInterest>10000);
+ const quotes=normalized.quotes.filter(hasLiquidity);
  return {...normalized,quotes,quality:{...normalized.quality,scope:'当前已订阅主力合约研究池，非所有月份合约'}};
 }
 export async function marketSnapshot(scope='research'){
  try{
   const snapshot=assess(JSON.parse(await readFile(resolve('.runtime/market.json'),'utf8')));
-  return scope==='all'?normalizeQuotes(snapshot):filterLiquidity(snapshot);
- }catch{return scope==='all'?normalizeQuotes(assess(null)):filterLiquidity(assess(null))}
+  return filterLiquidity(snapshot);
+ }catch{return filterLiquidity(assess(null))}
 }
 export async function marketQuery(name,args={}){
  const s=await marketSnapshot(args.scope==='all'?'all':'research');
@@ -38,4 +39,4 @@ export async function marketQuery(name,args={}){
  if(name==='resolve_contract')return {source:s.source,status:s.status,matches:q.map(({symbol,requestedSymbol})=>({symbol,requestedSymbol})),error:q.length?undefined:'仅解析已订阅的完整合约代码，未匹配时请明确合约'};
  return {source:s.source,status:s.status,symbol:args.symbol,period:'1d',bars:q[0]?.bars||[],receivedAt:s.receivedAt,permission:false};
 }
-export const marketTools=['get_market_snapshot','resolve_contract','get_bars'].map(name=>({type:'function',name,description:name==='get_market_snapshot'?'读取AKShare免费盘后主力连续完成K线及状态。默认返回流动性研究池；scope=all 可读取全部已采集品种。不得称为实时行情。':name==='resolve_contract'?'解析已采集的主力连续序列；当前具体主力字段仅作盘后核验。':'读取免费主力连续完成日K；scope=all 可读取低流动性品种，须注意换月影响。',parameters:{type:'object',properties:{symbol:{type:'string'},scope:{type:'string',enum:['research','all'],description:'research 为完成日K成交量和持仓量均大于1万手的默认研究池；all 为全部已采集国内期货品种'}},required:name==='get_market_snapshot'?[]:['symbol'],additionalProperties:false}}));
+export const marketTools=['get_market_snapshot','resolve_contract','get_bars'].map(name=>({type:'function',name,description:name==='get_market_snapshot'?'读取AKShare免费盘后主力连续完成K线及状态。默认返回流动性研究池；所有范围均执行成交量和持仓量严格大于1万手。不得称为实时行情。':name==='resolve_contract'?'解析已采集的主力连续序列；当前具体主力字段仅作盘后核验。':'读取免费主力连续完成日K；所有范围均剔除未同时超过1万手的品种。',parameters:{type:'object',properties:{symbol:{type:'string'},scope:{type:'string',enum:['research','all'],description:'research 为完成日K成交量和持仓量均大于1万手的默认研究池；all 同样执行双1万手硬门'}},required:name==='get_market_snapshot'?[]:['symbol'],additionalProperties:false}}));

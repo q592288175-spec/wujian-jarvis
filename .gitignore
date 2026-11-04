@@ -32,3 +32,7 @@ contract-bars/
 *.sqlite
 *.sqlite-wal
 *.sqlite-shm
+
+# Private portable migration and LAN access material
+局域网访问口令.txt
+*_私密迁移包*.zip

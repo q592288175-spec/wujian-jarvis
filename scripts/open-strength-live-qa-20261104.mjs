@@ -1,0 +1,14 @@
+import {readFile,writeFile} from 'node:fs/promises';
+import {resolve,join} from 'node:path';
+import {createHash} from 'node:crypto';
+import {databaseManifest} from './system-backup.mjs';
+import {_electron} from 'file:///C:/Users/86199/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs';
+const out=resolve('output/strength-live-2026-11-04'),preview=JSON.parse(await readFile(join(out,'preview.json'),'utf8'));
+const files=['integrations/day-trend.mjs','integrations/resonance-rule.mjs','integrations/five-workbench.mjs','scripts/fire_scan.py','desktop/trend-alarm.js'];
+await writeFile(join(out,'preservation-before.json'),JSON.stringify({at:new Date().toISOString(),business:databaseManifest('.runtime/five-workbench.sqlite'),rules:Object.fromEntries(await Promise.all(files.map(async p=>[p,createHash('sha256').update(await readFile(p)).digest('hex')])))} ,null,2));
+const env={...process.env,WUJIAN_DESKTOP_PORT:String(preview.port),WUJIAN_DESKTOP_PROFILE:join(preview.root,'qa-profile'),WUJIAN_MONITOR_HOME:join(preview.root,'monitor')};delete env.ELECTRON_RUN_AS_NODE;
+const app=await _electron.launch({executablePath:resolve('.runtime/desktop-strength-live-20261104/小木-win32-x64/小木.exe'),env,args:['--remote-debugging-port=9236'],timeout:45000});
+const page=await app.firstWindow();await page.waitForSelector('#accountSelect option',{state:'attached',timeout:45000});await page.setViewportSize({width:1920,height:1080});await page.goto(preview.base+'/market-panorama.html#market/strength');
+console.log('桌面隔离验收已打开，调试端口9236');
+process.on('SIGTERM',()=>void app.evaluate(({app})=>app.exit(0)));process.on('SIGINT',()=>void app.evaluate(({app})=>app.exit(0)));
+app.on('close',()=>process.exit(0));

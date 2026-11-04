@@ -43,11 +43,11 @@ export function parseSinaQuotes(raw,items,now=Date.now()){
  for(const item of items){
   const provider=sinaSymbol(item.symbol,now),text=literals.get(provider);if(!text){missing.push(item.symbol);continue;}
   const fields=text.split(','),financial=item.exchange==='CFFEX',name=financial?fields.at(-1):fields[0],day=fields[financial?36:17],clock=String(fields[financial?37:1]||'').replaceAll(':','').padStart(6,'0');
-  const last=Number(fields[financial?3:8]),volume=Number(fields[financial?4:14]);
+  const last=Number(fields[financial?3:8]),volume=Number(fields[financial?4:14]),interest=fields[financial?6:13]?.trim()?Number(fields[financial?6:13]):null;
   if(!name?.endsWith(provider.slice(3).match(/\d+$/)[0])||!/^\d{4}-\d{2}-\d{2}$/.test(day||'')||!/^\d{6}$/.test(clock)||!Number.isFinite(last)||last<=0||+clock.slice(0,2)>23||+clock.slice(2,4)>59||+clock.slice(4)>59){missing.push(item.symbol);continue;}
   const quoteAt=day+'T'+clock.slice(0,2)+':'+clock.slice(2,4)+':'+clock.slice(4)+'+08:00';
   if(!Number.isFinite(Date.parse(quoteAt))||dateAt(Date.parse(quoteAt))!==day){missing.push(item.symbol);continue;}
-  quotes.push({symbol:canonical(item.symbol),name,last,volume,quoteAt,source:SOURCE,providerSymbol:provider,receivedAt:new Date(now).toISOString()});
+  quotes.push({symbol:canonical(item.symbol),name,last,volume,interest:Number.isFinite(interest)?interest:null,quoteAt,source:SOURCE,providerSymbol:provider,receivedAt:new Date(now).toISOString()});
  }
  return {quotes,missing};
 }
@@ -76,7 +76,7 @@ export class SinaMonitorFeed{
    if(probe)this.coverage=coverage;
    for(const quote of result.quotes){
     const current=publicSession(quote.symbol,this.now(),this.calendar),provider=publicSession(quote.symbol,Date.parse(quote.quoteAt),this.calendar),info=current.sessionActive&&provider.sessionKey===current.sessionKey?current:off;this.active+=Number(info.sessionActive);
-    const signature=quote.quoteAt+':'+quote.last+':'+quote.volume;if(this.seen.get(quote.symbol)===signature)continue;this.seen.set(quote.symbol,signature);this.emit('quote',{...quote,...info,sequence:++this.sequence});
+    const signature=quote.quoteAt+':'+quote.last+':'+quote.volume+':'+quote.interest;if(this.seen.get(quote.symbol)===signature)continue;this.seen.set(quote.symbol,signature);this.emit('quote',{...quote,...info,sequence:++this.sequence});
    }
    for(const symbol of result.missing)if(this.symbols.includes(symbol))this.emit('contract-status',{symbol,status:'unavailable'});
    this.emit('status',{status:'connected',message:'新浪公开行情可访问 · 每10秒检查 · '+(this.active?'当前交易时段，陈旧报价不判断':'当前休市，保留最近报价'),source:SOURCE,provider:'sina',intervalMs:INTERVAL,heartbeatAt:new Date(this.now()).toISOString(),activeContracts:this.active,subscribed:this.symbols.length,coverage:this.coverage||coverage,lastCheck:coverage,calendarSource:'现有扫描使用的AKShare交易日历'});

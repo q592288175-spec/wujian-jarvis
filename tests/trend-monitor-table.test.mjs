@@ -9,10 +9,10 @@ function frame(){
  const start=Date.parse('2026-11-03T10:00:00+08:00'),small=Array.from({length:11},(_,i)=>({stamp:new Date(start-(10-i)*1800000).toISOString(),endStamp:new Date(start+(i-9)*1800000).toISOString(),close:i===0?10:100,complete:i<10}));
  return{quote,bars:{'1d':days,'30m':small},observedBars:{},source:'测试'};
 }
-test('direction grid measures MA10 slope even when price is below a rising MA10',()=>{
- const f=frame(),s=trendTableSignals(f,{now:Date.parse(f.quote.quoteAt)});assert.equal(s['1d'].direction,1);assert.equal(s['30m'].direction,1);assert.ok(f.quote.last<s['30m'].ma);assert.equal(s['1mo'].status,'missing');
+test('EMA10方向与同根价格位置一致，不沿用SMA斜率',()=>{
+ const f=frame(),s=trendTableSignals(f,{now:Date.parse(f.quote.quoteAt)});assert.equal(s['1d'].direction,-1);assert.equal(s['30m'].direction,-1);assert.ok(f.quote.last<s['30m'].ma);assert.equal(s['1mo'].status,'missing');
 });
-test('closed periods show actual completed MA10 direction while fresh-session stale data is labelled',()=>{
+test('closed periods show actual completed EMA10 direction while fresh-session stale data is labelled',()=>{
  const f=frame();f.quote.sessionActive=false;f.bars['30m']=undefined;f.observedBars['30m']=Array.from({length:12},(_,i)=>({stamp:new Date(Date.parse(f.quote.quoteAt)-(12-i)*1800000).toISOString(),close:100-i}));
  const s=trendTableSignals(f,{now:Date.parse(f.quote.quoteAt)+3600000});assert.equal(s['30m'].status,'closed');assert.equal(s['30m'].direction,-1);
  f.quote.sessionActive=true;assert.equal(trendTableSignals(f,{now:Date.parse(f.quote.quoteAt)+31000})['1d'].status,'stale');

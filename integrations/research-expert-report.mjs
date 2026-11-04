@@ -44,7 +44,7 @@ export function auditExpertReport(text,evidence,checklist,now=new Date()){
  for(const id of references)if(!byId.has(id))issues.push(`引用 ${id} 不存在`);
  const body=String(text).split('<!--WUJIAN_WATER_JSON_START-->')[0];
  for(const paragraph of body.split(/\n\s*\n/)){
-  const comparisons=[...paragraph.matchAll(/(\d+(?:\.\d+)?)(?:元\/吨)?\s*(?:低于|高于)(?:日|周|月)?(?:MA10|均线)/g)];
+  const comparisons=[...paragraph.matchAll(/(\d+(?:\.\d+)?)(?:元\/吨)?\s*(?:低于|高于)(?:日|周|月)?(?:(?:E)?MA10|均线)/g)];
   const ids=[...paragraph.matchAll(/\[(E\d+)\]/g)].map(m=>m[1]);
   if(comparisons.some(m=>ids.some(id=>{const item=byId.get(id);return item&&item.type!=='price'&&String(item.text).includes(m[1])&&![...contextContracts].some(c=>`${item.text} ${item.title}`.includes(c))}))){
    issues.push('存在将未标具体合约的外部报价与研究合约均线比较的表述；删除该比较，仅保留市场情绪线索');
